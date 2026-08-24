@@ -1,3 +1,6 @@
+import type { LibraryBridge } from './libraryTypes';
+import type { DocumentsBridge } from './documentTypes';
+
 export type ArtemisTabType =
   | 'home'
   | 'library'
@@ -17,6 +20,8 @@ export interface ArtemisTab {
   type: ArtemisTabType;
   /** Display title in tab header */
   title: string;
+  /** Optional resource ID (e.g. Library item UUID for documents) */
+  resourceId?: string;
   /** Icon identifier or name */
   icon?: string;
   /** Whether the user can close this tab */
@@ -51,7 +56,8 @@ export interface ArtemisWindowBridge {
   close: () => void;
   isMaximized: () => Promise<boolean>;
   getAppVersion: () => Promise<string>;
-  library: import('./libraryTypes').LibraryBridge;
+  library: LibraryBridge;
+  documents: DocumentsBridge;
 }
 
 declare global {

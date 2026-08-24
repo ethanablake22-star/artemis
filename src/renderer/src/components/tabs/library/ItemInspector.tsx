@@ -17,9 +17,14 @@ import type { LibraryItem } from '@shared/libraryTypes';
 interface ItemInspectorProps {
   onRename: (item: LibraryItem) => void;
   onDelete: (item: LibraryItem) => void;
+  onOpenDocument?: (item: LibraryItem) => void;
 }
 
-export const ItemInspector: React.FC<ItemInspectorProps> = ({ onRename, onDelete }) => {
+export const ItemInspector: React.FC<ItemInspectorProps> = ({
+  onRename,
+  onDelete,
+  onOpenDocument,
+}) => {
   const { selectedItem, items, navigateToFolder } = useLibrary();
 
   if (!selectedItem) {
@@ -152,6 +157,17 @@ export const ItemInspector: React.FC<ItemInspectorProps> = ({ onRename, onDelete
           >
             <FolderOpen className="w-3.5 h-3.5" />
             Open Folder
+          </button>
+        )}
+
+        {selectedItem.type === 'document' && onOpenDocument && (
+          <button
+            type="button"
+            onClick={() => onOpenDocument(selectedItem)}
+            className="w-full py-1.5 px-3 rounded-lg bg-indigo-500/15 hover:bg-indigo-500/25 text-indigo-400 border border-indigo-500/30 text-xs font-semibold flex items-center justify-center gap-2 transition-colors"
+          >
+            <FileText className="w-3.5 h-3.5" />
+            Open in Docs
           </button>
         )}
 

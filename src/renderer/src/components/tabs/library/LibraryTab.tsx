@@ -20,7 +20,10 @@ import { RenameModal } from './RenameModal';
 import type { LibraryItem } from '@shared/libraryTypes';
 import clsx from 'clsx';
 
+import { useTabs } from '../../../state/TabContext';
+
 export const LibraryTab: React.FC = () => {
+  const { openDocumentTab } = useTabs();
   const {
     filteredContents,
     currentFolder,
@@ -47,6 +50,10 @@ export const LibraryTab: React.FC = () => {
     navigateToFolder(folder.id);
   };
 
+  const handleOpenDocument = (doc: LibraryItem) => {
+    openDocumentTab(doc.id, doc.name);
+  };
+
   const handleItemClick = (item: LibraryItem) => {
     setSelectedItemId(item.id);
   };
@@ -54,6 +61,8 @@ export const LibraryTab: React.FC = () => {
   const handleItemDoubleClick = (item: LibraryItem) => {
     if (item.type === 'folder') {
       navigateToFolder(item.id);
+    } else if (item.type === 'document') {
+      openDocumentTab(item.id, item.name);
     }
   };
 
@@ -237,6 +246,7 @@ export const LibraryTab: React.FC = () => {
                             onRename={handleRename}
                             onDelete={handleDelete}
                             onOpen={handleOpenFolder}
+                            onOpenDocument={handleOpenDocument}
                           />
                         </div>
                       </div>
@@ -305,6 +315,7 @@ export const LibraryTab: React.FC = () => {
                               onRename={handleRename}
                               onDelete={handleDelete}
                               onOpen={handleOpenFolder}
+                              onOpenDocument={handleOpenDocument}
                             />
                           </td>
                         </tr>
@@ -317,7 +328,11 @@ export const LibraryTab: React.FC = () => {
           </div>
 
           {/* Right Inspector Sidebar */}
-          <ItemInspector onRename={handleRename} onDelete={handleDelete} />
+          <ItemInspector
+            onRename={handleRename}
+            onDelete={handleDelete}
+            onOpenDocument={handleOpenDocument}
+          />
         </div>
       </div>
 

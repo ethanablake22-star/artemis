@@ -6,6 +6,7 @@ import type {
   UpdateLibraryItemOptions,
   ListLibraryItemsFilter,
 } from '../shared/libraryTypes';
+import type { ArtemisDocumentRecord } from '../shared/documentTypes';
 
 const bridge: ArtemisWindowBridge = {
   minimize: () => ipcRenderer.send('artemis:window:minimize'),
@@ -26,6 +27,15 @@ const bridge: ArtemisWindowBridge = {
       ipcRenderer.invoke('artemis:library:move', id, newParentId),
     delete: (id: string): Promise<boolean> =>
       ipcRenderer.invoke('artemis:library:delete', id),
+  },
+  documents: {
+    get: (libraryItemId: string): Promise<ArtemisDocumentRecord | null> =>
+      ipcRenderer.invoke('artemis:documents:get', libraryItemId),
+    updateContent: (
+      libraryItemId: string,
+      content: Record<string, unknown>
+    ): Promise<ArtemisDocumentRecord> =>
+      ipcRenderer.invoke('artemis:documents:updateContent', libraryItemId, content),
   },
 };
 

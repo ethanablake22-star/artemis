@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { MoreVertical, Edit2, Trash2, FolderOpen } from 'lucide-react';
+import { MoreVertical, Edit2, Trash2, FolderOpen, FileText } from 'lucide-react';
 import type { LibraryItem } from '@shared/libraryTypes';
 
 interface ItemActionMenuProps {
@@ -7,6 +7,7 @@ interface ItemActionMenuProps {
   onRename: (item: LibraryItem) => void;
   onDelete: (item: LibraryItem) => void;
   onOpen?: (item: LibraryItem) => void;
+  onOpenDocument?: (item: LibraryItem) => void;
 }
 
 export const ItemActionMenu: React.FC<ItemActionMenuProps> = ({
@@ -14,6 +15,7 @@ export const ItemActionMenu: React.FC<ItemActionMenuProps> = ({
   onRename,
   onDelete,
   onOpen,
+  onOpenDocument,
 }) => {
   const [isOpen, setIsOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
@@ -58,6 +60,21 @@ export const ItemActionMenu: React.FC<ItemActionMenuProps> = ({
             >
               <FolderOpen className="w-3.5 h-3.5 text-amber-400" />
               <span>Open</span>
+            </button>
+          )}
+
+          {item.type === 'document' && onOpenDocument && (
+            <button
+              type="button"
+              onClick={(e) => {
+                e.stopPropagation();
+                setIsOpen(false);
+                onOpenDocument(item);
+              }}
+              className="w-full flex items-center gap-2 px-3 py-1.5 text-xs text-slate-200 hover:text-slate-100 hover:bg-slate-800 transition-colors text-left"
+            >
+              <FileText className="w-3.5 h-3.5 text-indigo-400" />
+              <span>Open in Docs</span>
             </button>
           )}
 

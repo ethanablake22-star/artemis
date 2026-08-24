@@ -1,4 +1,11 @@
-import React, { createContext, useContext, useState, useCallback, useMemo } from 'react';
+import React, {
+  createContext,
+  useContext,
+  useState,
+  useCallback,
+  useMemo,
+  useRef,
+} from 'react';
 import type { ArtemisTab, ArtemisTabType } from '@shared/types';
 
 interface TabContextValue {
@@ -6,10 +13,13 @@ interface TabContextValue {
   activeTabId: string;
   activeTab: ArtemisTab | undefined;
   selectTab: (id: string) => void;
-  closeTab: (id: string) => void;
+  closeTab: (id: string) => Promise<boolean>;
   openTab: (tab: Omit<ArtemisTab, 'id'> & { id?: string }) => string;
   openOrFocusTab: (type: ArtemisTabType, defaultOptions?: Partial<ArtemisTab>) => string;
+  openDocumentTab: (libraryItemId: string, title: string) => string;
   updateTab: (id: string, updates: Partial<ArtemisTab>) => void;
+  syncDocumentTitle: (libraryItemId: string, newTitle: string) => void;
+  registerBeforeClose: (tabId: string, handler: () => Promise<boolean>) => () => void;
 }
 
 const TabContext = createContext<TabContextValue | null>(null);
@@ -31,6 +41,17 @@ const SINGLETON_TAB_TYPES: Set<ArtemisTabType> = new Set(['home', 'library']);
 export const TabProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [tabs, setTabs] = useState<ArtemisTab[]>([DEFAULT_HOME_TAB]);
   const [activeTabId, setActiveTabId] = useState<string>(DEFAULT_HOME_TAB.id);
+  const beforeCloseHandlersRef = useRef<Map<string, () => Promise<boolean>>>(new Map());
+
+  const registerBeforeClose = useCallback(
+    (tabId: string, handler: () => Promise<boolean>) => {
+      beforeCloseHandlersRef.current.set(tabId, handler);
+      return () => {
+        beforeCloseHandlersRef.current.delete(tabId);
+      };
+    },
+    []
+  );
 
   const selectTab = useCallback((id: string) => {
     setTabs((prev) =>
@@ -43,27 +64,49 @@ export const TabProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     setActiveTabId(id);
   }, []);
 
-  const closeTab = useCallback((id: string) => {
-    setTabs((prev) => {
-      const tabToClose = prev.find((t) => t.id === id);
+  const closeTab = useCallback(
+    async (id: string): Promise<boolean> => {
+      const tabToClose = tabs.find((t) => t.id === id);
       if (!tabToClose || !tabToClose.closable) {
-        return prev;
+        return false;
       }
 
-      const newTabs = prev.filter((t) => t.id !== id);
-      
-      // If closing the active tab, switch to the nearest adjacent tab or Home
-      if (activeTabId === id) {
-        const closingIndex = prev.findIndex((t) => t.id === id);
-        const nextTab = newTabs[closingIndex] || newTabs[closingIndex - 1] || newTabs[0];
-        if (nextTab) {
-          setActiveTabId(nextTab.id);
+      // Check if there is a registered beforeClose handler (e.g. for flushing unsaved doc edits)
+      const beforeCloseHandler = beforeCloseHandlersRef.current.get(id);
+      if (beforeCloseHandler) {
+        try {
+          const canClose = await beforeCloseHandler();
+          if (!canClose) {
+            // Save failed: do not close tab
+            return false;
+          }
+        } catch (e) {
+          console.error(`beforeClose handler failed for tab ${id}:`, e);
+          return false;
         }
       }
 
-      return newTabs;
-    });
-  }, [activeTabId]);
+      beforeCloseHandlersRef.current.delete(id);
+
+      setTabs((prev) => {
+        const newTabs = prev.filter((t) => t.id !== id);
+
+        // If closing active tab, select nearest adjacent tab or Home
+        if (activeTabId === id) {
+          const closingIndex = prev.findIndex((t) => t.id === id);
+          const nextTab = newTabs[closingIndex] || newTabs[closingIndex - 1] || newTabs[0];
+          if (nextTab) {
+            setActiveTabId(nextTab.id);
+          }
+        }
+
+        return newTabs;
+      });
+
+      return true;
+    },
+    [tabs, activeTabId]
+  );
 
   const updateTab = useCallback((id: string, updates: Partial<ArtemisTab>) => {
     setTabs((prev) =>
@@ -72,9 +115,16 @@ export const TabProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   }, []);
 
   const openTab = useCallback((tabOptions: Omit<ArtemisTab, 'id'> & { id?: string }) => {
-    const id = tabOptions.id || `tab-${tabOptions.type}-${Date.now()}-${Math.random().toString(36).substring(2, 7)}`;
-    
-    // Deduplication check for singletons
+    // Deduplication by resourceId (for documents)
+    if (tabOptions.resourceId) {
+      const existingResourceTab = tabs.find((t) => t.resourceId === tabOptions.resourceId);
+      if (existingResourceTab) {
+        selectTab(existingResourceTab.id);
+        return existingResourceTab.id;
+      }
+    }
+
+    // Deduplication for singletons (Home, Library)
     if (SINGLETON_TAB_TYPES.has(tabOptions.type)) {
       const existing = tabs.find((t) => t.type === tabOptions.type);
       if (existing) {
@@ -82,6 +132,10 @@ export const TabProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         return existing.id;
       }
     }
+
+    const id =
+      tabOptions.id ||
+      `tab-${tabOptions.type}-${Date.now()}-${Math.random().toString(36).substring(2, 7)}`;
 
     const newTab: ArtemisTab = {
       ...tabOptions,
@@ -100,14 +154,12 @@ export const TabProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   }, [tabs, selectTab]);
 
   const openOrFocusTab = useCallback((type: ArtemisTabType, defaultOptions?: Partial<ArtemisTab>) => {
-    // Check if singleton or already exists
     const existing = tabs.find((t) => t.type === type);
     if (existing) {
       selectTab(existing.id);
       return existing.id;
     }
 
-    // Default configuration based on tab type
     let title = 'New Tab';
     let icon = 'file';
     let closable = true;
@@ -167,6 +219,33 @@ export const TabProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     });
   }, [tabs, openTab, selectTab]);
 
+  const openDocumentTab = useCallback(
+    (libraryItemId: string, title: string) => {
+      const existing = tabs.find((t) => t.resourceId === libraryItemId);
+      if (existing) {
+        selectTab(existing.id);
+        return existing.id;
+      }
+
+      return openTab({
+        type: 'document',
+        resourceId: libraryItemId,
+        title: title || 'Untitled Document',
+        icon: 'file-text',
+        closable: true,
+      });
+    },
+    [tabs, openTab, selectTab]
+  );
+
+  const syncDocumentTitle = useCallback((libraryItemId: string, newTitle: string) => {
+    setTabs((prev) =>
+      prev.map((tab) =>
+        tab.resourceId === libraryItemId ? { ...tab, title: newTitle } : tab
+      )
+    );
+  }, []);
+
   const activeTab = useMemo(() => tabs.find((t) => t.id === activeTabId), [tabs, activeTabId]);
 
   const value = useMemo(
@@ -178,9 +257,24 @@ export const TabProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       closeTab,
       openTab,
       openOrFocusTab,
+      openDocumentTab,
       updateTab,
+      syncDocumentTitle,
+      registerBeforeClose,
     }),
-    [tabs, activeTabId, activeTab, selectTab, closeTab, openTab, openOrFocusTab, updateTab]
+    [
+      tabs,
+      activeTabId,
+      activeTab,
+      selectTab,
+      closeTab,
+      openTab,
+      openOrFocusTab,
+      openDocumentTab,
+      updateTab,
+      syncDocumentTitle,
+      registerBeforeClose,
+    ]
   );
 
   return <TabContext.Provider value={value}>{children}</TabContext.Provider>;

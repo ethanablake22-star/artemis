@@ -9,6 +9,10 @@ import {
   moveItem,
   deleteItem,
 } from './libraryStorage';
+import {
+  getDocument,
+  updateDocumentContent,
+} from './documentStorage';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
@@ -69,7 +73,7 @@ function createWindow() {
   });
 
   // ---------------------------------------------------------------------------
-  // Authoritative Library IPC Endpoints (Strictly Narrowed)
+  // Authoritative Library IPC Endpoints
   // ---------------------------------------------------------------------------
 
   ipcMain.handle('artemis:library:list', async (_event, filter) => {
@@ -94,6 +98,18 @@ function createWindow() {
 
   ipcMain.handle('artemis:library:delete', async (_event, id) => {
     return deleteItem(id);
+  });
+
+  // ---------------------------------------------------------------------------
+  // Authoritative Document IPC Endpoints
+  // ---------------------------------------------------------------------------
+
+  ipcMain.handle('artemis:documents:get', async (_event, libraryItemId) => {
+    return getDocument(libraryItemId);
+  });
+
+  ipcMain.handle('artemis:documents:updateContent', async (_event, libraryItemId, content) => {
+    return updateDocumentContent(libraryItemId, content);
   });
 
   // Open external URLs in the user's default browser
