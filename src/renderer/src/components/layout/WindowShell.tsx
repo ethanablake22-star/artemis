@@ -21,9 +21,9 @@ export const WindowShell: React.FC<WindowShellProps> = ({ children }) => {
   };
 
   return (
-    <div className="flex flex-col h-screen w-screen bg-artemis-950 text-slate-100 overflow-hidden">
+    <div className="flex flex-col h-screen w-screen bg-artemis-950 text-slate-100 overflow-hidden print:bg-white print:h-auto print:w-auto print:overflow-visible">
       {/* Top Application Header / Tab Bar Strip */}
-      <header className="titlebar-drag-region h-11 bg-artemis-950 border-b border-slate-800/80 flex items-center px-2.5 gap-2 shrink-0 select-none">
+      <header className="titlebar-drag-region h-11 bg-artemis-950 border-b border-slate-800/80 flex items-center px-2.5 gap-2 shrink-0 select-none print:hidden">
         {/* Artemis Brand & App Launcher */}
         <div className="flex items-center gap-2 pr-1 shrink-0 no-drag">
           {/* Artemis Monogram Icon */}
@@ -78,12 +78,12 @@ export const WindowShell: React.FC<WindowShellProps> = ({ children }) => {
       </header>
 
       {/* Main Tab Content Viewport */}
-      <main className="flex-1 min-h-0 bg-artemis-900 overflow-hidden relative">
+      <main className="flex-1 min-h-0 bg-artemis-900 overflow-hidden relative print:bg-white print:overflow-visible">
         {children}
       </main>
 
       {/* Global Desktop Status Bar */}
-      <footer className="h-6 bg-artemis-950 border-t border-slate-800/80 px-3 flex items-center justify-between text-[11px] text-slate-400 shrink-0 select-none">
+      <footer className="h-6 bg-artemis-950 border-t border-slate-800/80 px-3 flex items-center justify-between text-[11px] text-slate-400 shrink-0 select-none print:hidden">
         <div className="flex items-center gap-3">
           <span className="flex items-center gap-1.5 text-emerald-400">
             <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />

@@ -6,7 +6,7 @@ import type {
   UpdateLibraryItemOptions,
   ListLibraryItemsFilter,
 } from '../shared/libraryTypes';
-import type { ArtemisDocumentRecord } from '../shared/documentTypes';
+import type { ArtemisDocumentRecord, ExportPdfResult } from '../shared/documentTypes';
 
 const bridge: ArtemisWindowBridge = {
   minimize: () => ipcRenderer.send('artemis:window:minimize'),
@@ -29,13 +29,15 @@ const bridge: ArtemisWindowBridge = {
       ipcRenderer.invoke('artemis:library:delete', id),
   },
   documents: {
-    get: (libraryItemId: string): Promise<ArtemisDocumentRecord | null> =>
+    get: (libraryItemId: string): Promise<ArtemisDocumentRecord> =>
       ipcRenderer.invoke('artemis:documents:get', libraryItemId),
     updateContent: (
       libraryItemId: string,
       content: Record<string, unknown>
     ): Promise<ArtemisDocumentRecord> =>
       ipcRenderer.invoke('artemis:documents:updateContent', libraryItemId, content),
+    exportPDF: (defaultTitle?: string): Promise<ExportPdfResult> =>
+      ipcRenderer.invoke('artemis:documents:exportPDF', defaultTitle),
   },
 };
 

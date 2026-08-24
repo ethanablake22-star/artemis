@@ -68,10 +68,10 @@ The universal, local-first file and asset browser subsystem.
 
 ### 3. Artemis Docs (`document`)
 The native structured rich-text document workspace.
-- **TipTap / ProseMirror Engine**: Canonical structured JSON representation with headings (H1-H3), paragraphs, bold, italic, underline, strikethrough, bulleted/numbered lists, text alignment, blockquotes, undo/redo, and keyboard shortcuts.
+- **TipTap / ProseMirror Engine**: Canonical structured JSON representation with headings (H1-H3), paragraphs, bold, italic, underline, strikethrough, highlight, bulleted/numbered lists, text alignment, blockquotes, horizontal rules, links, interactive tables, images, undo/redo, and keyboard shortcuts.
 - **Authoritative Content Store**: Document bodies are stored separately from Library metadata in `userData/artemis_documents_store.json` with revision tracking, lazy initialization validation, and atomic writes.
 - **Race-Safe Autosave & Flush**: Edit generation counter prevents stale status transitions, and tab closure flushes pending edits synchronously.
-- **Interoperability Roadmap**: Future milestones will add tables, images, printing, and DOCX/PDF export.
+- **Business Essentials**: Integrated interactive tables (add/remove rows/cols), embedded images, hyperlinks, print stylesheet (`@media print`), and native PDF export.
 
 ---
 
@@ -79,6 +79,7 @@ The native structured rich-text document workspace.
 
 The Artemis universal tab shell is decoupled from individual view engines. In future milestones, tabs may host diverse engines and environments, including:
 
+- **Automotive Core**: Customer directories, vehicle fleet profiles, repair orders, and service procedures.
 - **Chromium Web Content**: Embedded WebViews / BrowserViews for full web browsing and SaaS integrations.
 - **Artemis React Applications**: Native, high-performance modular React tool suites (Scheduling, Inventory, CRM, Automotive Service Management).
 - **Spreadsheet Editors**: Tabular calculation and ledger workspaces.

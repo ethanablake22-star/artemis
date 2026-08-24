@@ -3,6 +3,13 @@ import { useEditor } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
 import Underline from '@tiptap/extension-underline';
 import TextAlign from '@tiptap/extension-text-align';
+import Link from '@tiptap/extension-link';
+import { Table } from '@tiptap/extension-table';
+import { TableRow } from '@tiptap/extension-table-row';
+import { TableHeader } from '@tiptap/extension-table-header';
+import { TableCell } from '@tiptap/extension-table-cell';
+import Image from '@tiptap/extension-image';
+import Highlight from '@tiptap/extension-highlight';
 import {
   FileText,
   CheckCircle2,
@@ -12,6 +19,8 @@ import {
   Check,
   X,
   Layers,
+  Printer,
+  FileDown,
 } from 'lucide-react';
 import { documentsRepository } from '../../../services/documentStorage';
 import { useLibrary } from '../../../state/LibraryContext';
@@ -93,7 +102,7 @@ export const DocumentTab: React.FC<DocumentTabProps> = ({ libraryItemId }) => {
     [performSave]
   );
 
-  // Initialize TipTap Editor
+  // Initialize TipTap Editor with Business Extensions
   const editor = useEditor({
     extensions: [
       StarterKit.configure({
@@ -104,6 +113,24 @@ export const DocumentTab: React.FC<DocumentTabProps> = ({ libraryItemId }) => {
       Underline,
       TextAlign.configure({
         types: ['heading', 'paragraph'],
+      }),
+      Link.configure({
+        openOnClick: false,
+        autolink: true,
+        defaultProtocol: 'https',
+      }),
+      Table.configure({
+        resizable: true,
+      }),
+      TableRow,
+      TableHeader,
+      TableCell,
+      Image.configure({
+        inline: true,
+        allowBase64: true,
+      }),
+      Highlight.configure({
+        multicolor: true,
       }),
     ],
     content: undefined,
@@ -155,10 +182,9 @@ export const DocumentTab: React.FC<DocumentTabProps> = ({ libraryItemId }) => {
         clearTimeout(saveTimeoutRef.current);
       }
 
-      // If there are unsaved pending edits
       if (editGenerationRef.current > savedGenerationRef.current && pendingContentRef.current) {
         const success = await performSave(pendingContentRef.current, editGenerationRef.current);
-        return success; // Return true to allow close, false to block close and show error
+        return success;
       }
 
       return true;
@@ -188,10 +214,22 @@ export const DocumentTab: React.FC<DocumentTabProps> = ({ libraryItemId }) => {
     setIsEditingTitle(true);
   };
 
+  const handlePrint = () => {
+    window.print();
+  };
+
+  const handleExportPDF = async () => {
+    try {
+      await documentsRepository.exportPDF(documentTitle);
+    } catch (e) {
+      console.error('Export PDF failed:', e);
+    }
+  };
+
   return (
     <div className="flex flex-col h-full w-full bg-artemis-950 overflow-hidden">
-      {/* Top Document Header Bar */}
-      <div className="h-12 bg-artemis-950 border-b border-slate-800 px-5 flex items-center justify-between gap-4 shrink-0 select-none">
+      {/* Top Document Header Bar (Hidden in print) */}
+      <div className="h-12 bg-artemis-950 border-b border-slate-800 px-5 flex items-center justify-between gap-4 shrink-0 select-none print:hidden">
         {/* Document Title & Icon */}
         <div className="flex items-center gap-3 min-w-0">
           <div className="p-1.5 rounded-lg bg-indigo-500/10 border border-indigo-500/20 text-indigo-400 shrink-0">
@@ -239,7 +277,7 @@ export const DocumentTab: React.FC<DocumentTabProps> = ({ libraryItemId }) => {
           )}
         </div>
 
-        {/* Status Indicators: Revision, Autosave state */}
+        {/* Status Indicators: Revision, Autosave state, Quick Actions */}
         <div className="flex items-center gap-4 text-xs shrink-0">
           {documentRecord && (
             <span className="text-[11px] font-mono text-slate-500 flex items-center gap-1">
@@ -272,11 +310,40 @@ export const DocumentTab: React.FC<DocumentTabProps> = ({ libraryItemId }) => {
               </span>
             )}
           </div>
+
+          <div className="w-px h-4 bg-slate-800" />
+
+          {/* Header Quick Buttons for Print & PDF */}
+          <div className="flex items-center gap-1.5">
+            <button
+              type="button"
+              onClick={handlePrint}
+              title="Print Document (Ctrl+P)"
+              className="p-1 rounded text-slate-400 hover:text-slate-200 hover:bg-slate-800 transition-colors"
+            >
+              <Printer className="w-3.5 h-3.5" />
+            </button>
+            <button
+              type="button"
+              onClick={handleExportPDF}
+              title="Export as PDF"
+              className="px-2 py-1 rounded bg-artemis-accent/10 hover:bg-artemis-accent/20 text-artemis-accent border border-artemis-accent/30 text-[11px] font-bold flex items-center gap-1.5 transition-colors"
+            >
+              <FileDown className="w-3 h-3" />
+              Export PDF
+            </button>
+          </div>
         </div>
       </div>
 
-      {/* Editor Formatting Toolbar */}
-      <DocumentToolbar editor={editor} />
+      {/* Editor Formatting Toolbar (Hidden in print) */}
+      <div className="print:hidden">
+        <DocumentToolbar
+          editor={editor}
+          onPrint={handlePrint}
+          onExportPDF={handleExportPDF}
+        />
+      </div>
 
       {/* Loading Overlay / Error Banner / Main Paper Document Canvas */}
       {isLoading ? (

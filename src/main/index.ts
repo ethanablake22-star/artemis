@@ -1,5 +1,6 @@
-import { app, BrowserWindow, ipcMain, shell } from 'electron';
+import { app, BrowserWindow, ipcMain, shell, dialog } from 'electron';
 import path from 'node:path';
+import fs from 'node:fs/promises';
 import { fileURLToPath } from 'node:url';
 import {
   listItems,
@@ -110,6 +111,43 @@ function createWindow() {
 
   ipcMain.handle('artemis:documents:updateContent', async (_event, libraryItemId, content) => {
     return updateDocumentContent(libraryItemId, content);
+  });
+
+  ipcMain.handle('artemis:documents:exportPDF', async (_event, defaultTitle) => {
+    if (!mainWindow) {
+      return { success: false, error: 'Main window not available' };
+    }
+
+    try {
+      const sanitizedName = (defaultTitle || 'document')
+        .replace(/[/\\?%*:|"<>]/g, '-')
+        .trim();
+
+      const { canceled, filePath } = await dialog.showSaveDialog(mainWindow, {
+        title: 'Export Document to PDF',
+        defaultPath: path.join(app.getPath('documents'), `${sanitizedName}.pdf`),
+        filters: [{ name: 'PDF Documents', extensions: ['pdf'] }],
+      });
+
+      if (canceled || !filePath) {
+        return { success: false, canceled: true };
+      }
+
+      const pdfData = await mainWindow.webContents.printToPDF({
+        printBackground: true,
+        pageSize: 'Letter',
+        margins: {
+          marginType: 'default',
+        },
+      });
+
+      await fs.writeFile(filePath, pdfData);
+      return { success: true, filePath };
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : String(err);
+      console.error('Failed to export PDF:', err);
+      return { success: false, error: msg };
+    }
   });
 
   // Open external URLs in the user's default browser

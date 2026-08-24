@@ -1,5 +1,6 @@
 import type {
   ArtemisDocumentRecord,
+  ExportPdfResult,
   IDocumentsStorageRepository,
 } from '@shared/documentTypes';
 
@@ -27,7 +28,7 @@ const DEFAULT_BROWSER_EMPTY_DOC: Record<string, unknown> = {
 export class LocalDocumentsRepository implements IDocumentsStorageRepository {
   private browserDevDocs: ArtemisDocumentRecord[] | null = null;
 
-  async getDocument(libraryItemId: string): Promise<ArtemisDocumentRecord | null> {
+  async getDocument(libraryItemId: string): Promise<ArtemisDocumentRecord> {
     if (isElectronEnvironment()) {
       if (!window.artemisAPI?.documents?.get) {
         throw new Error('Artemis Documents IPC bridge is unavailable in Electron environment.');
@@ -50,6 +51,21 @@ export class LocalDocumentsRepository implements IDocumentsStorageRepository {
     }
 
     return this.browserDevUpdateContent(libraryItemId, content);
+  }
+
+  async exportPDF(defaultTitle?: string): Promise<ExportPdfResult> {
+    if (isElectronEnvironment()) {
+      if (!window.artemisAPI?.documents?.exportPDF) {
+        // Fallback to window.print if exportPDF bridge is not available
+        window.print();
+        return { success: true };
+      }
+      return window.artemisAPI.documents.exportPDF(defaultTitle);
+    }
+
+    // In browser dev mode, trigger native browser print which allows saving to PDF
+    window.print();
+    return { success: true };
   }
 
   // ---------------------------------------------------------------------------

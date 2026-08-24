@@ -18,18 +18,27 @@ export interface ArtemisDocumentsStoreData {
   documents: ArtemisDocumentRecord[];
 }
 
+export interface ExportPdfResult {
+  success: boolean;
+  filePath?: string;
+  canceled?: boolean;
+  error?: string;
+}
+
 export interface DocumentsBridge {
-  get: (libraryItemId: string) => Promise<ArtemisDocumentRecord | null>;
+  get: (libraryItemId: string) => Promise<ArtemisDocumentRecord>;
   updateContent: (
     libraryItemId: string,
     content: Record<string, unknown>
   ) => Promise<ArtemisDocumentRecord>;
+  exportPDF: (defaultTitle?: string) => Promise<ExportPdfResult>;
 }
 
 export interface IDocumentsStorageRepository {
-  getDocument(libraryItemId: string): Promise<ArtemisDocumentRecord | null>;
+  getDocument(libraryItemId: string): Promise<ArtemisDocumentRecord>;
   updateDocumentContent(
     libraryItemId: string,
     content: Record<string, unknown>
   ): Promise<ArtemisDocumentRecord>;
+  exportPDF(defaultTitle?: string): Promise<ExportPdfResult>;
 }

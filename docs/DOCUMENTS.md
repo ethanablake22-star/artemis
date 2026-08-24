@@ -2,13 +2,13 @@
 
 ## Overview
 
-**Artemis Docs** is the native structured rich-text document editing subsystem for the Artemis desktop platform. It provides an intuitive, high-performance workspace for drafting, reading, and maintaining critical company documentation, operating agreements, legal filings, technical specifications, and internal manuals directly inside Artemis universal tabs.
+**Artemis Docs** is the native structured rich-text document editing subsystem for the Artemis desktop platform. It provides an intuitive, high-performance workspace for drafting, reading, and maintaining critical company documentation, operating agreements, legal filings, technical specifications, automotive repair procedures, and internal manuals directly inside Artemis universal tabs.
 
 ---
 
 ## Relationship Between Library & Document Subsystems
 
-In Artemis, **metadata** and **document body content** are deliberately decoupled:
+In Artemis, **metadata** and **document body content** are decoupled:
 
 - **Library Item (`LibraryItem`)**: Stored in `artemis_library_store.json`. Contains item metadata, display name, folder hierarchy parent pointer (`parentId`), timestamps, and soft-deletion state.
 - **Document Content (`ArtemisDocumentRecord`)**: Stored authoritatively in `artemis_documents_store.json`. Contains the structured JSON document body, content schema version, and revision counter.
@@ -21,7 +21,7 @@ In Artemis, **metadata** and **document body content** are deliberately decouple
 ┌────────────────────────────────────────────────────────┐
 │                      Library Item                      │
 │   id: "d-corp-structure-uuid"                          │
-│   name: "Operating Agreement.doc"                      │
+│   name: "Corporate Structure.doc"                      │
 │   type: "document"                                     │
 │   parentId: "f-legal-folder-uuid"                      │
 └───────────────────────────┬────────────────────────────┘
@@ -33,7 +33,7 @@ In Artemis, **metadata** and **document body content** are deliberately decouple
 │   id: "tab-doc-..."                                    │
 │   type: "document"                                     │
 │   resourceId: "d-corp-structure-uuid"                  │
-│   title: "Operating Agreement.doc"                     │
+│   title: "Corporate Structure.doc"                     │
 └───────────────────────────┬────────────────────────────┘
                             │
                loads & autosaves content
@@ -53,9 +53,9 @@ In Artemis, **metadata** and **document body content** are deliberately decouple
 
 ---
 
-## Canonical Structured Content Format
+## Canonical Structured Content Format (TipTap / ProseMirror)
 
-Artemis Docs does **not** use DOCX or raw plain text as its internal canonical format. Instead, it stores a structured JSON document tree (`ProseMirror` / `TipTap` JSON representation).
+Artemis Docs stores a canonical structured JSON document tree (`ProseMirror` / `TipTap` JSON representation) with `contentSchemaVersion: 1`.
 
 ```typescript
 export interface ArtemisDocumentRecord {
@@ -79,26 +79,35 @@ export interface ArtemisDocumentsStoreData {
 }
 ```
 
-### Read-or-Initialize Semantics
-When `artemisAPI.documents.get(libraryItemId)` is called:
-1. The Electron Main process verifies the Library item exists, has `type === 'document'`, and is not deleted.
-2. If a document body record already exists in `artemis_documents_store.json`, it is returned.
-3. If no document body record exists yet, the Main process lazily initializes a default empty structured document with `revision: 1`, persists it atomically to disk, and returns the newly seeded record.
+### Supported Document Elements (Business Essentials V0.0.3.1)
+- **Hierarchy & Text**: Paragraphs, Heading 1, Heading 2, Heading 3.
+- **Character Marks**: Bold (`Ctrl+B`), Italic (`Ctrl+I`), Underline (`Ctrl+U`), Strikethrough, Highlight (`mark`).
+- **Alignment**: Left, Center, Right text alignment.
+- **Lists & Quotes**: Bulleted lists, numbered lists, blockquotes, horizontal dividers (`hr`).
+- **Hyperlinks**: Interactive web links with automatic protocol normalization (`https://`).
+- **Interactive Tables**:
+  - Resizable column tables with header row formatting.
+  - Context operations: Insert 3×3, Add/Delete Row, Add/Delete Column, Toggle Header, Delete Table.
+- **Images**: Local image upload (base64 standalone embedding) and web image URLs.
+- **Print & PDF Export**:
+  - High-fidelity print styles (`@media print`) that strip all application chrome.
+  - Electron native PDF export (`artemisAPI.documents.exportPDF`) via `webContents.printToPDF` and system save dialog.
 
 ---
 
 ## Authoritative Persistence & Narrow IPC
 
-The Electron Main Process is authoritative for loading and mutating document records.
+The Electron Main Process is authoritative for loading, initializing, mutating, and exporting document records.
 
 ### Narrow IPC Operations
-- `artemisAPI.documents.get(libraryItemId)`: Retrieves or initializes the document content record.
+- `artemisAPI.documents.get(libraryItemId)`: Retrieves or lazily initializes the document content record.
 - `artemisAPI.documents.updateContent(libraryItemId, content)`:
   1. Validates `libraryItemId` against authoritative Library records (verifies item exists, is `type: 'document'`, and `isDeleted === false`).
   2. Validates `content` is a non-null object.
   3. Increments `revision` counter.
   4. Updates `updatedAt` timestamp.
   5. Performs an atomic file write via temporary file swap to `app.getPath('userData')/artemis_documents_store.json`.
+- `artemisAPI.documents.exportPDF(defaultTitle)`: Prompts user with save dialog and exports the active document as a standalone PDF.
 
 ---
 
@@ -111,16 +120,7 @@ The Electron Main Process is authoritative for loading and mutating document rec
 
 ---
 
-## Tab Deduplication & Navigation
-
-- **Single Instance per Document**: If a document is already open in an active tab, double-clicking it in the Library or selecting it from launcher focuses the existing tab rather than opening a redundant duplicate.
-- **Closing Document Tabs**: Closing a tab unmounts the editor without affecting the underlying Library item or document content record.
-- **Title Synchronization**: Renaming a document from either the Library or the Docs header bar immediately synchronizes both the Library item record and the open tab title.
-
----
-
 ## Planned Interoperability (Roadmap)
 
-- **Task 003.1**: Tables, images, callout boxes, and links.
-- **Task 003.2**: Page layout modes, header/footer configuration, margins, and print stylesheet.
-- **Task 003.3**: Lossless DOCX import/export engine and high-fidelity PDF rendering.
+- **Task 003.2**: Page layout modes (Letter / A4), custom margin controls, and headers/footers.
+- **Task 003.3**: Lossless DOCX import/export engine.

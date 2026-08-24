@@ -16,17 +16,17 @@ export const DocumentCanvas: React.FC<DocumentCanvasProps> = ({ editor }) => {
 
   return (
     <div
-      className="flex-1 overflow-y-auto bg-artemis-950 py-8 px-4 flex justify-center cursor-text"
+      className="flex-1 overflow-y-auto bg-artemis-950 py-8 px-4 flex justify-center cursor-text print:bg-white print:p-0 print:overflow-visible"
       onClick={() => editor.chain().focus().run()}
     >
       {/* Centered White Page Canvas */}
       <div
-        className="w-full max-w-4xl bg-white text-slate-900 rounded-sm shadow-2xl shadow-black/80 min-h-[950px] px-14 sm:px-20 py-16 transition-shadow"
+        className="w-full max-w-4xl bg-white text-slate-900 rounded-sm shadow-2xl shadow-black/80 min-h-[950px] px-14 sm:px-20 py-16 transition-shadow print:shadow-none print:p-0 print:max-w-none print:min-h-0 print:rounded-none"
         onClick={(e) => e.stopPropagation()}
       >
         <EditorContent
           editor={editor}
-          className="artemis-doc-prose focus:outline-none min-h-[800px]"
+          className="artemis-doc-prose focus:outline-none min-h-[800px] print:min-h-0"
         />
       </div>
     </div>
