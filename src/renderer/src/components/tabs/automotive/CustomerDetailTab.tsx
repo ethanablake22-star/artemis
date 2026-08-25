@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import {
   User,
+  Building2,
   Phone,
   Mail,
   MapPin,
@@ -16,6 +17,8 @@ import {
 import { useAutomotive } from '../../../state/AutomotiveContext';
 import { useTabs } from '../../../state/TabContext';
 import { CreateVehicleModal } from './CreateVehicleModal';
+import type { CustomerType } from '@shared/automotiveTypes';
+import clsx from 'clsx';
 
 interface CustomerDetailTabProps {
   customerId: string;
@@ -37,7 +40,11 @@ export const CustomerDetailTab: React.FC<CustomerDetailTabProps> = ({ customerId
   const vehicles = getCustomerVehicles(customerId);
 
   const [isEditing, setIsEditing] = useState(false);
-  const [name, setName] = useState('');
+  const [type, setType] = useState<CustomerType>(customer?.type || 'individual');
+  const [firstName, setFirstName] = useState('');
+  const [lastName, setLastName] = useState('');
+  const [businessName, setBusinessName] = useState('');
+  const [contactPerson, setContactPerson] = useState('');
   const [phone, setPhone] = useState('');
   const [email, setEmail] = useState('');
   const [address, setAddress] = useState('');
@@ -57,7 +64,11 @@ export const CustomerDetailTab: React.FC<CustomerDetailTabProps> = ({ customerId
   }
 
   const handleStartEdit = () => {
-    setName(customer.name);
+    setType(customer.type || 'individual');
+    setFirstName(customer.firstName || '');
+    setLastName(customer.lastName || '');
+    setBusinessName(customer.businessName || '');
+    setContactPerson(customer.contactPerson || '');
     setPhone(customer.phone || '');
     setEmail(customer.email || '');
     setAddress(customer.address || '');
@@ -66,16 +77,19 @@ export const CustomerDetailTab: React.FC<CustomerDetailTabProps> = ({ customerId
   };
 
   const handleSaveEdit = async () => {
-    if (!name.trim()) return;
     try {
-      await updateCustomer(customer.id, {
-        name: name.trim(),
+      const updated = await updateCustomer(customer.id, {
+        type,
+        firstName: firstName.trim() || undefined,
+        lastName: lastName.trim() || undefined,
+        businessName: businessName.trim() || undefined,
+        contactPerson: contactPerson.trim() || undefined,
         phone: phone.trim() || undefined,
         email: email.trim() || undefined,
         address: address.trim() || undefined,
         notes: notes.trim() || undefined,
       });
-      syncCustomerTitle(customer.id, name.trim());
+      syncCustomerTitle(customer.id, updated.name);
       setIsEditing(false);
     } catch (e) {
       console.error('Failed to update customer:', e);
@@ -85,7 +99,7 @@ export const CustomerDetailTab: React.FC<CustomerDetailTabProps> = ({ customerId
   const handleDelete = async () => {
     if (
       window.confirm(
-        `Are you sure you want to delete customer "${customer.name}" and all associated vehicles?`
+        `Are you sure you want to archive customer "${customer.name}"? (Note: Owned vehicles will remain in the system and will not be deleted).`
       )
     ) {
       await deleteCustomer(customer.id);
@@ -107,19 +121,22 @@ export const CustomerDetailTab: React.FC<CustomerDetailTabProps> = ({ customerId
       <div className="h-14 bg-artemis-950 border-b border-slate-800 px-6 flex items-center justify-between shrink-0">
         <div className="flex items-center gap-3 min-w-0">
           <div className="w-9 h-9 rounded-xl bg-cyan-500/10 border border-cyan-500/20 text-cyan-400 flex items-center justify-center shrink-0">
-            <User className="w-5 h-5" />
+            {customer.type === 'business' ? <Building2 className="w-5 h-5" /> : <User className="w-5 h-5" />}
           </div>
           <div className="min-w-0">
             <div className="flex items-center gap-2">
               <h2 className="text-sm font-bold text-slate-100 truncate">
                 {customer.name}
               </h2>
-              <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-slate-800 text-slate-400 border border-slate-700">
-                Customer Record
+              <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-cyan-950 text-cyan-400 border border-cyan-800 font-bold">
+                {customer.customerNumber}
+              </span>
+              <span className="text-[10px] uppercase tracking-wider px-1.5 py-0.5 rounded bg-slate-800 text-slate-400 border border-slate-700 font-mono">
+                {customer.type}
               </span>
             </div>
             <div className="text-[11px] text-slate-500 flex items-center gap-3 mt-0.5 font-mono">
-              <span>ID: {customer.id.substring(0, 8)}…</span>
+              <span>UUID: {customer.id.substring(0, 8)}…</span>
               <span>•</span>
               <span>Added: {formatDate(customer.createdAt)}</span>
             </div>
@@ -160,7 +177,7 @@ export const CustomerDetailTab: React.FC<CustomerDetailTabProps> = ({ customerId
           <button
             type="button"
             onClick={handleDelete}
-            title="Delete Customer"
+            title="Archive Customer"
             className="p-1.5 rounded-lg text-red-400 hover:bg-red-500/10 border border-red-500/20 transition-colors"
           >
             <Trash2 className="w-3.5 h-3.5" />
@@ -176,20 +193,78 @@ export const CustomerDetailTab: React.FC<CustomerDetailTabProps> = ({ customerId
           <div className="p-4 rounded-xl bg-artemis-900/90 border border-slate-800 space-y-3">
             <h3 className="text-xs font-bold uppercase tracking-wider text-slate-400 flex items-center gap-1.5">
               <Phone className="w-3.5 h-3.5 text-artemis-accent" />
-              Contact Details
+              Contact & Identity
             </h3>
 
             {isEditing ? (
               <div className="space-y-2 text-xs">
-                <div>
-                  <label className="text-[10px] text-slate-500">Name</label>
-                  <input
-                    type="text"
-                    value={name}
-                    onChange={(e) => setName(e.target.value)}
-                    className="w-full bg-artemis-950 border border-slate-700 rounded px-2 py-1 text-slate-200"
-                  />
+                <div className="flex gap-1 p-0.5 bg-artemis-950 rounded border border-slate-800 mb-2">
+                  <button
+                    type="button"
+                    onClick={() => setType('individual')}
+                    className={clsx(
+                      'flex-1 py-1 rounded text-[11px] font-semibold',
+                      type === 'individual' ? 'bg-cyan-500/20 text-cyan-400' : 'text-slate-500'
+                    )}
+                  >
+                    Individual
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setType('business')}
+                    className={clsx(
+                      'flex-1 py-1 rounded text-[11px] font-semibold',
+                      type === 'business' ? 'bg-cyan-500/20 text-cyan-400' : 'text-slate-500'
+                    )}
+                  >
+                    Business
+                  </button>
                 </div>
+
+                {type === 'individual' ? (
+                  <div className="grid grid-cols-2 gap-2">
+                    <div>
+                      <label className="text-[10px] text-slate-500">First Name</label>
+                      <input
+                        type="text"
+                        value={firstName}
+                        onChange={(e) => setFirstName(e.target.value)}
+                        className="w-full bg-artemis-950 border border-slate-700 rounded px-2 py-1 text-slate-200"
+                      />
+                    </div>
+                    <div>
+                      <label className="text-[10px] text-slate-500">Last Name</label>
+                      <input
+                        type="text"
+                        value={lastName}
+                        onChange={(e) => setLastName(e.target.value)}
+                        className="w-full bg-artemis-950 border border-slate-700 rounded px-2 py-1 text-slate-200"
+                      />
+                    </div>
+                  </div>
+                ) : (
+                  <div className="space-y-2">
+                    <div>
+                      <label className="text-[10px] text-slate-500">Business Name</label>
+                      <input
+                        type="text"
+                        value={businessName}
+                        onChange={(e) => setBusinessName(e.target.value)}
+                        className="w-full bg-artemis-950 border border-slate-700 rounded px-2 py-1 text-slate-200"
+                      />
+                    </div>
+                    <div>
+                      <label className="text-[10px] text-slate-500">Contact Person</label>
+                      <input
+                        type="text"
+                        value={contactPerson}
+                        onChange={(e) => setContactPerson(e.target.value)}
+                        className="w-full bg-artemis-950 border border-slate-700 rounded px-2 py-1 text-slate-200"
+                      />
+                    </div>
+                  </div>
+                )}
+
                 <div>
                   <label className="text-[10px] text-slate-500">Phone</label>
                   <input
@@ -208,9 +283,24 @@ export const CustomerDetailTab: React.FC<CustomerDetailTabProps> = ({ customerId
                     className="w-full bg-artemis-950 border border-slate-700 rounded px-2 py-1 text-slate-200"
                   />
                 </div>
+                <div>
+                  <label className="text-[10px] text-slate-500">Address</label>
+                  <input
+                    type="text"
+                    value={address}
+                    onChange={(e) => setAddress(e.target.value)}
+                    className="w-full bg-artemis-950 border border-slate-700 rounded px-2 py-1 text-slate-200"
+                  />
+                </div>
               </div>
             ) : (
               <div className="space-y-2 text-xs">
+                {customer.type === 'business' && customer.contactPerson && (
+                  <div className="flex items-center gap-2.5 text-slate-300">
+                    <User className="w-3.5 h-3.5 text-cyan-400 shrink-0" />
+                    <span>Contact: {customer.contactPerson}</span>
+                  </div>
+                )}
                 <div className="flex items-center gap-2.5 text-slate-300">
                   <Phone className="w-3.5 h-3.5 text-slate-500 shrink-0" />
                   <span>{customer.phone || 'No phone recorded'}</span>
@@ -234,6 +324,10 @@ export const CustomerDetailTab: React.FC<CustomerDetailTabProps> = ({ customerId
               Account Overview
             </h3>
             <div className="space-y-2 text-xs">
+              <div className="flex justify-between py-1 border-b border-slate-800">
+                <span className="text-slate-500">Customer Number</span>
+                <span className="font-mono font-bold text-cyan-400">{customer.customerNumber}</span>
+              </div>
               <div className="flex justify-between py-1 border-b border-slate-800">
                 <span className="text-slate-500">Registered Vehicles</span>
                 <span className="font-bold text-slate-200">{vehicles.length}</span>
@@ -307,49 +401,57 @@ export const CustomerDetailTab: React.FC<CustomerDetailTabProps> = ({ customerId
             </div>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3.5">
-              {vehicles.map((v) => (
-                <div
-                  key={v.id}
-                  onClick={() => openVehicleTab(v.id, `${v.year} ${v.make} ${v.model}`)}
-                  className="group p-4 rounded-xl bg-artemis-900 border border-slate-800 hover:border-artemis-accent/40 cursor-pointer transition-all hover:shadow-lg hover:shadow-cyan-950/20"
-                >
-                  <div className="flex items-start justify-between">
-                    <div className="flex items-center gap-2.5">
-                      <div className="p-2 rounded-lg bg-slate-800 group-hover:bg-cyan-500/10 group-hover:text-cyan-400 text-slate-400 transition-colors">
-                        <Car className="w-4 h-4" />
+              {vehicles.map((v) => {
+                const title = `${v.year ? `${v.year} ` : ''}${v.make} ${v.model}`;
+                return (
+                  <div
+                    key={v.id}
+                    onClick={() => openVehicleTab(v.id, title)}
+                    className="group p-4 rounded-xl bg-artemis-900 border border-slate-800 hover:border-artemis-accent/40 cursor-pointer transition-all hover:shadow-lg hover:shadow-cyan-950/20"
+                  >
+                    <div className="flex items-start justify-between">
+                      <div className="flex items-center gap-2.5">
+                        <div className="p-2 rounded-lg bg-slate-800 group-hover:bg-cyan-500/10 group-hover:text-cyan-400 text-slate-400 transition-colors">
+                          <Car className="w-4 h-4" />
+                        </div>
+                        <div>
+                          <div className="flex items-center gap-1.5">
+                            <span className="text-[9px] font-mono font-bold text-indigo-400">
+                              {v.vehicleNumber}
+                            </span>
+                          </div>
+                          <h4 className="text-xs font-bold text-slate-100 group-hover:text-artemis-accent transition-colors">
+                            {title}
+                          </h4>
+                          {v.trim && (
+                            <span className="text-[11px] text-slate-400 font-mono">
+                              {v.trim}
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                      <ArrowRight className="w-3.5 h-3.5 text-slate-600 group-hover:text-artemis-accent group-hover:translate-x-0.5 transition-all" />
+                    </div>
+
+                    <div className="mt-3 pt-3 border-t border-slate-800/80 grid grid-cols-2 gap-2 text-[11px] font-mono text-slate-400">
+                      <div>
+                        <span className="text-slate-600 block text-[9px] uppercase">License Plate</span>
+                        <span className="text-slate-200 font-bold">{v.licensePlate || '—'}</span>
                       </div>
                       <div>
-                        <h4 className="text-xs font-bold text-slate-100 group-hover:text-artemis-accent transition-colors">
-                          {v.year} {v.make} {v.model}
-                        </h4>
-                        {v.trim && (
-                          <span className="text-[11px] text-slate-400 font-mono">
-                            {v.trim}
-                          </span>
-                        )}
+                        <span className="text-slate-600 block text-[9px] uppercase">Mileage</span>
+                        <span className="text-slate-200">{v.mileage ? `${v.mileage.toLocaleString()} mi` : '—'}</span>
                       </div>
                     </div>
-                    <ArrowRight className="w-3.5 h-3.5 text-slate-600 group-hover:text-artemis-accent group-hover:translate-x-0.5 transition-all" />
-                  </div>
 
-                  <div className="mt-3 pt-3 border-t border-slate-800/80 grid grid-cols-2 gap-2 text-[11px] font-mono text-slate-400">
-                    <div>
-                      <span className="text-slate-600 block text-[9px] uppercase">License Plate</span>
-                      <span className="text-slate-200 font-bold">{v.licensePlate || '—'}</span>
-                    </div>
-                    <div>
-                      <span className="text-slate-600 block text-[9px] uppercase">Mileage</span>
-                      <span className="text-slate-200">{v.mileage ? `${v.mileage.toLocaleString()} mi` : '—'}</span>
-                    </div>
+                    {v.vin && (
+                      <div className="mt-2 text-[10px] font-mono text-slate-500 truncate">
+                        VIN: {v.vin}
+                      </div>
+                    )}
                   </div>
-
-                  {v.vin && (
-                    <div className="mt-2 text-[10px] font-mono text-slate-500 truncate">
-                      VIN: {v.vin}
-                    </div>
-                  )}
-                </div>
-              ))}
+                );
+              })}
             </div>
           )}
         </div>

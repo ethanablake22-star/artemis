@@ -8,6 +8,8 @@ import {
   Phone,
   Mail,
   Sparkles,
+  Building2,
+  User,
 } from 'lucide-react';
 import { useAutomotive } from '../../../state/AutomotiveContext';
 import { useTabs } from '../../../state/TabContext';
@@ -39,8 +41,11 @@ export const AutomotiveHubTab: React.FC = () => {
     const q = searchQuery.toLowerCase().trim();
     return (
       c.name.toLowerCase().includes(q) ||
+      c.customerNumber.toLowerCase().includes(q) ||
       (c.phone && c.phone.toLowerCase().includes(q)) ||
       (c.email && c.email.toLowerCase().includes(q)) ||
+      (c.businessName && c.businessName.toLowerCase().includes(q)) ||
+      (c.contactPerson && c.contactPerson.toLowerCase().includes(q)) ||
       (c.notes && c.notes.toLowerCase().includes(q))
     );
   });
@@ -48,13 +53,15 @@ export const AutomotiveHubTab: React.FC = () => {
   const filteredVehicles = vehicles.filter((v) => {
     if (!searchQuery.trim()) return true;
     const q = searchQuery.toLowerCase().trim();
-    const owner = getCustomerById(v.customerId);
+    const owner = v.customerId ? getCustomerById(v.customerId) : null;
     return (
       v.make.toLowerCase().includes(q) ||
       v.model.toLowerCase().includes(q) ||
-      String(v.year).includes(q) ||
+      v.vehicleNumber.toLowerCase().includes(q) ||
+      (v.year && String(v.year).includes(q)) ||
       (v.vin && v.vin.toLowerCase().includes(q)) ||
       (v.licensePlate && v.licensePlate.toLowerCase().includes(q)) ||
+      (v.engine && v.engine.toLowerCase().includes(q)) ||
       (owner && owner.name.toLowerCase().includes(q))
     );
   });
@@ -72,7 +79,8 @@ export const AutomotiveHubTab: React.FC = () => {
   };
 
   const handleOpenVehicle = (v: VehicleRecord) => {
-    openVehicleTab(v.id, `${v.year} ${v.make} ${v.model}`);
+    const title = `${v.year ? `${v.year} ` : ''}${v.make} ${v.model}`;
+    openVehicleTab(v.id, title);
   };
 
   return (
@@ -88,7 +96,7 @@ export const AutomotiveHubTab: React.FC = () => {
               Automotive Operations
             </h1>
             <p className="text-[11px] text-slate-500 font-mono">
-              Customer Management & Vehicle Fleet Tracking
+              Customer Directory, Fleet Profiles & Work Orders
             </p>
           </div>
         </div>
@@ -106,8 +114,7 @@ export const AutomotiveHubTab: React.FC = () => {
           <button
             type="button"
             onClick={() => setIsCreateVehicleOpen(true)}
-            disabled={customers.length === 0}
-            className="px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 disabled:opacity-40 text-slate-200 border border-slate-700 text-xs font-semibold flex items-center gap-1.5 transition-colors"
+            className="px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 text-xs font-semibold flex items-center gap-1.5 transition-colors"
           >
             <Plus className="w-3.5 h-3.5" />
             New Vehicle
@@ -122,7 +129,7 @@ export const AutomotiveHubTab: React.FC = () => {
           <div className="p-4 rounded-xl bg-artemis-900/90 border border-slate-800 flex items-center justify-between">
             <div>
               <span className="text-[10px] uppercase font-mono text-slate-500 font-bold block">
-                Total Customers
+                Total Accounts
               </span>
               <span className="text-2xl font-bold text-slate-100 mt-0.5 block">
                 {customers.length}
@@ -136,7 +143,7 @@ export const AutomotiveHubTab: React.FC = () => {
           <div className="p-4 rounded-xl bg-artemis-900/90 border border-slate-800 flex items-center justify-between">
             <div>
               <span className="text-[10px] uppercase font-mono text-slate-500 font-bold block">
-                Active Fleet Vehicles
+                Tracked Vehicles
               </span>
               <span className="text-2xl font-bold text-slate-100 mt-0.5 block">
                 {vehicles.length}
@@ -153,7 +160,7 @@ export const AutomotiveHubTab: React.FC = () => {
                 Work Orders (Task 005)
               </span>
               <span className="text-xs font-mono text-slate-400 mt-1 block">
-                Next Milestone Ready
+                Next Subsystem Milestone
               </span>
             </div>
             <div className="p-3 rounded-xl bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
@@ -199,7 +206,11 @@ export const AutomotiveHubTab: React.FC = () => {
             <Search className="w-3.5 h-3.5 text-slate-500 absolute left-3 top-1/2 -translate-y-1/2" />
             <input
               type="text"
-              placeholder={activeSection === 'customers' ? 'Search customers by name, phone...' : 'Search vehicles by make, model, VIN...'}
+              placeholder={
+                activeSection === 'customers'
+                  ? 'Search by name, CUS-#, phone...'
+                  : 'Search by make, model, VEH-#, VIN...'
+              }
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               className="w-full bg-artemis-900 border border-slate-800 rounded-xl pl-9 pr-3 py-1.5 text-xs text-slate-100 placeholder-slate-500 focus:outline-none focus:border-artemis-accent/60"
@@ -215,7 +226,9 @@ export const AutomotiveHubTab: React.FC = () => {
                 <Users className="w-10 h-10 text-slate-600 mb-2" />
                 <h3 className="text-sm font-bold text-slate-300">No Customers Found</h3>
                 <p className="text-xs text-slate-500 mt-1 max-w-sm">
-                  {searchQuery ? 'No customer records match your search filter.' : 'Get started by registering your first customer profile.'}
+                  {searchQuery
+                    ? 'No customer records match your search filter.'
+                    : 'Get started by registering your first customer profile.'}
                 </p>
                 {!searchQuery && (
                   <button
@@ -233,9 +246,10 @@ export const AutomotiveHubTab: React.FC = () => {
                 <table className="w-full text-left text-xs border-collapse">
                   <thead>
                     <tr className="border-b border-slate-800 bg-artemis-950/80 text-slate-400 font-medium">
-                      <th className="py-3 px-4">Customer Name</th>
+                      <th className="py-3 px-4">Account / Number</th>
+                      <th className="py-3 px-4">Type</th>
                       <th className="py-3 px-4">Contact</th>
-                      <th className="py-3 px-4">Vehicles</th>
+                      <th className="py-3 px-4">Fleet</th>
                       <th className="py-3 px-4">Added</th>
                       <th className="py-3 px-4 text-right">Actions</th>
                     </tr>
@@ -252,19 +266,28 @@ export const AutomotiveHubTab: React.FC = () => {
                           <td className="py-3 px-4">
                             <div className="flex items-center gap-3">
                               <div className="w-7 h-7 rounded-lg bg-cyan-500/10 border border-cyan-500/20 text-cyan-400 flex items-center justify-center font-bold text-xs shrink-0">
-                                {customer.name.charAt(0).toUpperCase()}
+                                {customer.type === 'business' ? (
+                                  <Building2 className="w-4 h-4" />
+                                ) : (
+                                  <User className="w-4 h-4" />
+                                )}
                               </div>
                               <div>
+                                <div className="flex items-center gap-1.5">
+                                  <span className="font-mono text-[10px] font-bold text-cyan-400">
+                                    {customer.customerNumber}
+                                  </span>
+                                </div>
                                 <span className="font-bold text-slate-200 group-hover:text-artemis-accent transition-colors block">
                                   {customer.name}
                                 </span>
-                                {customer.notes && (
-                                  <span className="text-[10px] text-slate-500 truncate block max-w-xs">
-                                    {customer.notes}
-                                  </span>
-                                )}
                               </div>
                             </div>
+                          </td>
+                          <td className="py-3 px-4">
+                            <span className="text-[10px] uppercase font-mono px-2 py-0.5 rounded bg-slate-800 text-slate-400 border border-slate-700">
+                              {customer.type}
+                            </span>
                           </td>
                           <td className="py-3 px-4 text-slate-300">
                             <div className="space-y-0.5">
@@ -324,9 +347,11 @@ export const AutomotiveHubTab: React.FC = () => {
                 <Car className="w-10 h-10 text-slate-600 mb-2" />
                 <h3 className="text-sm font-bold text-slate-300">No Vehicles Found</h3>
                 <p className="text-xs text-slate-500 mt-1 max-w-sm">
-                  {searchQuery ? 'No vehicle records match your search filter.' : 'Register your customer vehicles to start tracking specs and history.'}
+                  {searchQuery
+                    ? 'No vehicle records match your search filter.'
+                    : 'Register your vehicles to start tracking specs, mileage, and service records.'}
                 </p>
-                {!searchQuery && customers.length > 0 && (
+                {!searchQuery && (
                   <button
                     type="button"
                     onClick={() => setIsCreateVehicleOpen(true)}
@@ -342,7 +367,7 @@ export const AutomotiveHubTab: React.FC = () => {
                 <table className="w-full text-left text-xs border-collapse">
                   <thead>
                     <tr className="border-b border-slate-800 bg-artemis-950/80 text-slate-400 font-medium">
-                      <th className="py-3 px-4">Vehicle Specs</th>
+                      <th className="py-3 px-4">Vehicle / Number</th>
                       <th className="py-3 px-4">Owner</th>
                       <th className="py-3 px-4">Plate / VIN</th>
                       <th className="py-3 px-4">Mileage</th>
@@ -351,7 +376,8 @@ export const AutomotiveHubTab: React.FC = () => {
                   </thead>
                   <tbody>
                     {filteredVehicles.map((vehicle) => {
-                      const owner = getCustomerById(vehicle.customerId);
+                      const owner = vehicle.customerId ? getCustomerById(vehicle.customerId) : null;
+                      const title = `${vehicle.year ? `${vehicle.year} ` : ''}${vehicle.make} ${vehicle.model}`;
                       return (
                         <tr
                           key={vehicle.id}
@@ -364,8 +390,13 @@ export const AutomotiveHubTab: React.FC = () => {
                                 <Car className="w-4 h-4" />
                               </div>
                               <div>
+                                <div className="flex items-center gap-1.5">
+                                  <span className="font-mono text-[10px] font-bold text-indigo-400">
+                                    {vehicle.vehicleNumber}
+                                  </span>
+                                </div>
                                 <span className="font-bold text-slate-200 group-hover:text-artemis-accent transition-colors block">
-                                  {vehicle.year} {vehicle.make} {vehicle.model}
+                                  {title}
                                 </span>
                                 {vehicle.trim && (
                                   <span className="text-[10px] text-slate-400 font-mono">
@@ -377,18 +408,25 @@ export const AutomotiveHubTab: React.FC = () => {
                           </td>
                           <td className="py-3 px-4 text-slate-300">
                             {owner ? (
-                              <button
-                                type="button"
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  handleOpenCustomer(owner);
-                                }}
-                                className="text-xs font-semibold text-cyan-400 hover:underline"
-                              >
-                                {owner.name}
-                              </button>
+                              <div className="flex items-center gap-1.5">
+                                <button
+                                  type="button"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    handleOpenCustomer(owner);
+                                  }}
+                                  className="text-xs font-semibold text-cyan-400 hover:underline"
+                                >
+                                  {owner.name}
+                                </button>
+                                {owner.isDeleted && (
+                                  <span className="text-[9px] px-1 py-0.2 rounded bg-amber-500/10 text-amber-400 border border-amber-500/20">
+                                    Archived
+                                  </span>
+                                )}
+                              </div>
                             ) : (
-                              <span className="text-slate-600 italic">Unknown</span>
+                              <span className="text-slate-500 italic text-[11px]">Unassigned</span>
                             )}
                           </td>
                           <td className="py-3 px-4 font-mono text-[11px] text-slate-300">
@@ -400,7 +438,9 @@ export const AutomotiveHubTab: React.FC = () => {
                             )}
                           </td>
                           <td className="py-3 px-4 font-mono text-[11px] text-slate-300">
-                            {vehicle.mileage ? `${vehicle.mileage.toLocaleString()} mi` : '—'}
+                            {vehicle.mileage !== undefined
+                              ? `${vehicle.mileage.toLocaleString()} mi`
+                              : '—'}
                           </td>
                           <td className="py-3 px-4 text-right">
                             <button
@@ -442,7 +482,8 @@ export const AutomotiveHubTab: React.FC = () => {
         onClose={() => setIsCreateVehicleOpen(false)}
         onSubmit={async (opts) => {
           const created = await createVehicle(opts);
-          openVehicleTab(created.id, `${created.year} ${created.make} ${created.model}`);
+          const title = `${created.year ? `${created.year} ` : ''}${created.make} ${created.model}`;
+          openVehicleTab(created.id, title);
         }}
       />
     </div>

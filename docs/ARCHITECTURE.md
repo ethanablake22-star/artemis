@@ -77,12 +77,16 @@ The native structured rich-text document workspace.
 
 ### 4. Artemis Automotive (`automotive`, `automotive-customer`, `automotive-vehicle`)
 The business management foundation for customer directories and vehicle fleet tracking.
-- **Authoritative Main Storage**: Customers and Vehicles stored in `userData/artemis_automotive_store.json` with atomic file writes and schema validation.
+- **Authoritative Main Storage (Schema V2)**: Customers and Vehicles stored in `userData/artemis_automotive_store.json` with atomic file writes and schema validation.
+- **Human-Facing Non-Reusable Identifiers**: Monotonic sequential numbers generated in Main (`CUS-000001`, `VEH-000001`). Numbers are never reused even if records are deleted.
+- **Individual & Business Accounts**: Support for individual names (`firstName`, `lastName`) and business accounts (`businessName`, `contactPerson`) with Main-synchronized display `name`.
+- **Powertrain Specification Separation**: Distinct optional fields for `engine`, `transmission`, and `drivetrain`.
+- **Global VIN Uniqueness**: Normalized uppercase VIN uniqueness enforced across all vehicles, including archived/soft-deleted records.
+- **Independent Vehicle Lifecycle**: Deleting a customer marks the customer as deleted without cascading to vehicles. Vehicles remain active, preserve ownership relations, and can be reassigned.
 - **First-Class Universal Tabs**:
   - `Automotive Hub`: Overview statistics, search across customers and vehicles, directory views.
   - `Customer Tab`: Contact profile, customer notes, and assigned vehicle fleet list with cross-tab links.
-  - `Vehicle Tab`: VIN, specs, license plate, mileage tracker, and linked owner card.
-- **Cascading Soft-Deletion**: Deleting a customer soft-deletes the customer and cascades soft-delete to all their vehicles.
+  - `Vehicle Tab`: VIN, specs, license plate, mileage tracker, powertrain specs, and linked owner card (with archived indicator if owner is deleted).
 
 ---
 

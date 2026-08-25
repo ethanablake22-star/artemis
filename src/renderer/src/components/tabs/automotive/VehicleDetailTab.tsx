@@ -8,6 +8,8 @@ import {
   Trash2,
   Check,
   ExternalLink,
+  Cpu,
+  UserX,
 } from 'lucide-react';
 import { useAutomotive } from '../../../state/AutomotiveContext';
 import { useTabs } from '../../../state/TabContext';
@@ -18,6 +20,7 @@ interface VehicleDetailTabProps {
 
 export const VehicleDetailTab: React.FC<VehicleDetailTabProps> = ({ vehicleId }) => {
   const {
+    customers,
     getVehicleById,
     getCustomerById,
     updateVehicle,
@@ -27,18 +30,23 @@ export const VehicleDetailTab: React.FC<VehicleDetailTabProps> = ({ vehicleId })
   const { openCustomerTab, closeTab, syncVehicleTitle, activeTabId } = useTabs();
 
   const vehicle = getVehicleById(vehicleId);
-  const owner = vehicle ? getCustomerById(vehicle.customerId) : undefined;
+  const owner = vehicle?.customerId ? getCustomerById(vehicle.customerId) : null;
 
   const [isEditing, setIsEditing] = useState(false);
-  const [year, setYear] = useState<number>(vehicle?.year || 2026);
+  const [customerId, setCustomerId] = useState<string>(vehicle?.customerId || '');
+  const [year, setYear] = useState<string>(vehicle?.year ? vehicle.year.toString() : '');
   const [make, setMake] = useState(vehicle?.make || '');
   const [model, setModel] = useState(vehicle?.model || '');
   const [trim, setTrim] = useState(vehicle?.trim || '');
+  const [engine, setEngine] = useState(vehicle?.engine || '');
+  const [transmission, setTransmission] = useState(vehicle?.transmission || '');
+  const [drivetrain, setDrivetrain] = useState(vehicle?.drivetrain || 'RWD');
   const [vin, setVin] = useState(vehicle?.vin || '');
   const [licensePlate, setLicensePlate] = useState(vehicle?.licensePlate || '');
   const [mileage, setMileage] = useState<string>(vehicle?.mileage?.toString() || '');
   const [color, setColor] = useState(vehicle?.color || '');
   const [notes, setNotes] = useState(vehicle?.notes || '');
+  const [error, setError] = useState<string | null>(null);
 
   if (!vehicle) {
     return (
@@ -53,41 +61,65 @@ export const VehicleDetailTab: React.FC<VehicleDetailTabProps> = ({ vehicleId })
   }
 
   const handleStartEdit = () => {
-    setYear(vehicle.year);
+    setCustomerId(vehicle.customerId || '');
+    setYear(vehicle.year ? vehicle.year.toString() : '');
     setMake(vehicle.make);
     setModel(vehicle.model);
     setTrim(vehicle.trim || '');
+    setEngine(vehicle.engine || '');
+    setTransmission(vehicle.transmission || '');
+    setDrivetrain(vehicle.drivetrain || 'RWD');
     setVin(vehicle.vin || '');
     setLicensePlate(vehicle.licensePlate || '');
-    setMileage(vehicle.mileage ? vehicle.mileage.toString() : '');
+    setMileage(vehicle.mileage !== undefined ? vehicle.mileage.toString() : '');
     setColor(vehicle.color || '');
     setNotes(vehicle.notes || '');
+    setError(null);
     setIsEditing(true);
   };
 
   const handleSaveEdit = async () => {
     if (!make.trim() || !model.trim()) return;
+
+    let parsedYear: number | undefined = undefined;
+    if (year.trim()) {
+      parsedYear = parseInt(year, 10);
+      if (isNaN(parsedYear) || parsedYear < 1900 || parsedYear > 2100) {
+        setError('Vehicle year must be between 1900 and 2100');
+        return;
+      }
+    }
+
+    setError(null);
     try {
-      await updateVehicle(vehicle.id, {
-        year,
+      const updated = await updateVehicle(vehicle.id, {
+        customerId: customerId ? customerId : null,
+        year: parsedYear,
         make: make.trim(),
         model: model.trim(),
         trim: trim.trim() || undefined,
-        vin: vin.trim().toUpperCase() || undefined,
-        licensePlate: licensePlate.trim().toUpperCase() || undefined,
+        engine: engine.trim() || undefined,
+        transmission: transmission.trim() || undefined,
+        drivetrain: drivetrain.trim() || undefined,
+        vin: vin.trim() ? vin.trim().toUpperCase() : undefined,
+        licensePlate: licensePlate.trim() ? licensePlate.trim().toUpperCase() : undefined,
         mileage: mileage ? parseInt(mileage, 10) : undefined,
         color: color.trim() || undefined,
         notes: notes.trim() || undefined,
       });
-      syncVehicleTitle(vehicle.id, `${year} ${make.trim()} ${model.trim()}`);
+      syncVehicleTitle(
+        vehicle.id,
+        `${updated.year ? `${updated.year} ` : ''}${updated.make} ${updated.model}`
+      );
       setIsEditing(false);
-    } catch (e) {
-      console.error('Failed to update vehicle:', e);
+    } catch (e: unknown) {
+      setError(e instanceof Error ? e.message : String(e));
     }
   };
 
   const handleDelete = async () => {
-    if (window.confirm(`Are you sure you want to delete this ${vehicle.year} ${vehicle.make} ${vehicle.model}?`)) {
+    const title = `${vehicle.year ? `${vehicle.year} ` : ''}${vehicle.make} ${vehicle.model}`;
+    if (window.confirm(`Are you sure you want to archive ${title}?`)) {
       await deleteVehicle(vehicle.id);
       closeTab(activeTabId);
     }
@@ -101,6 +133,8 @@ export const VehicleDetailTab: React.FC<VehicleDetailTabProps> = ({ vehicleId })
     });
   };
 
+  const vehicleTitle = `${vehicle.year ? `${vehicle.year} ` : ''}${vehicle.make} ${vehicle.model}`;
+
   return (
     <div className="h-full w-full bg-artemis-950 flex flex-col overflow-hidden text-slate-100 select-none">
       {/* Top Header Bar */}
@@ -112,8 +146,11 @@ export const VehicleDetailTab: React.FC<VehicleDetailTabProps> = ({ vehicleId })
           <div className="min-w-0">
             <div className="flex items-center gap-2">
               <h2 className="text-sm font-bold text-slate-100 truncate">
-                {vehicle.year} {vehicle.make} {vehicle.model}
+                {vehicleTitle}
               </h2>
+              <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-indigo-950 text-indigo-400 border border-indigo-800 font-bold">
+                {vehicle.vehicleNumber}
+              </span>
               {vehicle.trim && (
                 <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-slate-800 text-slate-400 border border-slate-700">
                   {vehicle.trim}
@@ -121,7 +158,7 @@ export const VehicleDetailTab: React.FC<VehicleDetailTabProps> = ({ vehicleId })
               )}
             </div>
             <div className="text-[11px] text-slate-500 flex items-center gap-3 mt-0.5 font-mono">
-              <span>VIN: {vehicle.vin || 'Not specified'}</span>
+              <span>VIN: {vehicle.vin || 'None'}</span>
               <span>•</span>
               <span>Plate: {vehicle.licensePlate || '—'}</span>
             </div>
@@ -162,13 +199,19 @@ export const VehicleDetailTab: React.FC<VehicleDetailTabProps> = ({ vehicleId })
           <button
             type="button"
             onClick={handleDelete}
-            title="Delete Vehicle"
+            title="Archive Vehicle"
             className="p-1.5 rounded-lg text-red-400 hover:bg-red-500/10 border border-red-500/20 transition-colors"
           >
             <Trash2 className="w-3.5 h-3.5" />
           </button>
         </div>
       </div>
+
+      {error && (
+        <div className="mx-6 mt-4 p-3 rounded-lg bg-red-500/10 border border-red-500/30 text-red-400 text-xs">
+          {error}
+        </div>
+      )}
 
       {/* Main Content Area */}
       <div className="flex-1 overflow-y-auto p-6 space-y-6 max-w-6xl w-full mx-auto">
@@ -180,23 +223,50 @@ export const VehicleDetailTab: React.FC<VehicleDetailTabProps> = ({ vehicleId })
               Registered Owner
             </h3>
 
-            {owner ? (
+            {isEditing ? (
+              <div className="space-y-1 text-xs">
+                <label className="text-[10px] text-slate-500">Reassign Owner</label>
+                <select
+                  value={customerId}
+                  onChange={(e) => setCustomerId(e.target.value)}
+                  className="w-full bg-artemis-950 border border-slate-700 rounded px-2 py-1.5 text-slate-200 text-xs"
+                >
+                  <option value="">— Unassigned / Shop Vehicle —</option>
+                  {customers.map((c) => (
+                    <option key={c.id} value={c.id}>
+                      {c.customerNumber} • {c.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            ) : owner ? (
               <div
                 onClick={() => openCustomerTab(owner.id, owner.name)}
                 className="p-3.5 rounded-xl bg-artemis-950/80 border border-slate-800 hover:border-artemis-accent/40 cursor-pointer group transition-all"
               >
                 <div className="flex items-center justify-between">
-                  <div className="font-bold text-xs text-slate-100 group-hover:text-artemis-accent transition-colors">
-                    {owner.name}
+                  <div className="flex items-center gap-2">
+                    <span className="font-bold text-xs text-slate-100 group-hover:text-artemis-accent transition-colors">
+                      {owner.name}
+                    </span>
+                    {owner.isDeleted && (
+                      <span className="text-[9px] px-1.5 py-0.5 rounded bg-amber-500/10 text-amber-400 border border-amber-500/20 font-mono">
+                        Archived Owner
+                      </span>
+                    )}
                   </div>
                   <ExternalLink className="w-3.5 h-3.5 text-slate-600 group-hover:text-artemis-accent transition-colors" />
                 </div>
                 <div className="text-[11px] text-slate-400 mt-1 font-mono">
-                  {owner.phone || owner.email || 'View Profile'}
+                  {owner.customerNumber} • {owner.phone || owner.email || 'View Profile'}
                 </div>
               </div>
             ) : (
-              <div className="text-xs text-slate-500 italic">No owner information</div>
+              <div className="p-3 rounded-xl bg-artemis-950/40 border border-slate-800/80 text-center space-y-1">
+                <UserX className="w-5 h-5 text-slate-600 mx-auto" />
+                <div className="text-xs font-semibold text-slate-400">Unassigned / Shop Vehicle</div>
+                <div className="text-[10px] text-slate-600">No customer account currently linked.</div>
+              </div>
             )}
           </div>
 
@@ -214,12 +284,13 @@ export const VehicleDetailTab: React.FC<VehicleDetailTabProps> = ({ vehicleId })
                   <input
                     type="number"
                     value={year}
-                    onChange={(e) => setYear(parseInt(e.target.value, 10))}
+                    placeholder="Optional"
+                    onChange={(e) => setYear(e.target.value)}
                     className="w-full bg-artemis-950 border border-slate-700 rounded px-2 py-1 text-slate-200"
                   />
                 </div>
                 <div>
-                  <label className="text-[10px] text-slate-500">Make</label>
+                  <label className="text-[10px] text-slate-500">Make *</label>
                   <input
                     type="text"
                     value={make}
@@ -228,7 +299,7 @@ export const VehicleDetailTab: React.FC<VehicleDetailTabProps> = ({ vehicleId })
                   />
                 </div>
                 <div>
-                  <label className="text-[10px] text-slate-500">Model</label>
+                  <label className="text-[10px] text-slate-500">Model *</label>
                   <input
                     type="text"
                     value={model}
@@ -264,7 +335,7 @@ export const VehicleDetailTab: React.FC<VehicleDetailTabProps> = ({ vehicleId })
                   />
                 </div>
                 <div className="col-span-3">
-                  <label className="text-[10px] text-slate-500">VIN</label>
+                  <label className="text-[10px] text-slate-500">VIN (Globally Unique)</label>
                   <input
                     type="text"
                     value={vin}
@@ -278,7 +349,7 @@ export const VehicleDetailTab: React.FC<VehicleDetailTabProps> = ({ vehicleId })
                 <div className="p-3 rounded-lg bg-artemis-950/60 border border-slate-800/80">
                   <span className="text-[10px] uppercase font-mono text-slate-500 block">Odometer</span>
                   <span className="text-sm font-bold text-slate-100 font-mono">
-                    {vehicle.mileage ? `${vehicle.mileage.toLocaleString()} mi` : '—'}
+                    {vehicle.mileage !== undefined ? `${vehicle.mileage.toLocaleString()} mi` : '—'}
                   </span>
                 </div>
 
@@ -307,11 +378,79 @@ export const VehicleDetailTab: React.FC<VehicleDetailTabProps> = ({ vehicleId })
           </div>
         </div>
 
-        {/* Notes & Powertrain Details */}
+        {/* Dedicated Powertrain Specifications */}
+        <div className="p-5 rounded-xl bg-artemis-900/90 border border-slate-800 space-y-3">
+          <h3 className="text-xs font-bold uppercase tracking-wider text-slate-400 flex items-center gap-1.5">
+            <Cpu className="w-3.5 h-3.5 text-artemis-accent" />
+            Powertrain Configuration
+          </h3>
+
+          {isEditing ? (
+            <div className="grid grid-cols-3 gap-3 text-xs">
+              <div>
+                <label className="text-[10px] text-slate-500">Engine</label>
+                <input
+                  type="text"
+                  placeholder="e.g. 5.0L V8 M113"
+                  value={engine}
+                  onChange={(e) => setEngine(e.target.value)}
+                  className="w-full bg-artemis-950 border border-slate-700 rounded px-2 py-1 text-slate-200"
+                />
+              </div>
+              <div>
+                <label className="text-[10px] text-slate-500">Transmission</label>
+                <input
+                  type="text"
+                  placeholder="e.g. 722.9 7-Speed"
+                  value={transmission}
+                  onChange={(e) => setTransmission(e.target.value)}
+                  className="w-full bg-artemis-950 border border-slate-700 rounded px-2 py-1 text-slate-200"
+                />
+              </div>
+              <div>
+                <label className="text-[10px] text-slate-500">Drivetrain</label>
+                <select
+                  value={drivetrain}
+                  onChange={(e) => setDrivetrain(e.target.value)}
+                  className="w-full bg-artemis-950 border border-slate-700 rounded px-2 py-1 text-slate-200"
+                >
+                  <option value="RWD">RWD</option>
+                  <option value="AWD">AWD</option>
+                  <option value="4WD">4WD</option>
+                  <option value="FWD">FWD</option>
+                  <option value="EV">EV / Dual Motor</option>
+                </select>
+              </div>
+            </div>
+          ) : (
+            <div className="grid grid-cols-3 gap-4 text-xs">
+              <div className="p-3 rounded-lg bg-artemis-950/60 border border-slate-800/80">
+                <span className="text-[10px] uppercase font-mono text-slate-500 block">Engine</span>
+                <span className="text-xs font-semibold text-slate-200">
+                  {vehicle.engine || 'Not specified'}
+                </span>
+              </div>
+              <div className="p-3 rounded-lg bg-artemis-950/60 border border-slate-800/80">
+                <span className="text-[10px] uppercase font-mono text-slate-500 block">Transmission</span>
+                <span className="text-xs font-semibold text-slate-200">
+                  {vehicle.transmission || 'Not specified'}
+                </span>
+              </div>
+              <div className="p-3 rounded-lg bg-artemis-950/60 border border-slate-800/80">
+                <span className="text-[10px] uppercase font-mono text-slate-500 block">Drivetrain</span>
+                <span className="text-xs font-semibold text-cyan-400 font-mono">
+                  {vehicle.drivetrain || 'RWD'}
+                </span>
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* General Vehicle Notes */}
         <div className="p-5 rounded-xl bg-artemis-900/90 border border-slate-800 space-y-3">
           <h3 className="text-xs font-bold uppercase tracking-wider text-slate-400 flex items-center gap-1.5">
             <FileText className="w-3.5 h-3.5 text-artemis-accent" />
-            Powertrain, Options & Service Notes
+            General Vehicle Notes
           </h3>
           {isEditing ? (
             <textarea
@@ -322,7 +461,7 @@ export const VehicleDetailTab: React.FC<VehicleDetailTabProps> = ({ vehicleId })
             />
           ) : (
             <p className="text-xs text-slate-300 leading-relaxed">
-              {vehicle.notes || 'No powertrain specifications or vehicle notes recorded.'}
+              {vehicle.notes || 'No vehicle notes recorded.'}
             </p>
           )}
         </div>

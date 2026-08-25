@@ -14,7 +14,7 @@ import type {
   ListVehiclesFilter,
 } from '../shared/automotiveTypes';
 
-export const CURRENT_AUTOMOTIVE_SCHEMA_VERSION = 1;
+export const CURRENT_AUTOMOTIVE_SCHEMA_VERSION = 2;
 const AUTOMOTIVE_STORE_FILENAME = 'artemis_automotive_store.json';
 
 export class UnsupportedAutomotiveSchemaVersionError extends Error {
@@ -29,10 +29,43 @@ function getAutomotiveStoreFilePath(): string {
   return path.join(userDataPath, AUTOMOTIVE_STORE_FILENAME);
 }
 
+function formatCustomerNumber(seq: number): string {
+  return `CUS-${String(seq).padStart(6, '0')}`;
+}
+
+function formatVehicleNumber(seq: number): string {
+  return `VEH-${String(seq).padStart(6, '0')}`;
+}
+
+function deriveCustomerName(
+  type: 'individual' | 'business',
+  options: {
+    name?: string;
+    firstName?: string;
+    lastName?: string;
+    businessName?: string;
+  }
+): string {
+  if (type === 'individual') {
+    const parts = [options.firstName?.trim(), options.lastName?.trim()].filter(Boolean);
+    if (parts.length > 0) {
+      return parts.join(' ');
+    }
+  } else if (type === 'business') {
+    if (options.businessName?.trim()) {
+      return options.businessName.trim();
+    }
+  }
+
+  return options.name?.trim() || '';
+}
+
 function validateAndMigrateAutomotiveStore(raw: unknown): ArtemisAutomotiveStoreData {
   if (!raw || typeof raw !== 'object') {
     return {
-      schemaVersion: 1,
+      schemaVersion: 2,
+      nextCustomerSequence: 1,
+      nextVehicleSequence: 1,
       customers: [],
       vehicles: [],
     };
@@ -43,18 +76,101 @@ function validateAndMigrateAutomotiveStore(raw: unknown): ArtemisAutomotiveStore
 
   switch (version) {
     case 1: {
+      // Deterministic migration from Schema 1 -> Schema 2
+      const rawCustomers = Array.isArray(obj.customers)
+        ? (obj.customers as Record<string, unknown>[])
+        : [];
+      const rawVehicles = Array.isArray(obj.vehicles)
+        ? (obj.vehicles as Record<string, unknown>[])
+        : [];
+
+      // Sort existing records deterministically: createdAt ascending, id as tie-breaker
+      const sortedCustomers = [...rawCustomers].sort((a, b) => {
+        const timeDiff = ((a.createdAt as number) || 0) - ((b.createdAt as number) || 0);
+        if (timeDiff !== 0) return timeDiff;
+        return String(a.id || '').localeCompare(String(b.id || ''));
+      });
+
+      const migratedCustomers: CustomerRecord[] = sortedCustomers.map((c, index) => {
+        const seq = index + 1;
+        const name = String(c.name || 'Unnamed Customer').trim();
+        return {
+          id: String(c.id || crypto.randomUUID()),
+          customerNumber: formatCustomerNumber(seq),
+          type: 'individual',
+          name,
+          phone: c.phone ? String(c.phone).trim() : undefined,
+          email: c.email ? String(c.email).trim() : undefined,
+          address: c.address ? String(c.address).trim() : undefined,
+          notes: c.notes ? String(c.notes).trim() : undefined,
+          createdAt: typeof c.createdAt === 'number' ? c.createdAt : Date.now(),
+          updatedAt: typeof c.updatedAt === 'number' ? c.updatedAt : Date.now(),
+          isDeleted: Boolean(c.isDeleted),
+        };
+      });
+
+      const sortedVehicles = [...rawVehicles].sort((a, b) => {
+        const timeDiff = ((a.createdAt as number) || 0) - ((b.createdAt as number) || 0);
+        if (timeDiff !== 0) return timeDiff;
+        return String(a.id || '').localeCompare(String(b.id || ''));
+      });
+
+      const migratedVehicles: VehicleRecord[] = sortedVehicles.map((v, index) => {
+        const seq = index + 1;
+        const vin = v.vin ? String(v.vin).trim().toUpperCase() : undefined;
+        return {
+          id: String(v.id || crypto.randomUUID()),
+          vehicleNumber: formatVehicleNumber(seq),
+          customerId: v.customerId ? String(v.customerId) : null,
+          year: typeof v.year === 'number' ? v.year : undefined,
+          make: String(v.make || 'Unknown Make').trim(),
+          model: String(v.model || 'Unknown Model').trim(),
+          trim: v.trim ? String(v.trim).trim() : undefined,
+          vin,
+          licensePlate: v.licensePlate ? String(v.licensePlate).trim().toUpperCase() : undefined,
+          mileage: typeof v.mileage === 'number' ? v.mileage : undefined,
+          color: v.color ? String(v.color).trim() : undefined,
+          notes: v.notes ? String(v.notes).trim() : undefined,
+          createdAt: typeof v.createdAt === 'number' ? v.createdAt : Date.now(),
+          updatedAt: typeof v.updatedAt === 'number' ? v.updatedAt : Date.now(),
+          isDeleted: Boolean(v.isDeleted),
+        };
+      });
+
+      return {
+        schemaVersion: 2,
+        nextCustomerSequence: migratedCustomers.length + 1,
+        nextVehicleSequence: migratedVehicles.length + 1,
+        customers: migratedCustomers,
+        vehicles: migratedVehicles,
+      };
+    }
+
+    case 2: {
       const customers = Array.isArray(obj.customers)
         ? (obj.customers as CustomerRecord[])
         : [];
       const vehicles = Array.isArray(obj.vehicles)
         ? (obj.vehicles as VehicleRecord[])
         : [];
+      const nextCustomerSequence =
+        typeof obj.nextCustomerSequence === 'number'
+          ? obj.nextCustomerSequence
+          : customers.length + 1;
+      const nextVehicleSequence =
+        typeof obj.nextVehicleSequence === 'number'
+          ? obj.nextVehicleSequence
+          : vehicles.length + 1;
+
       return {
-        schemaVersion: 1,
+        schemaVersion: 2,
+        nextCustomerSequence,
+        nextVehicleSequence,
         customers,
         vehicles,
       };
     }
+
     default: {
       throw new UnsupportedAutomotiveSchemaVersionError(version);
     }
@@ -81,7 +197,9 @@ async function readAutomotiveStoreFile(): Promise<ArtemisAutomotiveStoreData> {
       throw err;
     }
     const initialStore: ArtemisAutomotiveStoreData = {
-      schemaVersion: 1,
+      schemaVersion: 2,
+      nextCustomerSequence: 1,
+      nextVehicleSequence: 1,
       customers: [],
       vehicles: [],
     };
@@ -122,13 +240,20 @@ export async function listCustomers(filter?: ListCustomersFilter): Promise<Custo
     results = results.filter((c) => !c.isDeleted);
   }
 
+  if (filter?.type) {
+    results = results.filter((c) => c.type === filter.type);
+  }
+
   if (filter?.query && filter.query.trim()) {
     const q = filter.query.toLowerCase().trim();
     results = results.filter(
       (c) =>
         c.name.toLowerCase().includes(q) ||
+        c.customerNumber.toLowerCase().includes(q) ||
         (c.phone && c.phone.toLowerCase().includes(q)) ||
         (c.email && c.email.toLowerCase().includes(q)) ||
+        (c.businessName && c.businessName.toLowerCase().includes(q)) ||
+        (c.contactPerson && c.contactPerson.toLowerCase().includes(q)) ||
         (c.notes && c.notes.toLowerCase().includes(q))
     );
   }
@@ -147,17 +272,31 @@ export async function getCustomer(id: string): Promise<CustomerRecord | null> {
 }
 
 export async function createCustomer(options: CreateCustomerOptions): Promise<CustomerRecord> {
-  const name = options.name?.trim();
+  const type = options.type || 'individual';
+  const name = deriveCustomerName(type, options);
+
   if (!name) {
-    throw new Error('Customer name cannot be empty');
+    throw new Error(
+      type === 'business'
+        ? 'Business name is required'
+        : 'Customer name or first/last name is required'
+    );
   }
 
   const store = await readAutomotiveStoreFile();
+  const seq = store.nextCustomerSequence++;
+  const customerNumber = formatCustomerNumber(seq);
   const now = Date.now();
 
   const newCustomer: CustomerRecord = {
     id: crypto.randomUUID(),
+    customerNumber,
+    type,
     name,
+    firstName: options.firstName?.trim() || undefined,
+    lastName: options.lastName?.trim() || undefined,
+    businessName: options.businessName?.trim() || undefined,
+    contactPerson: options.contactPerson?.trim() || undefined,
     phone: options.phone?.trim() || undefined,
     email: options.email?.trim() || undefined,
     address: options.address?.trim() || undefined,
@@ -191,13 +330,24 @@ export async function updateCustomer(
     throw new Error(`Cannot update customer "${id}": record is deleted`);
   }
 
-  if (updates.name !== undefined) {
-    const trimmed = updates.name.trim();
-    if (!trimmed) {
-      throw new Error('Customer name cannot be empty');
-    }
-    customer.name = trimmed;
+  if (updates.type !== undefined) customer.type = updates.type;
+  if (updates.firstName !== undefined) customer.firstName = updates.firstName.trim() || undefined;
+  if (updates.lastName !== undefined) customer.lastName = updates.lastName.trim() || undefined;
+  if (updates.businessName !== undefined) customer.businessName = updates.businessName.trim() || undefined;
+  if (updates.contactPerson !== undefined) customer.contactPerson = updates.contactPerson.trim() || undefined;
+
+  // Authoritatively derive / synchronize display name
+  const updatedName = deriveCustomerName(customer.type, {
+    name: updates.name,
+    firstName: customer.firstName,
+    lastName: customer.lastName,
+    businessName: customer.businessName,
+  });
+
+  if (!updatedName) {
+    throw new Error('Customer name cannot be empty');
   }
+  customer.name = updatedName;
 
   if (updates.phone !== undefined) customer.phone = updates.phone.trim() || undefined;
   if (updates.email !== undefined) customer.email = updates.email.trim() || undefined;
@@ -225,14 +375,7 @@ export async function deleteCustomer(id: string): Promise<boolean> {
   customer.isDeleted = true;
   customer.updatedAt = now;
 
-  // Cascade soft-deletion to customer's vehicles
-  for (const v of store.vehicles) {
-    if (v.customerId === id) {
-      v.isDeleted = true;
-      v.updatedAt = now;
-    }
-  }
-
+  // V0.0.4.1 Invariant: Do NOT delete associated vehicles. Vehicles remain active.
   await writeAutomotiveStoreFile(store);
   return true;
 }
@@ -249,7 +392,7 @@ export async function listVehicles(filter?: ListVehiclesFilter): Promise<Vehicle
     results = results.filter((v) => !v.isDeleted);
   }
 
-  if (filter?.customerId) {
+  if (filter?.customerId !== undefined) {
     results = results.filter((v) => v.customerId === filter.customerId);
   }
 
@@ -259,10 +402,14 @@ export async function listVehicles(filter?: ListVehiclesFilter): Promise<Vehicle
       (v) =>
         v.make.toLowerCase().includes(q) ||
         v.model.toLowerCase().includes(q) ||
-        String(v.year).includes(q) ||
+        v.vehicleNumber.toLowerCase().includes(q) ||
+        (v.year && String(v.year).includes(q)) ||
         (v.vin && v.vin.toLowerCase().includes(q)) ||
         (v.licensePlate && v.licensePlate.toLowerCase().includes(q)) ||
         (v.trim && v.trim.toLowerCase().includes(q)) ||
+        (v.engine && v.engine.toLowerCase().includes(q)) ||
+        (v.transmission && v.transmission.toLowerCase().includes(q)) ||
+        (v.drivetrain && v.drivetrain.toLowerCase().includes(q)) ||
         (v.notes && v.notes.toLowerCase().includes(q))
     );
   }
@@ -281,48 +428,61 @@ export async function getVehicle(id: string): Promise<VehicleRecord | null> {
 }
 
 export async function createVehicle(options: CreateVehicleOptions): Promise<VehicleRecord> {
-  const { customerId, year, make, model } = options;
-
-  if (!customerId || typeof customerId !== 'string') {
-    throw new Error('Valid customer ID is required to register a vehicle');
-  }
-
-  const store = await readAutomotiveStoreFile();
-  const customer = store.customers.find((c) => c.id === customerId);
-
-  if (!customer) {
-    throw new Error(`Customer "${customerId}" does not exist`);
-  }
-
-  if (customer.isDeleted) {
-    throw new Error(`Cannot assign vehicle to deleted customer "${customerId}"`);
-  }
-
-  if (!year || typeof year !== 'number' || year < 1900 || year > 2100) {
-    throw new Error('Vehicle year must be a valid 4-digit number (e.g. 2006)');
-  }
+  const { customerId, make, model, year } = options;
 
   const trimmedMake = make?.trim();
   const trimmedModel = model?.trim();
 
-  if (!trimmedMake) {
-    throw new Error('Vehicle make cannot be empty');
+  if (!trimmedMake) throw new Error('Vehicle make cannot be empty');
+  if (!trimmedModel) throw new Error('Vehicle model cannot be empty');
+
+  if (year !== undefined && year !== null) {
+    if (typeof year !== 'number' || year < 1900 || year > 2100) {
+      throw new Error('Vehicle year must be a valid 4-digit number between 1900 and 2100');
+    }
   }
 
-  if (!trimmedModel) {
-    throw new Error('Vehicle model cannot be empty');
+  const store = await readAutomotiveStoreFile();
+
+  // Validate customerId if non-null
+  let assignedCustomerId: string | null = null;
+  if (customerId) {
+    const customer = store.customers.find((c) => c.id === customerId);
+    if (!customer) {
+      throw new Error(`Customer "${customerId}" does not exist`);
+    }
+    if (customer.isDeleted) {
+      throw new Error(`Cannot assign vehicle to deleted customer "${customerId}"`);
+    }
+    assignedCustomerId = customerId;
   }
 
+  // Enforce global VIN uniqueness across all vehicles (including soft-deleted)
+  let normalizedVin: string | undefined = undefined;
+  if (options.vin && options.vin.trim()) {
+    normalizedVin = options.vin.trim().toUpperCase();
+    const existingVehicleWithVin = store.vehicles.find((v) => v.vin === normalizedVin);
+    if (existingVehicleWithVin) {
+      throw new Error(`A vehicle with VIN "${normalizedVin}" already exists in the system (${existingVehicleWithVin.vehicleNumber}).`);
+    }
+  }
+
+  const seq = store.nextVehicleSequence++;
+  const vehicleNumber = formatVehicleNumber(seq);
   const now = Date.now();
 
   const newVehicle: VehicleRecord = {
     id: crypto.randomUUID(),
-    customerId,
-    year,
+    vehicleNumber,
+    customerId: assignedCustomerId,
+    year: year || undefined,
     make: trimmedMake,
     model: trimmedModel,
-    vin: options.vin?.trim().toUpperCase() || undefined,
     trim: options.trim?.trim() || undefined,
+    vin: normalizedVin,
+    engine: options.engine?.trim() || undefined,
+    transmission: options.transmission?.trim() || undefined,
+    drivetrain: options.drivetrain?.trim() || undefined,
     licensePlate: options.licensePlate?.trim().toUpperCase() || undefined,
     mileage: typeof options.mileage === 'number' && options.mileage >= 0 ? options.mileage : undefined,
     color: options.color?.trim() || undefined,
@@ -357,18 +517,26 @@ export async function updateVehicle(
   }
 
   if (updates.customerId !== undefined) {
-    const customer = store.customers.find((c) => c.id === updates.customerId);
-    if (!customer || customer.isDeleted) {
-      throw new Error(`Target customer "${updates.customerId}" not found or is deleted`);
+    if (updates.customerId === null) {
+      vehicle.customerId = null;
+    } else {
+      const customer = store.customers.find((c) => c.id === updates.customerId);
+      if (!customer || customer.isDeleted) {
+        throw new Error(`Target customer "${updates.customerId}" not found or is deleted`);
+      }
+      vehicle.customerId = updates.customerId;
     }
-    vehicle.customerId = updates.customerId;
   }
 
   if (updates.year !== undefined) {
-    if (typeof updates.year !== 'number' || updates.year < 1900 || updates.year > 2100) {
-      throw new Error('Invalid vehicle year');
+    if (updates.year !== null) {
+      if (typeof updates.year !== 'number' || updates.year < 1900 || updates.year > 2100) {
+        throw new Error('Invalid vehicle year');
+      }
+      vehicle.year = updates.year;
+    } else {
+      vehicle.year = undefined;
     }
-    vehicle.year = updates.year;
   }
 
   if (updates.make !== undefined) {
@@ -383,8 +551,27 @@ export async function updateVehicle(
     vehicle.model = trimmed;
   }
 
-  if (updates.vin !== undefined) vehicle.vin = updates.vin.trim().toUpperCase() || undefined;
+  if (updates.vin !== undefined) {
+    if (updates.vin && updates.vin.trim()) {
+      const normalizedVin = updates.vin.trim().toUpperCase();
+      const existingVehicleWithVin = store.vehicles.find(
+        (v) => v.vin === normalizedVin && v.id !== id
+      );
+      if (existingVehicleWithVin) {
+        throw new Error(
+          `A vehicle with VIN "${normalizedVin}" already exists in the system (${existingVehicleWithVin.vehicleNumber}).`
+        );
+      }
+      vehicle.vin = normalizedVin;
+    } else {
+      vehicle.vin = undefined;
+    }
+  }
+
   if (updates.trim !== undefined) vehicle.trim = updates.trim.trim() || undefined;
+  if (updates.engine !== undefined) vehicle.engine = updates.engine.trim() || undefined;
+  if (updates.transmission !== undefined) vehicle.transmission = updates.transmission.trim() || undefined;
+  if (updates.drivetrain !== undefined) vehicle.drivetrain = updates.drivetrain.trim() || undefined;
   if (updates.licensePlate !== undefined) vehicle.licensePlate = updates.licensePlate.trim().toUpperCase() || undefined;
   if (updates.mileage !== undefined) vehicle.mileage = typeof updates.mileage === 'number' && updates.mileage >= 0 ? updates.mileage : undefined;
   if (updates.color !== undefined) vehicle.color = updates.color.trim() || undefined;

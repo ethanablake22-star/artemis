@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
-import { UserPlus, X, Check } from 'lucide-react';
-import type { CreateCustomerOptions } from '@shared/automotiveTypes';
+import { UserPlus, Building2, User, X, Check } from 'lucide-react';
+import type { CreateCustomerOptions, CustomerType } from '@shared/automotiveTypes';
+import clsx from 'clsx';
 
 interface CreateCustomerModalProps {
   isOpen: boolean;
@@ -13,7 +14,11 @@ export const CreateCustomerModal: React.FC<CreateCustomerModalProps> = ({
   onClose,
   onSubmit,
 }) => {
-  const [name, setName] = useState('');
+  const [type, setType] = useState<CustomerType>('individual');
+  const [firstName, setFirstName] = useState('');
+  const [lastName, setLastName] = useState('');
+  const [businessName, setBusinessName] = useState('');
+  const [contactPerson, setContactPerson] = useState('');
   const [phone, setPhone] = useState('');
   const [email, setEmail] = useState('');
   const [address, setAddress] = useState('');
@@ -25,8 +30,14 @@ export const CreateCustomerModal: React.FC<CreateCustomerModalProps> = ({
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!name.trim()) {
-      setError('Customer name is required');
+
+    if (type === 'individual' && !firstName.trim() && !lastName.trim()) {
+      setError('Please provide at least a first or last name');
+      return;
+    }
+
+    if (type === 'business' && !businessName.trim()) {
+      setError('Business name is required');
       return;
     }
 
@@ -34,13 +45,22 @@ export const CreateCustomerModal: React.FC<CreateCustomerModalProps> = ({
     setError(null);
     try {
       await onSubmit({
-        name: name.trim(),
+        type,
+        firstName: firstName.trim() || undefined,
+        lastName: lastName.trim() || undefined,
+        businessName: businessName.trim() || undefined,
+        contactPerson: contactPerson.trim() || undefined,
         phone: phone.trim() || undefined,
         email: email.trim() || undefined,
         address: address.trim() || undefined,
         notes: notes.trim() || undefined,
       });
-      setName('');
+
+      // Reset
+      setFirstName('');
+      setLastName('');
+      setBusinessName('');
+      setContactPerson('');
       setPhone('');
       setEmail('');
       setAddress('');
@@ -70,6 +90,36 @@ export const CreateCustomerModal: React.FC<CreateCustomerModalProps> = ({
           </button>
         </div>
 
+        {/* Customer Type Toggle: Individual vs Business */}
+        <div className="flex gap-2 mt-4 p-1 bg-artemis-950 rounded-xl border border-slate-800">
+          <button
+            type="button"
+            onClick={() => setType('individual')}
+            className={clsx(
+              'flex-1 py-1.5 rounded-lg text-xs font-semibold flex items-center justify-center gap-1.5 transition-colors',
+              type === 'individual'
+                ? 'bg-artemis-accent/20 text-artemis-accent border border-artemis-accent/30'
+                : 'text-slate-400 hover:text-slate-200'
+            )}
+          >
+            <User className="w-3.5 h-3.5" />
+            Individual Person
+          </button>
+          <button
+            type="button"
+            onClick={() => setType('business')}
+            className={clsx(
+              'flex-1 py-1.5 rounded-lg text-xs font-semibold flex items-center justify-center gap-1.5 transition-colors',
+              type === 'business'
+                ? 'bg-artemis-accent/20 text-artemis-accent border border-artemis-accent/30'
+                : 'text-slate-400 hover:text-slate-200'
+            )}
+          >
+            <Building2 className="w-3.5 h-3.5" />
+            Business / Fleet
+          </button>
+        </div>
+
         {error && (
           <div className="mt-3 p-2.5 rounded-lg bg-red-500/10 border border-red-500/30 text-red-400 text-xs">
             {error}
@@ -77,19 +127,63 @@ export const CreateCustomerModal: React.FC<CreateCustomerModalProps> = ({
         )}
 
         <form onSubmit={handleSubmit} className="mt-4 space-y-3.5 text-xs">
-          <div>
-            <label className="block font-semibold text-slate-300 mb-1">
-              Customer Name / Business <span className="text-red-400">*</span>
-            </label>
-            <input
-              type="text"
-              placeholder="e.g. Ethan Blake or Silent Lane LLC"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              autoFocus
-              className="w-full bg-artemis-950 border border-slate-700 rounded-xl px-3 py-2 text-slate-100 placeholder-slate-500 focus:outline-none focus:border-artemis-accent"
-            />
-          </div>
+          {type === 'individual' ? (
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <label className="block font-semibold text-slate-300 mb-1">
+                  First Name <span className="text-red-400">*</span>
+                </label>
+                <input
+                  type="text"
+                  placeholder="e.g. Ethan"
+                  value={firstName}
+                  onChange={(e) => setFirstName(e.target.value)}
+                  autoFocus
+                  className="w-full bg-artemis-950 border border-slate-700 rounded-xl px-3 py-2 text-slate-100 placeholder-slate-500 focus:outline-none focus:border-artemis-accent"
+                />
+              </div>
+              <div>
+                <label className="block font-semibold text-slate-300 mb-1">
+                  Last Name
+                </label>
+                <input
+                  type="text"
+                  placeholder="e.g. Blake"
+                  value={lastName}
+                  onChange={(e) => setLastName(e.target.value)}
+                  className="w-full bg-artemis-950 border border-slate-700 rounded-xl px-3 py-2 text-slate-100 placeholder-slate-500 focus:outline-none focus:border-artemis-accent"
+                />
+              </div>
+            </div>
+          ) : (
+            <div className="space-y-3">
+              <div>
+                <label className="block font-semibold text-slate-300 mb-1">
+                  Business Name / Company <span className="text-red-400">*</span>
+                </label>
+                <input
+                  type="text"
+                  placeholder="e.g. Apex Performance Logistics"
+                  value={businessName}
+                  onChange={(e) => setBusinessName(e.target.value)}
+                  autoFocus
+                  className="w-full bg-artemis-950 border border-slate-700 rounded-xl px-3 py-2 text-slate-100 placeholder-slate-500 focus:outline-none focus:border-artemis-accent"
+                />
+              </div>
+              <div>
+                <label className="block font-semibold text-slate-300 mb-1">
+                  Point of Contact / Manager
+                </label>
+                <input
+                  type="text"
+                  placeholder="e.g. Sarah Connor (Fleet Manager)"
+                  value={contactPerson}
+                  onChange={(e) => setContactPerson(e.target.value)}
+                  className="w-full bg-artemis-950 border border-slate-700 rounded-xl px-3 py-2 text-slate-100 placeholder-slate-500 focus:outline-none focus:border-artemis-accent"
+                />
+              </div>
+            </div>
+          )}
 
           <div className="grid grid-cols-2 gap-3">
             <div>
@@ -136,7 +230,7 @@ export const CreateCustomerModal: React.FC<CreateCustomerModalProps> = ({
               Notes & Preferences
             </label>
             <textarea
-              placeholder="Key notes, customer history, gate codes..."
+              placeholder="Preferences, fleet requirements, gate codes..."
               rows={2}
               value={notes}
               onChange={(e) => setNotes(e.target.value)}
@@ -154,7 +248,7 @@ export const CreateCustomerModal: React.FC<CreateCustomerModalProps> = ({
             </button>
             <button
               type="submit"
-              disabled={isSubmitting || !name.trim()}
+              disabled={isSubmitting}
               className="px-4 py-1.5 rounded-lg bg-artemis-accent hover:bg-sky-400 disabled:opacity-40 text-slate-950 text-xs font-bold flex items-center gap-1.5"
             >
               <Check className="w-3.5 h-3.5" />

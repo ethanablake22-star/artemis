@@ -1,8 +1,22 @@
+export type CustomerType = 'individual' | 'business';
+
 export interface CustomerRecord {
-  /** Stable UUID generated authoritatively in Electron Main */
+  /** Stable immutable UUID generated authoritatively in Electron Main */
   id: string;
-  /** Full customer name or company name */
+  /** Authoritative human-facing sequential customer number (e.g. CUS-000001) */
+  customerNumber: string;
+  /** Customer type: individual person or commercial business entity */
+  type: CustomerType;
+  /** Primary display name (derived authoritatively by Main from first+last or businessName) */
   name: string;
+  /** Individual first name */
+  firstName?: string;
+  /** Individual last name */
+  lastName?: string;
+  /** Business entity legal / trade name */
+  businessName?: string;
+  /** Primary point of contact for business accounts */
+  contactPerson?: string;
   /** Contact phone number */
   phone?: string;
   /** Contact email address */
@@ -20,27 +34,35 @@ export interface CustomerRecord {
 }
 
 export interface VehicleRecord {
-  /** Stable UUID generated authoritatively in Electron Main */
+  /** Stable immutable UUID generated authoritatively in Electron Main */
   id: string;
-  /** Foreign key referencing CustomerRecord.id */
-  customerId: string;
-  /** 17-character VIN or custom identifier */
+  /** Authoritative human-facing sequential vehicle number (e.g. VEH-000001) */
+  vehicleNumber: string;
+  /** Foreign key referencing CustomerRecord.id, or null if unassigned/shop/project vehicle */
+  customerId: string | null;
+  /** 17-character VIN or custom identifier (normalized uppercase, globally unique) */
   vin?: string;
-  /** Model year (e.g. 2006) */
-  year: number;
+  /** Model year (e.g. 2006, optional) */
+  year?: number;
   /** Vehicle make (e.g. Mercedes, Honda, Ford) */
   make: string;
   /** Vehicle model (e.g. SL500, Civic, F-150) */
   model: string;
   /** Sub-model or trim (e.g. AMG, EX, Lariat) */
   trim?: string;
+  /** Engine specifications (e.g. "5.0L V8 M113") */
+  engine?: string;
+  /** Transmission specifications (e.g. "722.9 7-Speed Automatic") */
+  transmission?: string;
+  /** Drivetrain configuration (e.g. "RWD", "AWD", "4WD", "FWD") */
+  drivetrain?: string;
   /** State license plate number */
   licensePlate?: string;
   /** Current vehicle odometer mileage */
   mileage?: number;
   /** Exterior color */
   color?: string;
-  /** Engine / transmission / specs notes */
+  /** General vehicle notes */
   notes?: string;
   /** Record creation timestamp in milliseconds (epoch) */
   createdAt: number;
@@ -51,13 +73,20 @@ export interface VehicleRecord {
 }
 
 export interface ArtemisAutomotiveStoreData {
-  schemaVersion: 1;
+  schemaVersion: 2;
+  nextCustomerSequence: number;
+  nextVehicleSequence: number;
   customers: CustomerRecord[];
   vehicles: VehicleRecord[];
 }
 
 export interface CreateCustomerOptions {
-  name: string;
+  type?: CustomerType;
+  name?: string;
+  firstName?: string;
+  lastName?: string;
+  businessName?: string;
+  contactPerson?: string;
   phone?: string;
   email?: string;
   address?: string;
@@ -65,7 +94,12 @@ export interface CreateCustomerOptions {
 }
 
 export interface UpdateCustomerOptions {
+  type?: CustomerType;
   name?: string;
+  firstName?: string;
+  lastName?: string;
+  businessName?: string;
+  contactPerson?: string;
   phone?: string;
   email?: string;
   address?: string;
@@ -73,12 +107,15 @@ export interface UpdateCustomerOptions {
 }
 
 export interface CreateVehicleOptions {
-  customerId: string;
-  year: number;
+  customerId?: string | null;
   make: string;
   model: string;
+  year?: number;
   vin?: string;
   trim?: string;
+  engine?: string;
+  transmission?: string;
+  drivetrain?: string;
   licensePlate?: string;
   mileage?: number;
   color?: string;
@@ -86,12 +123,15 @@ export interface CreateVehicleOptions {
 }
 
 export interface UpdateVehicleOptions {
-  customerId?: string;
-  year?: number;
+  customerId?: string | null;
   make?: string;
   model?: string;
+  year?: number;
   vin?: string;
   trim?: string;
+  engine?: string;
+  transmission?: string;
+  drivetrain?: string;
   licensePlate?: string;
   mileage?: number;
   color?: string;
@@ -100,11 +140,12 @@ export interface UpdateVehicleOptions {
 
 export interface ListCustomersFilter {
   query?: string;
+  type?: CustomerType;
   includeDeleted?: boolean;
 }
 
 export interface ListVehiclesFilter {
-  customerId?: string;
+  customerId?: string | null;
   query?: string;
   includeDeleted?: boolean;
 }
