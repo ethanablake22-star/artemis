@@ -1,5 +1,6 @@
 import type { LibraryBridge } from './libraryTypes';
 import type { DocumentsBridge } from './documentTypes';
+import type { AutomotiveBridge } from './automotiveTypes';
 
 export type ArtemisTabType =
   | 'home'
@@ -11,7 +12,9 @@ export type ArtemisTabType =
   | 'cad'
   | 'pcb'
   | 'calendar'
-  | 'automotive';
+  | 'automotive'
+  | 'automotive-customer'
+  | 'automotive-vehicle';
 
 export interface ArtemisTab {
   /** Unique tab identifier */
@@ -20,7 +23,7 @@ export interface ArtemisTab {
   type: ArtemisTabType;
   /** Display title in tab header */
   title: string;
-  /** Optional resource ID (e.g. Library item UUID for documents) */
+  /** Optional resource ID (e.g. Library item UUID or Customer/Vehicle UUID) */
   resourceId?: string;
   /** Icon identifier or name */
   icon?: string;
@@ -58,6 +61,7 @@ export interface ArtemisWindowBridge {
   getAppVersion: () => Promise<string>;
   library: LibraryBridge;
   documents: DocumentsBridge;
+  automotive: AutomotiveBridge;
 }
 
 declare global {

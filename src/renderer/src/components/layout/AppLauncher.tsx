@@ -114,12 +114,11 @@ const APPS: LauncherApp[] = [
   {
     id: 'app-automotive',
     type: 'automotive',
-    title: 'Automotive Service',
-    description: 'Vehicle diagnostics, fleet maintenance, repair orders, and parts catalog.',
+    title: 'Automotive Operations',
+    description: 'Customer management, vehicle fleet profiles, repair orders, and diagnostics.',
     icon: <Wrench className="w-6 h-6 text-orange-400" />,
     category: 'engineering',
-    enabled: false,
-    badge: 'Planned',
+    enabled: true,
   },
 ];
 

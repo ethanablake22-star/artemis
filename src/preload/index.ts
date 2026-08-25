@@ -7,6 +7,16 @@ import type {
   ListLibraryItemsFilter,
 } from '../shared/libraryTypes';
 import type { ArtemisDocumentRecord, ExportPdfResult } from '../shared/documentTypes';
+import type {
+  CustomerRecord,
+  VehicleRecord,
+  CreateCustomerOptions,
+  UpdateCustomerOptions,
+  CreateVehicleOptions,
+  UpdateVehicleOptions,
+  ListCustomersFilter,
+  ListVehiclesFilter,
+} from '../shared/automotiveTypes';
 
 const bridge: ArtemisWindowBridge = {
   minimize: () => ipcRenderer.send('artemis:window:minimize'),
@@ -38,6 +48,29 @@ const bridge: ArtemisWindowBridge = {
       ipcRenderer.invoke('artemis:documents:updateContent', libraryItemId, content),
     exportPDF: (defaultTitle?: string): Promise<ExportPdfResult> =>
       ipcRenderer.invoke('artemis:documents:exportPDF', defaultTitle),
+  },
+  automotive: {
+    listCustomers: (filter?: ListCustomersFilter): Promise<CustomerRecord[]> =>
+      ipcRenderer.invoke('artemis:automotive:listCustomers', filter),
+    getCustomer: (id: string): Promise<CustomerRecord | null> =>
+      ipcRenderer.invoke('artemis:automotive:getCustomer', id),
+    createCustomer: (options: CreateCustomerOptions): Promise<CustomerRecord> =>
+      ipcRenderer.invoke('artemis:automotive:createCustomer', options),
+    updateCustomer: (id: string, updates: UpdateCustomerOptions): Promise<CustomerRecord> =>
+      ipcRenderer.invoke('artemis:automotive:updateCustomer', id, updates),
+    deleteCustomer: (id: string): Promise<boolean> =>
+      ipcRenderer.invoke('artemis:automotive:deleteCustomer', id),
+
+    listVehicles: (filter?: ListVehiclesFilter): Promise<VehicleRecord[]> =>
+      ipcRenderer.invoke('artemis:automotive:listVehicles', filter),
+    getVehicle: (id: string): Promise<VehicleRecord | null> =>
+      ipcRenderer.invoke('artemis:automotive:getVehicle', id),
+    createVehicle: (options: CreateVehicleOptions): Promise<VehicleRecord> =>
+      ipcRenderer.invoke('artemis:automotive:createVehicle', options),
+    updateVehicle: (id: string, updates: UpdateVehicleOptions): Promise<VehicleRecord> =>
+      ipcRenderer.invoke('artemis:automotive:updateVehicle', id, updates),
+    deleteVehicle: (id: string): Promise<boolean> =>
+      ipcRenderer.invoke('artemis:automotive:deleteVehicle', id),
   },
 };
 

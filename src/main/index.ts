@@ -14,6 +14,18 @@ import {
   getDocument,
   updateDocumentContent,
 } from './documentStorage';
+import {
+  listCustomers,
+  getCustomer,
+  createCustomer,
+  updateCustomer,
+  deleteCustomer,
+  listVehicles,
+  getVehicle,
+  createVehicle,
+  updateVehicle,
+  deleteVehicle,
+} from './automotiveStorage';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
@@ -148,6 +160,50 @@ function createWindow() {
       console.error('Failed to export PDF:', err);
       return { success: false, error: msg };
     }
+  });
+
+  // ---------------------------------------------------------------------------
+  // Authoritative Automotive IPC Endpoints
+  // ---------------------------------------------------------------------------
+
+  ipcMain.handle('artemis:automotive:listCustomers', async (_event, filter) => {
+    return listCustomers(filter);
+  });
+
+  ipcMain.handle('artemis:automotive:getCustomer', async (_event, id) => {
+    return getCustomer(id);
+  });
+
+  ipcMain.handle('artemis:automotive:createCustomer', async (_event, options) => {
+    return createCustomer(options);
+  });
+
+  ipcMain.handle('artemis:automotive:updateCustomer', async (_event, id, updates) => {
+    return updateCustomer(id, updates);
+  });
+
+  ipcMain.handle('artemis:automotive:deleteCustomer', async (_event, id) => {
+    return deleteCustomer(id);
+  });
+
+  ipcMain.handle('artemis:automotive:listVehicles', async (_event, filter) => {
+    return listVehicles(filter);
+  });
+
+  ipcMain.handle('artemis:automotive:getVehicle', async (_event, id) => {
+    return getVehicle(id);
+  });
+
+  ipcMain.handle('artemis:automotive:createVehicle', async (_event, options) => {
+    return createVehicle(options);
+  });
+
+  ipcMain.handle('artemis:automotive:updateVehicle', async (_event, id, updates) => {
+    return updateVehicle(id, updates);
+  });
+
+  ipcMain.handle('artemis:automotive:deleteVehicle', async (_event, id) => {
+    return deleteVehicle(id);
   });
 
   // Open external URLs in the user's default browser

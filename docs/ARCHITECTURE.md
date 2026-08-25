@@ -24,13 +24,15 @@ export type ArtemisTabType =
   | 'cad'
   | 'pcb'
   | 'calendar'
-  | 'automotive';
+  | 'automotive'
+  | 'automotive-customer'
+  | 'automotive-vehicle';
 
 export interface ArtemisTab {
   id: string;
   type: ArtemisTabType;
   title: string;
-  resourceId?: string; // Stable UUID for bound resources (e.g. Library documents)
+  resourceId?: string; // Stable UUID for bound resources (e.g. Library documents, Customers, Vehicles)
   icon?: string;
   closable: boolean;
   state?: Record<string, unknown>;
@@ -47,8 +49,8 @@ export interface ArtemisTab {
 ### Tab Lifecycle & Singleton Rules
 1. **Shell Independence**: The top-level tab shell governs window lifecycle, navigation, tab selection, reordering, and closure. The shell does not concern itself with the internal business logic of the hosted view.
 2. **Singleton & Resource Deduplication**:
-   - Singletons like **Home** and **Library** are unique across the app.
-   - Resource-bound tabs (such as **Documents**) deduplicate by `resourceId`: opening an already open document focuses the existing tab rather than spawning duplicates.
+   - Singletons like **Home**, **Library**, and **Automotive Hub** are unique across the app.
+   - Resource-bound tabs (**Documents**, **Customers**, **Vehicles**) deduplicate by `resourceId`: opening an already open document or vehicle focuses the existing tab rather than spawning duplicates.
 3. **Immutability & Closability**: The initial **Artemis Home** tab is non-closable (`closable: false`), serving as the persistent mission control and workspace anchor.
 4. **Flush-on-Close Safety**: Document tabs register close hooks with `TabContext` to guarantee pending changes are flushed before unmounting, blocking closure if disk writes fail.
 
@@ -62,7 +64,7 @@ The persistent mission dashboard anchoring the workspace. Provides mission objec
 ### 2. Artemis Library (`library`)
 The universal, local-first file and asset browser subsystem.
 - **Authoritative Main Process Boundary**: All data validation, cryptographic UUID generation (`crypto.randomUUID()`), recursive cascading soft-deletions, and atomic disk writes are executed strictly within the Electron Main Process.
-- **Versioned Store Format**: Persisted using `{ "schemaVersion": 1, "items": [...] }` in `userData`.
+- **Versioned Store Format**: Persisted using `{ "schemaVersion": 1, "items": [...] }` in `userData/artemis_library_store.json`.
 - **Narrow IPC Surface**: Preload bridge only exposes granular operations (`list`, `get`, `create`, `update`, `move`, `delete`). Generic store replacement is disabled.
 - **Navigation & Management**: Arbitrary folder nesting, interactive breadcrumbs, folder and placeholder document creation, renaming, and soft-deletion.
 
@@ -73,21 +75,28 @@ The native structured rich-text document workspace.
 - **Race-Safe Autosave & Flush**: Edit generation counter prevents stale status transitions, and tab closure flushes pending edits synchronously.
 - **Business Essentials**: Integrated interactive tables (add/remove rows/cols), embedded images, hyperlinks, print stylesheet (`@media print`), and native PDF export.
 
+### 4. Artemis Automotive (`automotive`, `automotive-customer`, `automotive-vehicle`)
+The business management foundation for customer directories and vehicle fleet tracking.
+- **Authoritative Main Storage**: Customers and Vehicles stored in `userData/artemis_automotive_store.json` with atomic file writes and schema validation.
+- **First-Class Universal Tabs**:
+  - `Automotive Hub`: Overview statistics, search across customers and vehicles, directory views.
+  - `Customer Tab`: Contact profile, customer notes, and assigned vehicle fleet list with cross-tab links.
+  - `Vehicle Tab`: VIN, specs, license plate, mileage tracker, and linked owner card.
+- **Cascading Soft-Deletion**: Deleting a customer soft-deletes the customer and cascades soft-delete to all their vehicles.
+
 ---
 
 ## Future Extensibility & Hosted Engines
 
 The Artemis universal tab shell is decoupled from individual view engines. In future milestones, tabs may host diverse engines and environments, including:
 
-- **Automotive Core**: Customer directories, vehicle fleet profiles, repair orders, and service procedures.
+- **Work Orders & Invoicing**: Repair orders, diagnostic flows, labor rates, parts inventory, and invoicing.
+- **Scheduling & Calendar**: Dispatch calendars, service bays, technician assignment.
 - **Chromium Web Content**: Embedded WebViews / BrowserViews for full web browsing and SaaS integrations.
-- **Artemis React Applications**: Native, high-performance modular React tool suites (Scheduling, Inventory, CRM, Automotive Service Management).
 - **Spreadsheet Editors**: Tabular calculation and ledger workspaces.
 - **Monaco & Code Environments**: Full-featured code editor with syntax highlighting, language servers, and git integration.
-- **CAD & 3D Engines**: WebGL/WebGPU parametric 3D modeling and rendering environments.
+- **CAD & 3D Engines**: WebGL/WebGPU parametric 3D modeling and mechanical assembly viewer.
 - **PCB Tools**: Interactive electronic schematic and PCB layout design canvas.
-- **Terminals & Consoles**: Embedded xterm.js terminal instances and CLI environments.
-- **Document Viewers**: Hardware-accelerated PDF, Gerber, and vector viewers.
 
 ---
 

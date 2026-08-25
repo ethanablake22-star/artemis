@@ -3,6 +3,9 @@ import { useTabs } from '../../state/TabContext';
 import { HomeTab } from './home/HomeTab';
 import { LibraryTab } from './library/LibraryTab';
 import { DocumentTab } from './document/DocumentTab';
+import { AutomotiveHubTab } from './automotive/AutomotiveHubTab';
+import { CustomerDetailTab } from './automotive/CustomerDetailTab';
+import { VehicleDetailTab } from './automotive/VehicleDetailTab';
 import { Construction, Sparkles } from 'lucide-react';
 
 export const TabHost: React.FC = () => {
@@ -24,6 +27,12 @@ export const TabHost: React.FC = () => {
       return <LibraryTab />;
     case 'document':
       return <DocumentTab libraryItemId={activeTab.resourceId || ''} />;
+    case 'automotive':
+      return <AutomotiveHubTab />;
+    case 'automotive-customer':
+      return <CustomerDetailTab customerId={activeTab.resourceId || ''} />;
+    case 'automotive-vehicle':
+      return <VehicleDetailTab vehicleId={activeTab.resourceId || ''} />;
     default:
       return (
         <div className="h-full w-full flex flex-col items-center justify-center p-8 text-center">

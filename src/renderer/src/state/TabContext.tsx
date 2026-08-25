@@ -17,8 +17,12 @@ interface TabContextValue {
   openTab: (tab: Omit<ArtemisTab, 'id'> & { id?: string }) => string;
   openOrFocusTab: (type: ArtemisTabType, defaultOptions?: Partial<ArtemisTab>) => string;
   openDocumentTab: (libraryItemId: string, title: string) => string;
+  openCustomerTab: (customerId: string, name: string) => string;
+  openVehicleTab: (vehicleId: string, title: string) => string;
   updateTab: (id: string, updates: Partial<ArtemisTab>) => void;
   syncDocumentTitle: (libraryItemId: string, newTitle: string) => void;
+  syncCustomerTitle: (customerId: string, newName: string) => void;
+  syncVehicleTitle: (vehicleId: string, newTitle: string) => void;
   registerBeforeClose: (tabId: string, handler: () => Promise<boolean>) => () => void;
 }
 
@@ -36,7 +40,7 @@ const DEFAULT_HOME_TAB: ArtemisTab = {
   },
 };
 
-const SINGLETON_TAB_TYPES: Set<ArtemisTabType> = new Set(['home', 'library']);
+const SINGLETON_TAB_TYPES: Set<ArtemisTabType> = new Set(['home', 'library', 'automotive']);
 
 export const TabProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [tabs, setTabs] = useState<ArtemisTab[]>([DEFAULT_HOME_TAB]);
@@ -77,7 +81,6 @@ export const TabProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         try {
           const canClose = await beforeCloseHandler();
           if (!canClose) {
-            // Save failed: do not close tab
             return false;
           }
         } catch (e) {
@@ -91,7 +94,6 @@ export const TabProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       setTabs((prev) => {
         const newTabs = prev.filter((t) => t.id !== id);
 
-        // If closing active tab, select nearest adjacent tab or Home
         if (activeTabId === id) {
           const closingIndex = prev.findIndex((t) => t.id === id);
           const nextTab = newTabs[closingIndex] || newTabs[closingIndex - 1] || newTabs[0];
@@ -115,7 +117,7 @@ export const TabProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   }, []);
 
   const openTab = useCallback((tabOptions: Omit<ArtemisTab, 'id'> & { id?: string }) => {
-    // Deduplication by resourceId (for documents)
+    // Deduplication by resourceId (for documents, customers, vehicles)
     if (tabOptions.resourceId) {
       const existingResourceTab = tabs.find((t) => t.resourceId === tabOptions.resourceId);
       if (existingResourceTab) {
@@ -124,7 +126,7 @@ export const TabProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       }
     }
 
-    // Deduplication for singletons (Home, Library)
+    // Deduplication for singletons (Home, Library, Automotive Hub)
     if (SINGLETON_TAB_TYPES.has(tabOptions.type)) {
       const existing = tabs.find((t) => t.type === tabOptions.type);
       if (existing) {
@@ -175,6 +177,11 @@ export const TabProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         icon = 'library';
         closable = true;
         break;
+      case 'automotive':
+        title = 'Automotive';
+        icon = 'wrench';
+        closable = true;
+        break;
       case 'web':
         title = 'Browser';
         icon = 'globe';
@@ -198,10 +205,6 @@ export const TabProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       case 'calendar':
         title = 'Calendar & Schedule';
         icon = 'calendar';
-        break;
-      case 'automotive':
-        title = 'Automotive Service';
-        icon = 'wrench';
         break;
       default:
         title = 'Artemis View';
@@ -238,10 +241,64 @@ export const TabProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     [tabs, openTab, selectTab]
   );
 
+  const openCustomerTab = useCallback(
+    (customerId: string, name: string) => {
+      const existing = tabs.find((t) => t.resourceId === customerId);
+      if (existing) {
+        selectTab(existing.id);
+        return existing.id;
+      }
+
+      return openTab({
+        type: 'automotive-customer',
+        resourceId: customerId,
+        title: name || 'Customer',
+        icon: 'user',
+        closable: true,
+      });
+    },
+    [tabs, openTab, selectTab]
+  );
+
+  const openVehicleTab = useCallback(
+    (vehicleId: string, title: string) => {
+      const existing = tabs.find((t) => t.resourceId === vehicleId);
+      if (existing) {
+        selectTab(existing.id);
+        return existing.id;
+      }
+
+      return openTab({
+        type: 'automotive-vehicle',
+        resourceId: vehicleId,
+        title: title || 'Vehicle',
+        icon: 'car',
+        closable: true,
+      });
+    },
+    [tabs, openTab, selectTab]
+  );
+
   const syncDocumentTitle = useCallback((libraryItemId: string, newTitle: string) => {
     setTabs((prev) =>
       prev.map((tab) =>
         tab.resourceId === libraryItemId ? { ...tab, title: newTitle } : tab
+      )
+    );
+  }, []);
+
+  const syncCustomerTitle = useCallback((customerId: string, newName: string) => {
+    setTabs((prev) =>
+      prev.map((tab) =>
+        tab.resourceId === customerId ? { ...tab, title: newName } : tab
+      )
+    );
+  }, []);
+
+  const syncVehicleTitle = useCallback((vehicleId: string, newTitle: string) => {
+    setTabs((prev) =>
+      prev.map((tab) =>
+        tab.resourceId === vehicleId ? { ...tab, title: newTitle } : tab
       )
     );
   }, []);
@@ -258,8 +315,12 @@ export const TabProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       openTab,
       openOrFocusTab,
       openDocumentTab,
+      openCustomerTab,
+      openVehicleTab,
       updateTab,
       syncDocumentTitle,
+      syncCustomerTitle,
+      syncVehicleTitle,
       registerBeforeClose,
     }),
     [
@@ -271,8 +332,12 @@ export const TabProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       openTab,
       openOrFocusTab,
       openDocumentTab,
+      openCustomerTab,
+      openVehicleTab,
       updateTab,
       syncDocumentTitle,
+      syncCustomerTitle,
+      syncVehicleTitle,
       registerBeforeClose,
     ]
   );
