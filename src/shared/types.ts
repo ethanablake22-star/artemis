@@ -2,6 +2,7 @@ import type { LibraryBridge } from './libraryTypes';
 import type { DocumentsBridge } from './documentTypes';
 import type { AutomotiveBridge } from './automotiveTypes';
 import type { ScheduleBridge } from './scheduleTypes';
+import type { HomeBridge } from './homeTypes';
 
 export type ArtemisTabType =
   | 'home'
@@ -67,6 +68,7 @@ export interface ArtemisWindowBridge {
   documents: DocumentsBridge;
   automotive: AutomotiveBridge;
   schedule: ScheduleBridge;
+  home: HomeBridge;
 }
 
 declare global {

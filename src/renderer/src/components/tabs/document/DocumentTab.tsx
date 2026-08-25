@@ -21,13 +21,16 @@ import {
   Layers,
   Printer,
   FileDown,
+  Target,
 } from 'lucide-react';
 import { documentsRepository } from '../../../services/documentStorage';
 import { useLibrary } from '../../../state/LibraryContext';
 import { useTabs } from '../../../state/TabContext';
+import { useHome } from '../../../state/HomeContext';
 import { DocumentToolbar } from './DocumentToolbar';
 import { DocumentCanvas } from './DocumentCanvas';
 import type { ArtemisDocumentRecord } from '@shared/documentTypes';
+import clsx from 'clsx';
 
 interface DocumentTabProps {
   libraryItemId: string;
@@ -38,6 +41,7 @@ type SaveStatus = 'saved' | 'saving' | 'error' | 'idle';
 export const DocumentTab: React.FC<DocumentTabProps> = ({ libraryItemId }) => {
   const { items, renameItem } = useLibrary();
   const { tabs, activeTabId, syncDocumentTitle, registerBeforeClose } = useTabs();
+  const { setCurrentMission, clearCurrentMission, isCurrentMission } = useHome();
 
   const [documentRecord, setDocumentRecord] = useState<ArtemisDocumentRecord | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -312,6 +316,29 @@ export const DocumentTab: React.FC<DocumentTabProps> = ({ libraryItemId }) => {
           </div>
 
           <div className="w-px h-4 bg-slate-800" />
+
+          {/* Current Mission Button */}
+          {libraryItem && !libraryItem.isDeleted && (
+            <button
+              type="button"
+              onClick={async () => {
+                if (isCurrentMission('document', libraryItemId)) {
+                  await clearCurrentMission();
+                } else {
+                  await setCurrentMission({ resourceType: 'document', resourceId: libraryItemId });
+                }
+              }}
+              className={clsx(
+                'px-2.5 py-1 rounded text-[11px] font-bold flex items-center gap-1.5 transition-all',
+                isCurrentMission('document', libraryItemId)
+                  ? 'bg-amber-500/20 text-amber-300 border border-amber-500/40 shadow-sm shadow-amber-500/10'
+                  : 'bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700'
+              )}
+            >
+              <Target className={clsx('w-3 h-3', isCurrentMission('document', libraryItemId) && 'text-amber-400 fill-amber-400/20')} />
+              {isCurrentMission('document', libraryItemId) ? '★ Current Mission' : 'Set as Current Mission'}
+            </button>
+          )}
 
           {/* Header Quick Buttons for Print & PDF */}
           <div className="flex items-center gap-1.5">

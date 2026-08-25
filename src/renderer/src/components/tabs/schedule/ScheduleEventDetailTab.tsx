@@ -12,9 +12,11 @@ import {
   Check,
   ExternalLink,
   X,
+  Target,
 } from 'lucide-react';
 import { useSchedule } from '../../../state/ScheduleContext';
 import { useAutomotive } from '../../../state/AutomotiveContext';
+import { useHome } from '../../../state/HomeContext';
 import { useTabs } from '../../../state/TabContext';
 import type {
   ScheduleEventType,
@@ -64,6 +66,7 @@ export const ScheduleEventDetailTab: React.FC<ScheduleEventDetailTabProps> = ({ 
     closeTab,
     activeTabId,
   } = useTabs();
+  const { setCurrentMission, clearCurrentMission, isCurrentMission } = useHome();
 
   const event = getEventById(eventId);
   const liveCustomer = event?.customerId ? getCustomerById(event.customerId) : undefined;
@@ -209,6 +212,29 @@ export const ScheduleEventDetailTab: React.FC<ScheduleEventDetailTabProps> = ({ 
 
         {/* Status Dropdown & Actions */}
         <div className="flex items-center gap-3">
+          {/* Current Mission Button */}
+          {event.status !== 'completed' && event.status !== 'cancelled' && event.status !== 'no_show' && (
+            <button
+              type="button"
+              onClick={async () => {
+                if (isCurrentMission('schedule-event', event.id)) {
+                  await clearCurrentMission();
+                } else {
+                  await setCurrentMission({ resourceType: 'schedule-event', resourceId: event.id });
+                }
+              }}
+              className={clsx(
+                'px-3 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1.5 transition-all',
+                isCurrentMission('schedule-event', event.id)
+                  ? 'bg-amber-500/20 text-amber-300 border border-amber-500/40 shadow-sm shadow-amber-500/10'
+                  : 'bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700'
+              )}
+            >
+              <Target className={clsx('w-3.5 h-3.5', isCurrentMission('schedule-event', event.id) && 'text-amber-400 fill-amber-400/20')} />
+              {isCurrentMission('schedule-event', event.id) ? '★ Current Mission' : 'Set as Current Mission'}
+            </button>
+          )}
+
           <div className="flex items-center gap-1.5">
             <span className="text-[11px] text-slate-400 font-medium">Status:</span>
             <select

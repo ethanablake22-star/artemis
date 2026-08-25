@@ -16,9 +16,11 @@ import {
   ExternalLink,
   X,
   Calendar,
+  Target,
 } from 'lucide-react';
 import { useAutomotive } from '../../../state/AutomotiveContext';
 import { useSchedule } from '../../../state/ScheduleContext';
+import { useHome } from '../../../state/HomeContext';
 import { useTabs } from '../../../state/TabContext';
 import { CreateEventModal } from '../schedule/CreateEventModal';
 import type {
@@ -97,6 +99,7 @@ export const WorkOrderDetailTab: React.FC<WorkOrderDetailTabProps> = ({ workOrde
 
   const { openCustomerTab, openVehicleTab, openScheduleEventTab, closeTab, activeTabId } = useTabs();
   const { getWorkOrderEvents, createEvent } = useSchedule();
+  const { setCurrentMission, clearCurrentMission, isCurrentMission } = useHome();
 
   const workOrder = getWorkOrderById(workOrderId);
   const liveVehicle = workOrder ? getVehicleById(workOrder.vehicleId) : undefined;
@@ -340,6 +343,29 @@ export const WorkOrderDetailTab: React.FC<WorkOrderDetailTabProps> = ({ workOrde
 
         {/* Status Dropdown & Actions */}
         <div className="flex items-center gap-3">
+          {/* Current Mission Button */}
+          {workOrder.status !== 'completed' && workOrder.status !== 'cancelled' && (
+            <button
+              type="button"
+              onClick={async () => {
+                if (isCurrentMission('work-order', workOrder.id)) {
+                  await clearCurrentMission();
+                } else {
+                  await setCurrentMission({ resourceType: 'work-order', resourceId: workOrder.id });
+                }
+              }}
+              className={clsx(
+                'px-3 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1.5 transition-all',
+                isCurrentMission('work-order', workOrder.id)
+                  ? 'bg-amber-500/20 text-amber-300 border border-amber-500/40 shadow-sm shadow-amber-500/10'
+                  : 'bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700'
+              )}
+            >
+              <Target className={clsx('w-3.5 h-3.5', isCurrentMission('work-order', workOrder.id) && 'text-amber-400 fill-amber-400/20')} />
+              {isCurrentMission('work-order', workOrder.id) ? '★ Current Mission' : 'Set as Current Mission'}
+            </button>
+          )}
+
           {/* Schedule Appointment Button */}
           <button
             type="button"

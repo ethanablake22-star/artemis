@@ -62,7 +62,14 @@ export interface ArtemisTab {
 ## Artemis Subsystems
 
 ### 1. Artemis Home (`home`)
-The persistent mission dashboard anchoring the workspace. Provides mission objectives, active work progress, calendar/dispatch schedule, recent files, and real-time notifications.
+The persistent operational command cockpit anchoring the workspace. Aggregates live data across subsystems:
+- **Current Mission**: Focused hero card tracking the active Work Order, Schedule Appointment, or Document (`userData/artemis_home_store.json`).
+- **Today's Schedule**: Real-time chronological appointments intersecting today in the local timezone.
+- **Needs Attention**: Critical action items derived strictly from active Work Orders (`awaiting_approval`, `waiting_parts`, `diagnosing`).
+- **Active Work**: Prioritized active repairs and diagnostics (`in_progress` > `diagnosing` > `awaiting_approval` > `waiting_parts` > `open`).
+- **Recent Documents**: Authoritatively sorted recent structured documents from the Library.
+- **Quick Access**: Direct creation shortcuts for Work Orders, Appointments, Documents, Customers, and Vehicles.
+- **Fault-Isolated Loading**: Individual section loading errors do not blank or destabilize the rest of Home.
 
 ### 2. Artemis Library (`library`)
 The universal, local-first file and asset browser subsystem.

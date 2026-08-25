@@ -39,6 +39,11 @@ import {
   deleteScheduleEvent,
   checkOverlap,
 } from './scheduleStorage';
+import {
+  getCurrentMission,
+  setCurrentMission,
+  clearCurrentMission,
+} from './homeStorage';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
@@ -265,6 +270,22 @@ function createWindow() {
 
   ipcMain.handle('artemis:schedule:checkOverlap', async (_event, startAt, endAt, excludeEventId) => {
     return checkOverlap(startAt, endAt, excludeEventId);
+  });
+
+  // ---------------------------------------------------------------------------
+  // Authoritative Home & Current Mission IPC Endpoints (V0.0.7)
+  // ---------------------------------------------------------------------------
+
+  ipcMain.handle('artemis:home:getCurrentMission', async () => {
+    return getCurrentMission();
+  });
+
+  ipcMain.handle('artemis:home:setCurrentMission', async (_event, options) => {
+    return setCurrentMission(options);
+  });
+
+  ipcMain.handle('artemis:home:clearCurrentMission', async () => {
+    return clearCurrentMission();
   });
 
   // Open external URLs in the user's default browser

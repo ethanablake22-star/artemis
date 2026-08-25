@@ -28,6 +28,10 @@ import type {
   ListScheduleEventsFilter,
   OverlapConflictInfo,
 } from '../shared/scheduleTypes';
+import type {
+  CurrentMissionReference,
+  SetCurrentMissionOptions,
+} from '../shared/homeTypes';
 
 const bridge: ArtemisWindowBridge = {
   minimize: () => ipcRenderer.send('artemis:window:minimize'),
@@ -111,6 +115,14 @@ const bridge: ArtemisWindowBridge = {
       excludeEventId?: string
     ): Promise<OverlapConflictInfo> =>
       ipcRenderer.invoke('artemis:schedule:checkOverlap', startAt, endAt, excludeEventId),
+  },
+  home: {
+    getCurrentMission: (): Promise<CurrentMissionReference | null> =>
+      ipcRenderer.invoke('artemis:home:getCurrentMission'),
+    setCurrentMission: (options: SetCurrentMissionOptions): Promise<CurrentMissionReference> =>
+      ipcRenderer.invoke('artemis:home:setCurrentMission', options),
+    clearCurrentMission: (): Promise<boolean> =>
+      ipcRenderer.invoke('artemis:home:clearCurrentMission'),
   },
 };
 
