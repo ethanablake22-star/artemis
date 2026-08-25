@@ -17,12 +17,15 @@ import {
   X,
   Calendar,
   Target,
+  Calculator,
 } from 'lucide-react';
 import { useAutomotive } from '../../../state/AutomotiveContext';
 import { useSchedule } from '../../../state/ScheduleContext';
 import { useHome } from '../../../state/HomeContext';
 import { useTabs } from '../../../state/TabContext';
 import { CreateEventModal } from '../schedule/CreateEventModal';
+import { CreateEstimateModal } from './estimates/CreateEstimateModal';
+import { formatCents } from '@shared/currencyUtils';
 import type {
   WorkOrderStatus,
   WorkOrderLaborLine,
@@ -95,9 +98,18 @@ export const WorkOrderDetailTab: React.FC<WorkOrderDetailTabProps> = ({ workOrde
     getCustomerById,
     updateWorkOrder,
     deleteWorkOrder,
+    getWorkOrderEstimates,
+    createEstimate,
   } = useAutomotive();
 
-  const { openCustomerTab, openVehicleTab, openScheduleEventTab, closeTab, activeTabId } = useTabs();
+  const {
+    openCustomerTab,
+    openVehicleTab,
+    openScheduleEventTab,
+    openEstimateTab,
+    closeTab,
+    activeTabId,
+  } = useTabs();
   const { getWorkOrderEvents, createEvent } = useSchedule();
   const { setCurrentMission, clearCurrentMission, isCurrentMission } = useHome();
 
@@ -105,8 +117,10 @@ export const WorkOrderDetailTab: React.FC<WorkOrderDetailTabProps> = ({ workOrde
   const liveVehicle = workOrder ? getVehicleById(workOrder.vehicleId) : undefined;
   const liveCustomer = workOrder?.customerId ? getCustomerById(workOrder.customerId) : undefined;
   const woEvents = workOrder ? getWorkOrderEvents(workOrder.id) : [];
+  const woEstimates = workOrder ? getWorkOrderEstimates(workOrder.id) : [];
 
   const [isScheduleModalOpen, setIsScheduleModalOpen] = useState(false);
+  const [isEstimateModalOpen, setIsEstimateModalOpen] = useState(false);
 
   // Editable sections
   const [isEditingConcern, setIsEditingConcern] = useState(false);
@@ -1046,6 +1060,77 @@ export const WorkOrderDetailTab: React.FC<WorkOrderDetailTabProps> = ({ workOrde
           )}
         </div>
 
+        {/* Linked Estimates */}
+        <div className="p-5 rounded-xl bg-artemis-900/90 border border-slate-800 space-y-3">
+          <div className="flex items-center justify-between">
+            <h3 className="text-xs font-bold uppercase tracking-wider text-slate-300 flex items-center gap-1.5">
+              <Calculator className="w-3.5 h-3.5 text-teal-400" />
+              Commercial Estimates ({woEstimates.length})
+            </h3>
+            <button
+              type="button"
+              onClick={() => setIsEstimateModalOpen(true)}
+              className="text-xs text-teal-400 hover:text-teal-300 flex items-center gap-1 font-bold"
+            >
+              <Plus className="w-3 h-3" />
+              Create Estimate
+            </button>
+          </div>
+
+          {woEstimates.length === 0 ? (
+            <p className="text-xs text-slate-500 italic bg-artemis-950/40 p-3 rounded-lg">
+              No estimates generated for this Work Order yet.
+            </p>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+              {woEstimates.map((est) => (
+                <div
+                  key={est.id}
+                  onClick={() =>
+                    openEstimateTab(
+                      est.id,
+                      `${est.estimateNumber} — ${est.vehicleDescriptionSnapshot}`
+                    )
+                  }
+                  className="p-3 rounded-lg bg-artemis-950/80 border border-slate-800 hover:border-teal-500/40 cursor-pointer group transition-all"
+                >
+                  <div className="flex items-center justify-between">
+                    <span className="font-bold text-xs text-teal-400 font-mono">
+                      {est.estimateNumber}
+                    </span>
+                    <span
+                      className={clsx(
+                        'text-[10px] uppercase font-bold px-1.5 py-0.5 rounded border',
+                        est.status === 'approved'
+                          ? 'bg-emerald-950/60 text-emerald-400 border-emerald-800/80'
+                          : est.status === 'declined'
+                            ? 'bg-red-950/60 text-red-400 border-red-800/80'
+                            : est.status === 'ready'
+                              ? 'bg-blue-950/60 text-blue-400 border-blue-800/80'
+                              : 'bg-slate-800 text-slate-400 border-slate-700'
+                      )}
+                    >
+                      {est.status}
+                    </span>
+                  </div>
+                  <div className="flex items-center justify-between mt-2">
+                    <div className="text-sm font-black text-white font-mono">
+                      {formatCents(est.totalCents)}
+                    </div>
+                    <div className="text-[11px] text-slate-400">
+                      {est.lineItems.length} line(s) ·{' '}
+                      {new Date(est.createdAt).toLocaleDateString(undefined, {
+                        month: 'short',
+                        day: 'numeric',
+                      })}
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+
         {/* Linked Appointments */}
         <div className="p-5 rounded-xl bg-artemis-900/90 border border-slate-800 space-y-3">
           <div className="flex items-center justify-between">
@@ -1113,6 +1198,20 @@ export const WorkOrderDetailTab: React.FC<WorkOrderDetailTabProps> = ({ workOrde
         onSubmit={async (opts) => {
           const created = await createEvent(opts);
           openScheduleEventTab(created.id, `${created.eventNumber} — ${created.title}`);
+        }}
+      />
+
+      {/* Create Estimate Modal */}
+      <CreateEstimateModal
+        isOpen={isEstimateModalOpen}
+        workOrder={workOrder}
+        onClose={() => setIsEstimateModalOpen(false)}
+        onSubmit={async (opts) => {
+          const created = await createEstimate(opts);
+          openEstimateTab(
+            created.id,
+            `${created.estimateNumber} — ${created.vehicleDescriptionSnapshot}`
+          );
         }}
       />
     </div>

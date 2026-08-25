@@ -2,21 +2,27 @@ import type {
   CustomerRecord,
   VehicleRecord,
   WorkOrderRecord,
+  EstimateRecord,
   CreateCustomerOptions,
   UpdateCustomerOptions,
   CreateVehicleOptions,
   UpdateVehicleOptions,
   CreateWorkOrderOptions,
   UpdateWorkOrderOptions,
+  CreateEstimateOptions,
+  UpdateEstimateOptions,
   ListCustomersFilter,
   ListVehiclesFilter,
   ListWorkOrdersFilter,
+  ListEstimatesFilter,
   IAutomotiveStorageRepository,
 } from '@shared/automotiveTypes';
+import { calculateEstimateTotals } from '@shared/currencyUtils';
 
 const LOCAL_STORAGE_CUSTOMERS_KEY = 'artemis_automotive_customers_browser_dev';
 const LOCAL_STORAGE_VEHICLES_KEY = 'artemis_automotive_vehicles_browser_dev';
 const LOCAL_STORAGE_WORK_ORDERS_KEY = 'artemis_automotive_work_orders_browser_dev';
+const LOCAL_STORAGE_ESTIMATES_KEY = 'artemis_automotive_estimates_browser_dev';
 
 function isElectronEnvironment(): boolean {
   if (typeof window === 'undefined') return false;
@@ -31,9 +37,11 @@ export class LocalAutomotiveRepository implements IAutomotiveStorageRepository {
   private browserDevCustomers: CustomerRecord[] | null = null;
   private browserDevVehicles: VehicleRecord[] | null = null;
   private browserDevWorkOrders: WorkOrderRecord[] | null = null;
+  private browserDevEstimates: EstimateRecord[] | null = null;
   private nextCustomerSeq = 1;
   private nextVehicleSeq = 1;
   private nextWorkOrderSeq = 1;
+  private nextEstimateSeq = 1;
 
   async listCustomers(filter?: ListCustomersFilter): Promise<CustomerRecord[]> {
     if (isElectronEnvironment()) {
@@ -558,6 +566,264 @@ export class LocalAutomotiveRepository implements IAutomotiveStorageRepository {
     await this.browserDevSaveWorkOrders(list);
     return true;
   }
+
+  // ---------------------------------------------------------------------------
+  // Estimates
+  // ---------------------------------------------------------------------------
+
+  async listEstimates(filter?: ListEstimatesFilter): Promise<EstimateRecord[]> {
+    if (isElectronEnvironment()) {
+      if (!window.artemisAPI?.automotive?.estimates?.list) {
+        throw new Error('Artemis Automotive IPC bridge unavailable in Electron environment.');
+      }
+      return window.artemisAPI.automotive.estimates.list(filter);
+    }
+    return this.browserDevListEstimates(filter);
+  }
+
+  async getEstimate(id: string): Promise<EstimateRecord | null> {
+    if (isElectronEnvironment()) {
+      if (!window.artemisAPI?.automotive?.estimates?.get) {
+        throw new Error('Artemis Automotive IPC bridge unavailable in Electron environment.');
+      }
+      return window.artemisAPI.automotive.estimates.get(id);
+    }
+    return this.browserDevGetEstimate(id);
+  }
+
+  async createEstimate(options: CreateEstimateOptions): Promise<EstimateRecord> {
+    if (isElectronEnvironment()) {
+      if (!window.artemisAPI?.automotive?.estimates?.create) {
+        throw new Error('Artemis Automotive IPC bridge unavailable in Electron environment.');
+      }
+      return window.artemisAPI.automotive.estimates.create(options);
+    }
+    return this.browserDevCreateEstimate(options);
+  }
+
+  async updateEstimate(id: string, updates: UpdateEstimateOptions): Promise<EstimateRecord> {
+    if (isElectronEnvironment()) {
+      if (!window.artemisAPI?.automotive?.estimates?.update) {
+        throw new Error('Artemis Automotive IPC bridge unavailable in Electron environment.');
+      }
+      return window.artemisAPI.automotive.estimates.update(id, updates);
+    }
+    return this.browserDevUpdateEstimate(id, updates);
+  }
+
+  async reopenEstimate(id: string): Promise<EstimateRecord> {
+    if (isElectronEnvironment()) {
+      if (!window.artemisAPI?.automotive?.estimates?.reopen) {
+        throw new Error('Artemis Automotive IPC bridge unavailable in Electron environment.');
+      }
+      return window.artemisAPI.automotive.estimates.reopen(id);
+    }
+    return this.browserDevReopenEstimate(id);
+  }
+
+  async deleteEstimate(id: string): Promise<boolean> {
+    if (isElectronEnvironment()) {
+      if (!window.artemisAPI?.automotive?.estimates?.delete) {
+        throw new Error('Artemis Automotive IPC bridge unavailable in Electron environment.');
+      }
+      return window.artemisAPI.automotive.estimates.delete(id);
+    }
+    return this.browserDevDeleteEstimate(id);
+  }
+
+  // ---------------------------------------------------------------------------
+  // Browser Dev Fallbacks for Estimates
+  // ---------------------------------------------------------------------------
+
+  private async browserDevLoadEstimates(): Promise<EstimateRecord[]> {
+    if (this.browserDevEstimates !== null) {
+      return this.browserDevEstimates;
+    }
+    try {
+      const stored = localStorage.getItem(LOCAL_STORAGE_ESTIMATES_KEY);
+      if (stored) {
+        this.browserDevEstimates = JSON.parse(stored);
+        this.nextEstimateSeq = (this.browserDevEstimates?.length || 0) + 1;
+        return this.browserDevEstimates!;
+      }
+    } catch {
+      // ignore
+    }
+    this.browserDevEstimates = [];
+    return this.browserDevEstimates;
+  }
+
+  private async browserDevSaveEstimates(list: EstimateRecord[]): Promise<void> {
+    this.browserDevEstimates = list;
+    try {
+      localStorage.setItem(LOCAL_STORAGE_ESTIMATES_KEY, JSON.stringify(list));
+    } catch {
+      // ignore
+    }
+  }
+
+  private async browserDevListEstimates(filter?: ListEstimatesFilter): Promise<EstimateRecord[]> {
+    const list = await this.browserDevLoadEstimates();
+    let result = list;
+
+    if (!filter?.includeDeleted) {
+      result = result.filter((e) => !e.isDeleted);
+    }
+    if (filter?.workOrderId) {
+      result = result.filter((e) => e.workOrderId === filter.workOrderId);
+    }
+    if (filter?.vehicleId) {
+      result = result.filter((e) => e.vehicleId === filter.vehicleId);
+    }
+    if (filter?.customerId) {
+      result = result.filter((e) => e.customerId === filter.customerId);
+    }
+    if (filter?.status) {
+      result = result.filter((e) => e.status === filter.status);
+    }
+    if (filter?.search) {
+      const q = filter.search.toLowerCase().trim();
+      result = result.filter(
+        (e) =>
+          e.estimateNumber.toLowerCase().includes(q) ||
+          e.vehicleDescriptionSnapshot.toLowerCase().includes(q)
+      );
+    }
+
+    return [...result].sort((a, b) => b.createdAt - a.createdAt);
+  }
+
+  private async browserDevGetEstimate(id: string): Promise<EstimateRecord | null> {
+    const list = await this.browserDevLoadEstimates();
+    return list.find((e) => e.id === id && !e.isDeleted) || null;
+  }
+
+  private async browserDevCreateEstimate(options: CreateEstimateOptions): Promise<EstimateRecord> {
+    const list = await this.browserDevLoadEstimates();
+    const woList = await this.browserDevLoadWorkOrders();
+    const wo = woList.find((w) => w.id === options.workOrderId);
+    if (!wo) throw new Error('Work order not found');
+
+    const lines = (options.lineItems || []).map((item) => ({
+      ...item,
+      id: `line-${Math.random().toString(36).substring(2, 6)}`,
+    }));
+
+    const totals = calculateEstimateTotals(
+      lines,
+      options.taxRateBps || 0,
+      options.discountType,
+      options.fixedDiscountCents,
+      options.discountPercentBps
+    );
+
+    const now = Date.now();
+    const seq = this.nextEstimateSeq++;
+    const estimateNumber = `EST-${String(seq).padStart(6, '0')}`;
+
+    const estimate: EstimateRecord = {
+      id: `est-${Math.random().toString(36).substring(2, 9)}`,
+      estimateNumber,
+      workOrderId: wo.id,
+      vehicleId: wo.vehicleId,
+      customerId: wo.customerId || null,
+      customerNameSnapshot: wo.customerNameSnapshot,
+      vehicleDescriptionSnapshot: wo.vehicleDescriptionSnapshot,
+      workOrderNumberSnapshot: wo.workOrderNumber,
+      status: 'draft',
+      lineItems: lines,
+      discountType: options.discountType,
+      fixedDiscountCents: options.fixedDiscountCents,
+      discountPercentBps: options.discountPercentBps,
+      taxRateBps: options.taxRateBps || 0,
+      notes: options.notes,
+      customerMessage: options.customerMessage,
+      validUntil: options.validUntil,
+      subtotalCents: totals.subtotalCents,
+      discountTotalCents: totals.discountTotalCents,
+      taxableSubtotalCents: totals.taxableSubtotalCents,
+      taxTotalCents: totals.taxTotalCents,
+      totalCents: totals.totalCents,
+      createdAt: now,
+      updatedAt: now,
+      isDeleted: false,
+    };
+
+    list.push(estimate);
+    await this.browserDevSaveEstimates(list);
+    return estimate;
+  }
+
+  private async browserDevUpdateEstimate(
+    id: string,
+    updates: UpdateEstimateOptions
+  ): Promise<EstimateRecord> {
+    const list = await this.browserDevLoadEstimates();
+    const estimate = list.find((e) => e.id === id);
+    if (!estimate || estimate.isDeleted) throw new Error('Estimate not found');
+    if (estimate.status === 'approved') throw new Error('Cannot modify approved estimate');
+
+    if (updates.lineItems !== undefined) {
+      estimate.lineItems = updates.lineItems.map((l) => ({
+        ...l,
+        id: 'id' in l && l.id ? l.id : `line-${Math.random().toString(36).substring(2, 6)}`,
+      }));
+    }
+    if (updates.discountType !== undefined) estimate.discountType = updates.discountType;
+    if (updates.fixedDiscountCents !== undefined) estimate.fixedDiscountCents = updates.fixedDiscountCents;
+    if (updates.discountPercentBps !== undefined) estimate.discountPercentBps = updates.discountPercentBps;
+    if (updates.taxRateBps !== undefined) estimate.taxRateBps = updates.taxRateBps;
+    if (updates.notes !== undefined) estimate.notes = updates.notes;
+    if (updates.customerMessage !== undefined) estimate.customerMessage = updates.customerMessage;
+    if (updates.validUntil !== undefined) estimate.validUntil = updates.validUntil;
+
+    const totals = calculateEstimateTotals(
+      estimate.lineItems,
+      estimate.taxRateBps,
+      estimate.discountType,
+      estimate.fixedDiscountCents,
+      estimate.discountPercentBps
+    );
+
+    estimate.subtotalCents = totals.subtotalCents;
+    estimate.discountTotalCents = totals.discountTotalCents;
+    estimate.taxableSubtotalCents = totals.taxableSubtotalCents;
+    estimate.taxTotalCents = totals.taxTotalCents;
+    estimate.totalCents = totals.totalCents;
+
+    if (updates.status !== undefined && updates.status !== estimate.status) {
+      estimate.status = updates.status;
+      if (updates.status === 'approved') estimate.approvedAt = Date.now();
+      if (updates.status === 'declined') estimate.declinedAt = Date.now();
+    }
+
+    estimate.updatedAt = Date.now();
+    await this.browserDevSaveEstimates(list);
+    return estimate;
+  }
+
+  private async browserDevReopenEstimate(id: string): Promise<EstimateRecord> {
+    const list = await this.browserDevLoadEstimates();
+    const estimate = list.find((e) => e.id === id);
+    if (!estimate || estimate.isDeleted) throw new Error('Estimate not found');
+    estimate.status = 'draft';
+    estimate.approvedAt = undefined;
+    estimate.updatedAt = Date.now();
+    await this.browserDevSaveEstimates(list);
+    return estimate;
+  }
+
+  private async browserDevDeleteEstimate(id: string): Promise<boolean> {
+    const list = await this.browserDevLoadEstimates();
+    const estimate = list.find((e) => e.id === id);
+    if (!estimate) throw new Error('Estimate not found');
+    if (estimate.status === 'approved') throw new Error('Cannot delete approved Estimate');
+    estimate.isDeleted = true;
+    estimate.updatedAt = Date.now();
+    await this.browserDevSaveEstimates(list);
+    return true;
+  }
 }
 
 export const automotiveRepository = new LocalAutomotiveRepository();
+

@@ -1,74 +1,51 @@
+import type {
+  EstimateRecord,
+  CreateEstimateOptions,
+  UpdateEstimateOptions,
+  ListEstimatesFilter,
+  EstimatesBridge,
+} from './estimateTypes';
+
+export * from './estimateTypes';
+
 export type CustomerType = 'individual' | 'business';
 
 export interface CustomerRecord {
-  /** Stable immutable UUID generated authoritatively in Electron Main */
-  id: string;
-  /** Authoritative human-facing sequential customer number (e.g. CUS-000001) */
-  customerNumber: string;
-  /** Customer type: individual person or commercial business entity */
+  id: string; // UUID
+  customerNumber: string; // Monotonic sequential ID, e.g. CUS-000001
   type: CustomerType;
-  /** Primary display name (derived authoritatively by Main from first+last or businessName) */
   name: string;
-  /** Individual first name */
   firstName?: string;
-  /** Individual last name */
   lastName?: string;
-  /** Business entity legal / trade name */
   businessName?: string;
-  /** Primary point of contact for business accounts */
   contactPerson?: string;
-  /** Contact phone number */
   phone?: string;
-  /** Contact email address */
   email?: string;
-  /** Physical / billing address */
   address?: string;
-  /** Customer-level notes, preferences, or account info */
   notes?: string;
-  /** Record creation timestamp in milliseconds (epoch) */
   createdAt: number;
-  /** Last update timestamp in milliseconds (epoch) */
   updatedAt: number;
-  /** Soft-deletion flag */
   isDeleted: boolean;
 }
 
 export interface VehicleRecord {
-  /** Stable immutable UUID generated authoritatively in Electron Main */
-  id: string;
-  /** Authoritative human-facing sequential vehicle number (e.g. VEH-000001) */
-  vehicleNumber: string;
-  /** Foreign key referencing CustomerRecord.id, or null if unassigned/shop/project vehicle */
-  customerId: string | null;
-  /** 17-character VIN or custom identifier (normalized uppercase, globally unique) */
-  vin?: string;
-  /** Model year (e.g. 2006, optional) */
+  id: string; // UUID
+  vehicleNumber: string; // Monotonic sequential ID, e.g. VEH-000001
+  customerId: string | null; // Nullable: vehicle can be unassigned/shop-owned
   year?: number;
-  /** Vehicle make (e.g. Mercedes, Honda, Ford) */
   make: string;
-  /** Vehicle model (e.g. SL500, Civic, F-150) */
   model: string;
-  /** Sub-model or trim (e.g. AMG, EX, Lariat) */
   trim?: string;
-  /** Engine specifications (e.g. "5.0L V8 M113") */
   engine?: string;
-  /** Transmission specifications (e.g. "722.9 7-Speed Automatic") */
   transmission?: string;
-  /** Drivetrain configuration (e.g. "RWD", "AWD", "4WD", "FWD", "EV") */
   drivetrain?: string;
-  /** State license plate number */
+  vin?: string;
   licensePlate?: string;
-  /** Current vehicle odometer mileage */
   mileage?: number;
-  /** Exterior color */
   color?: string;
-  /** General vehicle notes */
   notes?: string;
-  /** Record creation timestamp in milliseconds (epoch) */
   createdAt: number;
-  /** Last update timestamp in milliseconds (epoch) */
   updatedAt: number;
-  /** Soft-deletion flag */
   isDeleted: boolean;
 }
 
@@ -83,38 +60,28 @@ export type WorkOrderStatus =
   | 'cancelled';
 
 export interface WorkOrderLaborLine {
-  /** Immutable line item UUID generated in Electron Main */
-  id: string;
-  /** Labor description (e.g. "Front brake pad and rotor replacement") */
+  id: string; // Unique line UUID
   description: string;
-  /** Labor time in hours (work/time only, no labor rates in V0.0.5) */
   hours?: number;
-  /** Technician notes or instructions specific to this labor operation */
+  technician?: string;
   notes?: string;
 }
 
 export interface WorkOrderPartLine {
-  /** Immutable line item UUID generated in Electron Main */
-  id: string;
-  /** Part item description (e.g. "Ceramic Front Brake Pads") */
+  id: string; // Unique line UUID
   description: string;
-  /** Manufacturer / OEM / Aftermarket Part Number */
   partNumber?: string;
-  /** Part quantity required/installed (greater than zero, no pricing in V0.0.5) */
-  quantity: number;
-  /** Specific part notes, brand, or bin location */
+  quantity: number; // Strictly positive integer
   notes?: string;
 }
 
 export interface WorkOrderRecord {
-  /** Stable immutable UUID generated authoritatively in Electron Main */
-  id: string;
-  /** Authoritative human-facing sequential work order number (e.g. WO-000001) */
-  workOrderNumber: string;
+  id: string; // UUID
+  workOrderNumber: string; // Monotonic sequential ID, e.g. WO-000001
 
-  /** Foreign key referencing VehicleRecord.id */
+  /** Immutable relationship to vehicle record */
   vehicleId: string;
-  /** Foreign key referencing CustomerRecord.id at time of intake, or null */
+  /** Linked customer ID at the time of work order creation, or null */
   customerId: string | null;
 
   /** Immutable historical snapshot of customer display name at creation */
@@ -161,13 +128,15 @@ export interface WorkOrderRecord {
 }
 
 export interface ArtemisAutomotiveStoreData {
-  schemaVersion: 3;
+  schemaVersion: 4;
   nextCustomerSequence: number;
   nextVehicleSequence: number;
   nextWorkOrderSequence: number;
+  nextEstimateSequence: number;
   customers: CustomerRecord[];
   vehicles: VehicleRecord[];
   workOrders: WorkOrderRecord[];
+  estimates: EstimateRecord[];
 }
 
 export interface CreateCustomerOptions {
@@ -295,6 +264,8 @@ export interface AutomotiveBridge {
   createWorkOrder: (options: CreateWorkOrderOptions) => Promise<WorkOrderRecord>;
   updateWorkOrder: (id: string, updates: UpdateWorkOrderOptions) => Promise<WorkOrderRecord>;
   deleteWorkOrder: (id: string) => Promise<boolean>;
+
+  estimates: EstimatesBridge;
 }
 
 export interface IAutomotiveStorageRepository {
@@ -315,4 +286,11 @@ export interface IAutomotiveStorageRepository {
   createWorkOrder(options: CreateWorkOrderOptions): Promise<WorkOrderRecord>;
   updateWorkOrder(id: string, updates: UpdateWorkOrderOptions): Promise<WorkOrderRecord>;
   deleteWorkOrder(id: string): Promise<boolean>;
+
+  listEstimates(filter?: ListEstimatesFilter): Promise<EstimateRecord[]>;
+  getEstimate(id: string): Promise<EstimateRecord | null>;
+  createEstimate(options: CreateEstimateOptions): Promise<EstimateRecord>;
+  updateEstimate(id: string, updates: UpdateEstimateOptions): Promise<EstimateRecord>;
+  reopenEstimate(id: string): Promise<EstimateRecord>;
+  deleteEstimate(id: string): Promise<boolean>;
 }

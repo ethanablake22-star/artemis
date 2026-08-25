@@ -8,6 +8,8 @@ import type {
   WorkOrderRecord,
   WorkOrderLaborLine,
   WorkOrderPartLine,
+  EstimateRecord,
+  EstimateLineItem,
   ArtemisAutomotiveStoreData,
   CreateCustomerOptions,
   UpdateCustomerOptions,
@@ -15,12 +17,16 @@ import type {
   UpdateVehicleOptions,
   CreateWorkOrderOptions,
   UpdateWorkOrderOptions,
+  CreateEstimateOptions,
+  UpdateEstimateOptions,
   ListCustomersFilter,
   ListVehiclesFilter,
   ListWorkOrdersFilter,
+  ListEstimatesFilter,
 } from '../shared/automotiveTypes';
+import { calculateEstimateTotals } from '../shared/currencyUtils';
 
-export const CURRENT_AUTOMOTIVE_SCHEMA_VERSION = 3;
+export const CURRENT_AUTOMOTIVE_SCHEMA_VERSION = 4;
 const AUTOMOTIVE_STORE_FILENAME = 'artemis_automotive_store.json';
 
 export class UnsupportedAutomotiveSchemaVersionError extends Error {
@@ -45,6 +51,10 @@ function formatVehicleNumber(seq: number): string {
 
 function formatWorkOrderNumber(seq: number): string {
   return `WO-${String(seq).padStart(6, '0')}`;
+}
+
+function formatEstimateNumber(seq: number): string {
+  return `EST-${String(seq).padStart(6, '0')}`;
 }
 
 function deriveCustomerName(
@@ -73,13 +83,15 @@ function deriveCustomerName(
 function validateAndMigrateAutomotiveStore(raw: unknown): ArtemisAutomotiveStoreData {
   if (!raw || typeof raw !== 'object') {
     return {
-      schemaVersion: 3,
+      schemaVersion: 4,
       nextCustomerSequence: 1,
       nextVehicleSequence: 1,
       nextWorkOrderSequence: 1,
+      nextEstimateSequence: 1,
       customers: [],
       vehicles: [],
       workOrders: [],
+      estimates: [],
     };
   }
 
@@ -88,7 +100,7 @@ function validateAndMigrateAutomotiveStore(raw: unknown): ArtemisAutomotiveStore
 
   switch (version) {
     case 1: {
-      // Deterministic migration from Schema 1 -> Schema 3
+      // Deterministic migration from Schema 1 -> Schema 4
       const rawCustomers = Array.isArray(obj.customers)
         ? (obj.customers as Record<string, unknown>[])
         : [];
@@ -149,18 +161,20 @@ function validateAndMigrateAutomotiveStore(raw: unknown): ArtemisAutomotiveStore
       });
 
       return {
-        schemaVersion: 3,
+        schemaVersion: 4,
         nextCustomerSequence: migratedCustomers.length + 1,
         nextVehicleSequence: migratedVehicles.length + 1,
         nextWorkOrderSequence: 1,
+        nextEstimateSequence: 1,
         customers: migratedCustomers,
         vehicles: migratedVehicles,
         workOrders: [],
+        estimates: [],
       };
     }
 
     case 2: {
-      // Migration from Schema 2 -> Schema 3
+      // Migration from Schema 2 -> Schema 4
       const customers = Array.isArray(obj.customers)
         ? (obj.customers as CustomerRecord[])
         : [];
@@ -177,17 +191,20 @@ function validateAndMigrateAutomotiveStore(raw: unknown): ArtemisAutomotiveStore
           : vehicles.length + 1;
 
       return {
-        schemaVersion: 3,
+        schemaVersion: 4,
         nextCustomerSequence,
         nextVehicleSequence,
         nextWorkOrderSequence: 1,
+        nextEstimateSequence: 1,
         customers,
         vehicles,
         workOrders: [],
+        estimates: [],
       };
     }
 
     case 3: {
+      // Migration from Schema 3 -> Schema 4
       const customers = Array.isArray(obj.customers)
         ? (obj.customers as CustomerRecord[])
         : [];
@@ -212,13 +229,59 @@ function validateAndMigrateAutomotiveStore(raw: unknown): ArtemisAutomotiveStore
           : workOrders.length + 1;
 
       return {
-        schemaVersion: 3,
+        schemaVersion: 4,
         nextCustomerSequence,
         nextVehicleSequence,
         nextWorkOrderSequence,
+        nextEstimateSequence: 1,
         customers,
         vehicles,
         workOrders,
+        estimates: [],
+      };
+    }
+
+    case 4: {
+      const customers = Array.isArray(obj.customers)
+        ? (obj.customers as CustomerRecord[])
+        : [];
+      const vehicles = Array.isArray(obj.vehicles)
+        ? (obj.vehicles as VehicleRecord[])
+        : [];
+      const workOrders = Array.isArray(obj.workOrders)
+        ? (obj.workOrders as WorkOrderRecord[])
+        : [];
+      const estimates = Array.isArray(obj.estimates)
+        ? (obj.estimates as EstimateRecord[])
+        : [];
+
+      const nextCustomerSequence =
+        typeof obj.nextCustomerSequence === 'number'
+          ? obj.nextCustomerSequence
+          : customers.length + 1;
+      const nextVehicleSequence =
+        typeof obj.nextVehicleSequence === 'number'
+          ? obj.nextVehicleSequence
+          : vehicles.length + 1;
+      const nextWorkOrderSequence =
+        typeof obj.nextWorkOrderSequence === 'number'
+          ? obj.nextWorkOrderSequence
+          : workOrders.length + 1;
+      const nextEstimateSequence =
+        typeof obj.nextEstimateSequence === 'number'
+          ? obj.nextEstimateSequence
+          : estimates.length + 1;
+
+      return {
+        schemaVersion: 4,
+        nextCustomerSequence,
+        nextVehicleSequence,
+        nextWorkOrderSequence,
+        nextEstimateSequence,
+        customers,
+        vehicles,
+        workOrders,
+        estimates,
       };
     }
 
@@ -248,13 +311,15 @@ async function readAutomotiveStoreFile(): Promise<ArtemisAutomotiveStoreData> {
       throw err;
     }
     const initialStore: ArtemisAutomotiveStoreData = {
-      schemaVersion: 3,
+      schemaVersion: 4,
       nextCustomerSequence: 1,
       nextVehicleSequence: 1,
       nextWorkOrderSequence: 1,
+      nextEstimateSequence: 1,
       customers: [],
       vehicles: [],
       workOrders: [],
+      estimates: [],
     };
     await writeAutomotiveStoreFile(initialStore);
     inMemoryCache = initialStore;
@@ -984,6 +1049,379 @@ export async function deleteWorkOrder(id: string): Promise<boolean> {
 
   workOrder.isDeleted = true;
   workOrder.updatedAt = Date.now();
+  await writeAutomotiveStoreFile(store);
+  return true;
+}
+
+// -----------------------------------------------------------------------------
+// Authoritative Estimates Operations (V0.0.8)
+// -----------------------------------------------------------------------------
+
+export async function listEstimates(filter?: ListEstimatesFilter): Promise<EstimateRecord[]> {
+  const store = await readAutomotiveStoreFile();
+  let result = store.estimates || [];
+
+  if (!filter?.includeDeleted) {
+    result = result.filter((e) => !e.isDeleted);
+  }
+
+  if (filter?.workOrderId) {
+    result = result.filter((e) => e.workOrderId === filter.workOrderId);
+  }
+
+  if (filter?.vehicleId) {
+    result = result.filter((e) => e.vehicleId === filter.vehicleId);
+  }
+
+  if (filter?.customerId) {
+    result = result.filter((e) => e.customerId === filter.customerId);
+  }
+
+  if (filter?.status) {
+    result = result.filter((e) => e.status === filter.status);
+  }
+
+  if (filter?.search) {
+    const q = filter.search.toLowerCase().trim();
+    result = result.filter(
+      (e) =>
+        e.estimateNumber.toLowerCase().includes(q) ||
+        (e.customerNameSnapshot && e.customerNameSnapshot.toLowerCase().includes(q)) ||
+        e.vehicleDescriptionSnapshot.toLowerCase().includes(q) ||
+        (e.notes && e.notes.toLowerCase().includes(q))
+    );
+  }
+
+  return [...result].sort((a, b) => b.createdAt - a.createdAt);
+}
+
+export async function getEstimate(id: string): Promise<EstimateRecord | null> {
+  if (!id || typeof id !== 'string') return null;
+  const store = await readAutomotiveStoreFile();
+  const estimate = (store.estimates || []).find((e) => e.id === id);
+  if (!estimate || estimate.isDeleted) return null;
+  return estimate;
+}
+
+export async function createEstimate(options: CreateEstimateOptions): Promise<EstimateRecord> {
+  if (!options || typeof options !== 'object') {
+    throw new Error('Invalid options object provided to createEstimate');
+  }
+
+  const { workOrderId } = options;
+  if (!workOrderId || typeof workOrderId !== 'string') {
+    throw new Error('Valid workOrderId is required to create an Estimate');
+  }
+
+  const store = await readAutomotiveStoreFile();
+  const workOrder = (store.workOrders || []).find((w) => w.id === workOrderId);
+  if (!workOrder) {
+    throw new Error(`Work Order "${workOrderId}" not found`);
+  }
+  if (workOrder.isDeleted) {
+    throw new Error(`Cannot create Estimate for archived Work Order ${workOrder.workOrderNumber}`);
+  }
+
+  // Derive relationship & snapshots authoritatively from Work Order
+  const vehicleId = workOrder.vehicleId;
+  const customerId = workOrder.customerId || null;
+  const vehicleDescriptionSnapshot = workOrder.vehicleDescriptionSnapshot;
+  const customerNameSnapshot = workOrder.customerNameSnapshot;
+  const workOrderNumberSnapshot = workOrder.workOrderNumber;
+
+  // Build line items
+  const validatedLines: EstimateLineItem[] = [];
+
+  if (options.importWorkOrderItems) {
+    const defaultLaborRate =
+      typeof options.defaultLaborRateCents === 'number' && options.defaultLaborRateCents >= 0
+        ? Math.round(options.defaultLaborRateCents)
+        : 0;
+
+    // Import labor lines
+    for (const labor of workOrder.laborLines) {
+      const hours = typeof labor.hours === 'number' && labor.hours >= 0 ? labor.hours : 1;
+      const quantityMilli = Math.round(hours * 1000);
+      validatedLines.push({
+        id: crypto.randomUUID(),
+        type: 'labor',
+        description: labor.description || 'Labor service',
+        quantityMilli,
+        unitPriceCents: defaultLaborRate,
+        taxable: false,
+        sourceWorkOrderLaborLineId: labor.id,
+        notes: labor.notes,
+      });
+    }
+
+    // Import part lines
+    for (const part of workOrder.partLines) {
+      const quantityMilli = Math.round((part.quantity || 1) * 1000);
+      validatedLines.push({
+        id: crypto.randomUUID(),
+        type: 'part',
+        description: part.description || 'Part',
+        quantityMilli,
+        unitPriceCents: 0,
+        taxable: true,
+        sourceWorkOrderPartLineId: part.id,
+        notes: part.partNumber ? `Part #: ${part.partNumber}` : undefined,
+      });
+    }
+  } else if (Array.isArray(options.lineItems)) {
+    for (const item of options.lineItems) {
+      const desc = item.description?.trim();
+      if (!desc) throw new Error('Line item description cannot be empty');
+      if (typeof item.quantityMilli !== 'number' || item.quantityMilli < 0) {
+        throw new Error('Line item quantity must be non-negative');
+      }
+      if (typeof item.unitPriceCents !== 'number' || item.unitPriceCents < 0) {
+        throw new Error('Line item unit price cannot be negative');
+      }
+
+      validatedLines.push({
+        id: crypto.randomUUID(),
+        type: item.type || 'labor',
+        description: desc,
+        quantityMilli: Math.round(item.quantityMilli),
+        unitPriceCents: Math.round(item.unitPriceCents),
+        taxable: Boolean(item.taxable),
+        notes: item.notes?.trim() || undefined,
+      });
+    }
+  }
+
+  // Validate discount & tax
+  const taxRateBps =
+    typeof options.taxRateBps === 'number' && options.taxRateBps >= 0
+      ? Math.round(options.taxRateBps)
+      : 0;
+
+  let discountType = options.discountType;
+  let fixedDiscountCents =
+    typeof options.fixedDiscountCents === 'number' && options.fixedDiscountCents >= 0
+      ? Math.round(options.fixedDiscountCents)
+      : undefined;
+  let discountPercentBps =
+    typeof options.discountPercentBps === 'number' && options.discountPercentBps >= 0
+      ? Math.round(options.discountPercentBps)
+      : undefined;
+
+  if (discountType === 'percent') {
+    if (discountPercentBps !== undefined && (discountPercentBps < 0 || discountPercentBps > 10000)) {
+      throw new Error('Percentage discount cannot exceed 100% (10000 basis points)');
+    }
+  }
+
+  // Calculate preliminary totals to validate fixed discount <= subtotal
+  const totals = calculateEstimateTotals(
+    validatedLines,
+    taxRateBps,
+    discountType,
+    fixedDiscountCents,
+    discountPercentBps
+  );
+
+  if (discountType === 'fixed' && fixedDiscountCents !== undefined && fixedDiscountCents > totals.subtotalCents) {
+    throw new Error(
+      `Fixed discount ($${(fixedDiscountCents / 100).toFixed(2)}) cannot exceed subtotal ($${(totals.subtotalCents / 100).toFixed(2)})`
+    );
+  }
+
+  const seq = store.nextEstimateSequence++;
+  const estimateNumber = formatEstimateNumber(seq);
+  const now = Date.now();
+
+  const newEstimate: EstimateRecord = {
+    id: crypto.randomUUID(),
+    estimateNumber,
+    workOrderId,
+    vehicleId,
+    customerId,
+    customerNameSnapshot,
+    vehicleDescriptionSnapshot,
+    workOrderNumberSnapshot,
+    status: 'draft',
+    lineItems: validatedLines,
+    discountType,
+    fixedDiscountCents,
+    discountPercentBps,
+    taxRateBps,
+    notes: options.notes?.trim() || undefined,
+    customerMessage: options.customerMessage?.trim() || undefined,
+    validUntil: typeof options.validUntil === 'number' ? options.validUntil : undefined,
+    subtotalCents: totals.subtotalCents,
+    discountTotalCents: totals.discountTotalCents,
+    taxableSubtotalCents: totals.taxableSubtotalCents,
+    taxTotalCents: totals.taxTotalCents,
+    totalCents: totals.totalCents,
+    createdAt: now,
+    updatedAt: now,
+    isDeleted: false,
+  };
+
+  if (!store.estimates) store.estimates = [];
+  store.estimates.push(newEstimate);
+  await writeAutomotiveStoreFile(store);
+  return newEstimate;
+}
+
+export async function updateEstimate(
+  id: string,
+  updates: UpdateEstimateOptions
+): Promise<EstimateRecord> {
+  if (!id || typeof id !== 'string') {
+    throw new Error('Invalid estimate ID provided');
+  }
+
+  const store = await readAutomotiveStoreFile();
+  const estimate = (store.estimates || []).find((e) => e.id === id);
+  if (!estimate || estimate.isDeleted) {
+    throw new Error(`Estimate "${id}" not found`);
+  }
+
+  // Approved Estimate Mutation Lock: normal updates cannot mutate approved estimates
+  if (estimate.status === 'approved') {
+    throw new Error(
+      `Cannot modify approved Estimate ${estimate.estimateNumber}. Please explicitly reopen the estimate first.`
+    );
+  }
+
+  // Update line items if provided
+  if (Array.isArray(updates.lineItems)) {
+    const validatedLines: EstimateLineItem[] = [];
+    for (const item of updates.lineItems) {
+      const desc = item.description?.trim();
+      if (!desc) throw new Error('Line item description cannot be empty');
+      if (typeof item.quantityMilli !== 'number' || item.quantityMilli < 0) {
+        throw new Error('Line item quantity must be non-negative');
+      }
+      if (typeof item.unitPriceCents !== 'number' || item.unitPriceCents < 0) {
+        throw new Error('Line item unit price cannot be negative');
+      }
+
+      validatedLines.push({
+        id: item.id || crypto.randomUUID(),
+        type: item.type || 'labor',
+        description: desc,
+        quantityMilli: Math.round(item.quantityMilli),
+        unitPriceCents: Math.round(item.unitPriceCents),
+        taxable: Boolean(item.taxable),
+        sourceWorkOrderLaborLineId: item.sourceWorkOrderLaborLineId,
+        sourceWorkOrderPartLineId: item.sourceWorkOrderPartLineId,
+        notes: item.notes?.trim() || undefined,
+      });
+    }
+    estimate.lineItems = validatedLines;
+  }
+
+  // Update discount & tax fields
+  if (updates.discountType !== undefined) {
+    estimate.discountType = updates.discountType;
+  }
+  if (updates.fixedDiscountCents !== undefined) {
+    estimate.fixedDiscountCents =
+      updates.fixedDiscountCents >= 0 ? Math.round(updates.fixedDiscountCents) : undefined;
+  }
+  if (updates.discountPercentBps !== undefined) {
+    estimate.discountPercentBps =
+      updates.discountPercentBps >= 0 ? Math.round(updates.discountPercentBps) : undefined;
+  }
+  if (updates.taxRateBps !== undefined) {
+    estimate.taxRateBps = Math.max(0, Math.round(updates.taxRateBps));
+  }
+
+  if (estimate.discountType === 'percent' && estimate.discountPercentBps !== undefined) {
+    if (estimate.discountPercentBps < 0 || estimate.discountPercentBps > 10000) {
+      throw new Error('Percentage discount cannot exceed 100% (10000 basis points)');
+    }
+  }
+
+  // Calculate authoritative totals
+  const totals = calculateEstimateTotals(
+    estimate.lineItems,
+    estimate.taxRateBps,
+    estimate.discountType,
+    estimate.fixedDiscountCents,
+    estimate.discountPercentBps
+  );
+
+  if (
+    estimate.discountType === 'fixed' &&
+    estimate.fixedDiscountCents !== undefined &&
+    estimate.fixedDiscountCents > totals.subtotalCents
+  ) {
+    throw new Error(
+      `Fixed discount ($${(estimate.fixedDiscountCents / 100).toFixed(2)}) cannot exceed subtotal ($${(totals.subtotalCents / 100).toFixed(2)})`
+    );
+  }
+
+  estimate.subtotalCents = totals.subtotalCents;
+  estimate.discountTotalCents = totals.discountTotalCents;
+  estimate.taxableSubtotalCents = totals.taxableSubtotalCents;
+  estimate.taxTotalCents = totals.taxTotalCents;
+  estimate.totalCents = totals.totalCents;
+
+  if (updates.notes !== undefined) estimate.notes = updates.notes?.trim() || undefined;
+  if (updates.customerMessage !== undefined) {
+    estimate.customerMessage = updates.customerMessage?.trim() || undefined;
+  }
+  if (updates.validUntil !== undefined) estimate.validUntil = updates.validUntil;
+
+  // Status transitions and timestamp management
+  if (updates.status !== undefined && updates.status !== estimate.status) {
+    estimate.status = updates.status;
+
+    if (updates.status === 'approved') {
+      estimate.approvedAt = Date.now();
+    } else if (updates.status === 'declined') {
+      estimate.declinedAt = Date.now();
+    }
+  }
+
+  estimate.updatedAt = Date.now();
+  await writeAutomotiveStoreFile(store);
+  return estimate;
+}
+
+export async function reopenEstimate(id: string): Promise<EstimateRecord> {
+  if (!id || typeof id !== 'string') {
+    throw new Error('Invalid estimate ID provided');
+  }
+
+  const store = await readAutomotiveStoreFile();
+  const estimate = (store.estimates || []).find((e) => e.id === id);
+  if (!estimate || estimate.isDeleted) {
+    throw new Error(`Estimate "${id}" not found`);
+  }
+
+  estimate.status = 'draft';
+  estimate.approvedAt = undefined;
+  estimate.updatedAt = Date.now();
+  await writeAutomotiveStoreFile(store);
+  return estimate;
+}
+
+export async function deleteEstimate(id: string): Promise<boolean> {
+  if (!id || typeof id !== 'string') {
+    throw new Error('Invalid estimate ID provided');
+  }
+
+  const store = await readAutomotiveStoreFile();
+  const estimate = (store.estimates || []).find((e) => e.id === id);
+  if (!estimate) {
+    throw new Error(`Estimate "${id}" not found`);
+  }
+
+  // Deletion guard for approved estimates
+  if (estimate.status === 'approved') {
+    throw new Error(
+      `Cannot delete approved Estimate ${estimate.estimateNumber}. Approved commercial proposals must be preserved for historical audit integrity.`
+    );
+  }
+
+  estimate.isDeleted = true;
+  estimate.updatedAt = Date.now();
   await writeAutomotiveStoreFile(store);
   return true;
 }

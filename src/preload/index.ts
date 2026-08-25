@@ -11,15 +11,19 @@ import type {
   CustomerRecord,
   VehicleRecord,
   WorkOrderRecord,
+  EstimateRecord,
   CreateCustomerOptions,
   UpdateCustomerOptions,
   CreateVehicleOptions,
   UpdateVehicleOptions,
   CreateWorkOrderOptions,
   UpdateWorkOrderOptions,
+  CreateEstimateOptions,
+  UpdateEstimateOptions,
   ListCustomersFilter,
   ListVehiclesFilter,
   ListWorkOrdersFilter,
+  ListEstimatesFilter,
 } from '../shared/automotiveTypes';
 import type {
   ScheduleEventRecord,
@@ -97,6 +101,21 @@ const bridge: ArtemisWindowBridge = {
       ipcRenderer.invoke('artemis:automotive:updateWorkOrder', id, updates),
     deleteWorkOrder: (id: string): Promise<boolean> =>
       ipcRenderer.invoke('artemis:automotive:deleteWorkOrder', id),
+
+    estimates: {
+      list: (filter?: ListEstimatesFilter): Promise<EstimateRecord[]> =>
+        ipcRenderer.invoke('artemis:automotive:estimates:list', filter),
+      get: (id: string): Promise<EstimateRecord | null> =>
+        ipcRenderer.invoke('artemis:automotive:estimates:get', id),
+      create: (options: CreateEstimateOptions): Promise<EstimateRecord> =>
+        ipcRenderer.invoke('artemis:automotive:estimates:create', options),
+      update: (id: string, updates: UpdateEstimateOptions): Promise<EstimateRecord> =>
+        ipcRenderer.invoke('artemis:automotive:estimates:update', id, updates),
+      reopen: (id: string): Promise<EstimateRecord> =>
+        ipcRenderer.invoke('artemis:automotive:estimates:reopen', id),
+      delete: (id: string): Promise<boolean> =>
+        ipcRenderer.invoke('artemis:automotive:estimates:delete', id),
+    },
   },
   schedule: {
     list: (filter?: ListScheduleEventsFilter): Promise<ScheduleEventRecord[]> =>

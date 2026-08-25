@@ -13,6 +13,7 @@ import {
   User,
   Car,
   ClipboardList,
+  Calculator,
   File,
   X,
 } from 'lucide-react';
@@ -58,6 +59,8 @@ const renderTabIcon = (type: ArtemisTab['type']) => {
       return <Car {...iconProps} className="w-4 h-4 shrink-0 text-indigo-400" />;
     case 'automotive-work-order':
       return <ClipboardList {...iconProps} className="w-4 h-4 shrink-0 text-emerald-400" />;
+    case 'automotive-estimate':
+      return <Calculator {...iconProps} className="w-4 h-4 shrink-0 text-teal-400" />;
     default:
       return <File {...iconProps} className="w-4 h-4 shrink-0 text-slate-400" />;
   }

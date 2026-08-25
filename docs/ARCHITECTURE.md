@@ -29,13 +29,14 @@ export type ArtemisTabType =
   | 'automotive'
   | 'automotive-customer'
   | 'automotive-vehicle'
-  | 'automotive-work-order';
+  | 'automotive-work-order'
+  | 'automotive-estimate';
 
 export interface ArtemisTab {
   id: string;
   type: ArtemisTabType;
   title: string;
-  resourceId?: string; // Stable UUID for bound resources (e.g. Documents, Customers, Vehicles, Work Orders, Events)
+  resourceId?: string; // Stable UUID for bound resources (e.g. Documents, Customers, Vehicles, Work Orders, Estimates, Events)
   icon?: string;
   closable: boolean;
   state?: Record<string, unknown>;
@@ -53,7 +54,7 @@ export interface ArtemisTab {
 1. **Shell Independence**: The top-level tab shell governs window lifecycle, navigation, tab selection, reordering, and closure. The shell does not concern itself with the internal business logic of the hosted view.
 2. **Singleton & Resource Deduplication**:
    - Singletons like **Home**, **Library**, **Automotive Hub**, and **Schedule & Calendar** are unique across the app.
-   - Resource-bound tabs (**Documents**, **Customers**, **Vehicles**, **Work Orders**, **Schedule Events**) deduplicate by `tab.type + tab.resourceId`: opening an already open resource focuses the existing tab rather than spawning duplicates.
+   - Resource-bound tabs (**Documents**, **Customers**, **Vehicles**, **Work Orders**, **Estimates**, **Schedule Events**) deduplicate by `tab.type + tab.resourceId`: opening an already open resource focuses the existing tab rather than spawning duplicates.
 3. **Immutability & Closability**: The initial **Artemis Home** tab is non-closable (`closable: false`), serving as the persistent mission control and workspace anchor.
 4. **Flush-on-Close Safety**: Document tabs register close hooks with `TabContext` to guarantee pending changes are flushed before unmounting, blocking closure if disk writes fail.
 
@@ -85,13 +86,15 @@ The native structured rich-text document workspace.
 - **Race-Safe Autosave & Flush**: Edit generation counter prevents stale status transitions, and tab closure flushes pending edits synchronously.
 - **Business Essentials**: Integrated interactive tables (add/remove rows/cols), embedded images, hyperlinks, print stylesheet (`@media print`), and native PDF export.
 
-### 4. Artemis Automotive (`automotive`, `automotive-customer`, `automotive-vehicle`, `automotive-work-order`)
-The operational backbone for automotive repair management, fleet tracking, and customer history.
-- **Authoritative Main Storage (Schema V3)**: Customers, Vehicles, and Work Orders stored in `userData/artemis_automotive_store.json` with atomic writes.
-- **Human-Facing Non-Reusable Identifiers**: Monotonic sequential numbers generated in Main (`CUS-000001`, `VEH-000001`, `WO-000001`). Numbers are never reused even if records are deleted.
-- **Immutable Historical Snapshots**: Work Orders preserve immutable customer name, vehicle description, and VIN snapshots captured at creation.
-- **Repair Operations**: Labor line items with hours/technician notes, Part line items with part numbers/quantities, inspection/diagnosis notes, work performed summaries, and odometer tracking (`odometerIn`, `odometerOut`).
-- **Independent Lifecycles**: Deleting a customer or vehicle marks the record as deleted without cascading to linked repair history.
+### 4. Artemis Automotive (`automotive`, `automotive-customer`, `automotive-vehicle`, `automotive-work-order`, `automotive-estimate`)
+The operational backbone for automotive repair management, fleet tracking, customer history, and commercial estimating.
+- **Authoritative Main Storage (Schema V4)**: Customers, Vehicles, Work Orders, and Estimates stored in `userData/artemis_automotive_store.json` with atomic writes.
+- **Human-Facing Non-Reusable Identifiers**: Monotonic sequential numbers generated in Main (`CUS-000001`, `VEH-000001`, `WO-000001`, `EST-000001`). Numbers are never reused even if records are deleted.
+- **Separation of Concerns**: Work Orders capture the technical repair record; Estimates capture what was proposed to charge.
+- **Integer-Cent Monetary Math**: 100% integer cent arithmetic with proportional discount and tax allocations (see [docs/ESTIMATES.md](file:///home/EthanABlake/Projects/artemis/docs/ESTIMATES.md)).
+- **Approved Estimate Protection**: Approved commercial records are locked from ordinary mutations and deletions; explicit reopening transitions back to draft.
+- **Immutable Historical Snapshots**: Work Orders and Estimates preserve immutable customer name, vehicle description, and VIN snapshots captured at creation.
+- **Independent Lifecycles**: Deleting a customer or vehicle marks the record as deleted without cascading to linked repair or pricing history.
 
 ### 5. Artemis Scheduling & Calendar (`schedule`, `schedule-event`)
 Native appointment scheduling, dispatch timelines, and service bookings.

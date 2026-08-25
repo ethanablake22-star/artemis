@@ -30,6 +30,12 @@ import {
   createWorkOrder,
   updateWorkOrder,
   deleteWorkOrder,
+  listEstimates,
+  getEstimate,
+  createEstimate,
+  updateEstimate,
+  reopenEstimate,
+  deleteEstimate,
 } from './automotiveStorage';
 import {
   listScheduleEvents,
@@ -242,6 +248,31 @@ function createWindow() {
 
   ipcMain.handle('artemis:automotive:deleteWorkOrder', async (_event, id) => {
     return deleteWorkOrder(id);
+  });
+
+  // Estimates (V0.0.8)
+  ipcMain.handle('artemis:automotive:estimates:list', async (_event, filter) => {
+    return listEstimates(filter);
+  });
+
+  ipcMain.handle('artemis:automotive:estimates:get', async (_event, id) => {
+    return getEstimate(id);
+  });
+
+  ipcMain.handle('artemis:automotive:estimates:create', async (_event, options) => {
+    return createEstimate(options);
+  });
+
+  ipcMain.handle('artemis:automotive:estimates:update', async (_event, id, updates) => {
+    return updateEstimate(id, updates);
+  });
+
+  ipcMain.handle('artemis:automotive:estimates:reopen', async (_event, id) => {
+    return reopenEstimate(id);
+  });
+
+  ipcMain.handle('artemis:automotive:estimates:delete', async (_event, id) => {
+    return deleteEstimate(id);
   });
 
   // ---------------------------------------------------------------------------

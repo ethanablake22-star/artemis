@@ -15,12 +15,14 @@ import {
   ArrowRight,
   Calendar,
   Clock,
+  Calculator,
 } from 'lucide-react';
 import { useAutomotive } from '../../../state/AutomotiveContext';
 import { useSchedule } from '../../../state/ScheduleContext';
 import { useTabs } from '../../../state/TabContext';
 import { CreateWorkOrderModal } from './CreateWorkOrderModal';
 import { CreateEventModal } from '../schedule/CreateEventModal';
+import { formatCents } from '@shared/currencyUtils';
 import type { WorkOrderStatus } from '@shared/automotiveTypes';
 import clsx from 'clsx';
 
@@ -51,15 +53,25 @@ export const VehicleDetailTab: React.FC<VehicleDetailTabProps> = ({ vehicleId })
     updateVehicle,
     deleteVehicle,
     getVehicleWorkOrders,
+    getVehicleEstimates,
     createWorkOrder,
   } = useAutomotive();
 
-  const { openCustomerTab, openWorkOrderTab, openScheduleEventTab, closeTab, syncVehicleTitle, activeTabId } = useTabs();
+  const {
+    openCustomerTab,
+    openWorkOrderTab,
+    openScheduleEventTab,
+    openEstimateTab,
+    closeTab,
+    syncVehicleTitle,
+    activeTabId,
+  } = useTabs();
   const { getVehicleEvents, createEvent } = useSchedule();
 
   const vehicle = getVehicleById(vehicleId);
   const owner = vehicle?.customerId ? getCustomerById(vehicle.customerId) : null;
   const workOrders = vehicle ? getVehicleWorkOrders(vehicle.id) : [];
+  const vehicleEstimates = vehicle ? getVehicleEstimates(vehicle.id) : [];
   const vehicleEvents = vehicle ? getVehicleEvents(vehicle.id) : [];
 
   const [isEditing, setIsEditing] = useState(false);
@@ -562,6 +574,69 @@ export const VehicleDetailTab: React.FC<VehicleDetailTabProps> = ({ vehicleId })
                   })}
                 </tbody>
               </table>
+            </div>
+          )}
+        </div>
+
+        {/* Commercial Estimates */}
+        <div className="p-5 rounded-xl bg-artemis-900/90 border border-slate-800 space-y-3">
+          <div className="flex items-center justify-between">
+            <h3 className="text-xs font-bold uppercase tracking-wider text-slate-300 flex items-center gap-1.5">
+              <Calculator className="w-3.5 h-3.5 text-teal-400" />
+              Commercial Estimates ({vehicleEstimates.length})
+            </h3>
+          </div>
+
+          {vehicleEstimates.length === 0 ? (
+            <p className="text-xs text-slate-500 italic bg-artemis-950/40 p-3 rounded-lg">
+              No commercial estimates generated for this vehicle.
+            </p>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+              {vehicleEstimates.map((est) => (
+                <div
+                  key={est.id}
+                  onClick={() =>
+                    openEstimateTab(
+                      est.id,
+                      `${est.estimateNumber} — ${est.vehicleDescriptionSnapshot}`
+                    )
+                  }
+                  className="p-3 rounded-lg bg-artemis-950/80 border border-slate-800 hover:border-teal-500/40 cursor-pointer group transition-all"
+                >
+                  <div className="flex items-center justify-between">
+                    <span className="font-bold text-xs text-teal-400 font-mono">
+                      {est.estimateNumber}
+                    </span>
+                    <span
+                      className={clsx(
+                        'text-[10px] uppercase font-bold px-1.5 py-0.5 rounded border',
+                        est.status === 'approved'
+                          ? 'bg-emerald-950/60 text-emerald-400 border-emerald-800/80'
+                          : est.status === 'declined'
+                            ? 'bg-red-950/60 text-red-400 border-red-800/80'
+                            : est.status === 'ready'
+                              ? 'bg-blue-950/60 text-blue-400 border-blue-800/80'
+                              : 'bg-slate-800 text-slate-400 border-slate-700'
+                      )}
+                    >
+                      {est.status}
+                    </span>
+                  </div>
+                  <div className="flex items-center justify-between mt-2">
+                    <div className="text-sm font-black text-white font-mono">
+                      {formatCents(est.totalCents)}
+                    </div>
+                    <div className="text-[11px] text-slate-400">
+                      {est.workOrderNumberSnapshot} ·{' '}
+                      {new Date(est.createdAt).toLocaleDateString(undefined, {
+                        month: 'short',
+                        day: 'numeric',
+                      })}
+                    </div>
+                  </div>
+                </div>
+              ))}
             </div>
           )}
         </div>
