@@ -1,6 +1,7 @@
 import type { LibraryBridge } from './libraryTypes';
 import type { DocumentsBridge } from './documentTypes';
 import type { AutomotiveBridge } from './automotiveTypes';
+import type { ScheduleBridge } from './scheduleTypes';
 
 export type ArtemisTabType =
   | 'home'
@@ -12,6 +13,8 @@ export type ArtemisTabType =
   | 'cad'
   | 'pcb'
   | 'calendar'
+  | 'schedule'
+  | 'schedule-event'
   | 'automotive'
   | 'automotive-customer'
   | 'automotive-vehicle'
@@ -24,7 +27,7 @@ export interface ArtemisTab {
   type: ArtemisTabType;
   /** Display title in tab header */
   title: string;
-  /** Optional resource ID (e.g. Library item UUID or Customer/Vehicle/WorkOrder UUID) */
+  /** Optional resource ID (e.g. Library item UUID or Customer/Vehicle/WorkOrder/Event UUID) */
   resourceId?: string;
   /** Icon identifier or name */
   icon?: string;
@@ -63,6 +66,7 @@ export interface ArtemisWindowBridge {
   library: LibraryBridge;
   documents: DocumentsBridge;
   automotive: AutomotiveBridge;
+  schedule: ScheduleBridge;
 }
 
 declare global {

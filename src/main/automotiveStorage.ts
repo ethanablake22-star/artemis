@@ -714,9 +714,10 @@ export async function createWorkOrder(options: CreateWorkOrderOptions): Promise<
     throw new Error('Vehicle ID is required to create a Work Order');
   }
 
-  const trimmedConcern = customerConcern?.trim();
-  if (!trimmedConcern) {
-    throw new Error('Customer concern / reason for service is required');
+  const status = options.status || 'open';
+  const trimmedConcern = customerConcern?.trim() || '';
+  if (status !== 'draft' && !trimmedConcern) {
+    throw new Error('Customer concern / reason for service is required for active work orders');
   }
 
   if (options.odometerIn !== undefined && options.odometerIn !== null) {
@@ -809,7 +810,6 @@ export async function createWorkOrder(options: CreateWorkOrderOptions): Promise<
   const seq = store.nextWorkOrderSequence++;
   const workOrderNumber = formatWorkOrderNumber(seq);
   const now = Date.now();
-  const status = options.status || 'open';
   const completedAt = status === 'completed' ? now : undefined;
 
   const newWorkOrder: WorkOrderRecord = {
@@ -874,10 +874,18 @@ export async function updateWorkOrder(
     }
   }
 
+  const targetStatus = updates.status !== undefined ? updates.status : workOrder.status;
+
   if (updates.customerConcern !== undefined) {
     const trimmed = updates.customerConcern.trim();
-    if (!trimmed) throw new Error('Customer concern cannot be empty');
+    if (targetStatus !== 'draft' && !trimmed) {
+      throw new Error('Customer concern cannot be empty for active work orders');
+    }
     workOrder.customerConcern = trimmed;
+  }
+
+  if (updates.status !== undefined && updates.status !== 'draft' && !workOrder.customerConcern.trim()) {
+    throw new Error('Cannot transition work order out of draft without entering a customer concern');
   }
 
   if (updates.odometerIn !== undefined) {

@@ -47,6 +47,8 @@ const renderTabIcon = (type: ArtemisTab['type']) => {
     case 'pcb':
       return <Cpu {...iconProps} className="w-4 h-4 shrink-0 text-green-400" />;
     case 'calendar':
+    case 'schedule':
+    case 'schedule-event':
       return <Calendar {...iconProps} className="w-4 h-4 shrink-0 text-rose-400" />;
     case 'automotive':
       return <Wrench {...iconProps} className="w-4 h-4 shrink-0 text-orange-400" />;

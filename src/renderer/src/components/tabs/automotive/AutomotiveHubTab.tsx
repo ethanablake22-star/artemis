@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import {
   Users,
+  User,
   Car,
   Search,
   Plus,
@@ -8,11 +9,13 @@ import {
   Phone,
   Mail,
   Building2,
-  User,
   ClipboardList,
   CheckCircle2,
+  Calendar,
+  Clock,
 } from 'lucide-react';
 import { useAutomotive } from '../../../state/AutomotiveContext';
+import { useSchedule } from '../../../state/ScheduleContext';
 import { useTabs } from '../../../state/TabContext';
 import { CreateCustomerModal } from './CreateCustomerModal';
 import { CreateVehicleModal } from './CreateVehicleModal';
@@ -51,7 +54,8 @@ export const AutomotiveHubTab: React.FC = () => {
     getCustomerById,
   } = useAutomotive();
 
-  const { openCustomerTab, openVehicleTab, openWorkOrderTab } = useTabs();
+  const { openCustomerTab, openVehicleTab, openWorkOrderTab, openScheduleTab, openScheduleEventTab } = useTabs();
+  const { todayEvents } = useSchedule();
 
   const [activeSection, setActiveSection] = useState<'customers' | 'vehicles' | 'workOrders'>('workOrders');
   const [searchQuery, setSearchQuery] = useState('');
@@ -256,6 +260,66 @@ export const AutomotiveHubTab: React.FC = () => {
               <Users className="w-5 h-5" />
             </div>
           </div>
+        </div>
+
+        {/* TODAY'S SCHEDULE BANNER */}
+        <div className="p-4 rounded-xl bg-artemis-900/90 border border-slate-800 space-y-3">
+          <div className="flex items-center justify-between">
+            <h3 className="text-xs font-bold uppercase tracking-wider text-slate-300 flex items-center gap-1.5 font-mono">
+              <Calendar className="w-4 h-4 text-rose-400" />
+              Today's Schedule & Service Dispatch ({todayEvents.length})
+            </h3>
+            <button
+              type="button"
+              onClick={() => openScheduleTab()}
+              className="text-xs text-rose-400 hover:text-rose-300 font-bold flex items-center gap-1 transition-colors"
+            >
+              Open Full Schedule →
+            </button>
+          </div>
+
+          {todayEvents.length === 0 ? (
+            <div className="p-3 rounded-lg bg-artemis-950/50 border border-slate-800/80 text-xs text-slate-500 flex items-center justify-between">
+              <span>No service appointments or operations booked for today.</span>
+              <button
+                type="button"
+                onClick={() => openScheduleTab()}
+                className="text-[11px] text-rose-400 hover:underline font-semibold"
+              >
+                + Schedule Appointment
+              </button>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
+              {todayEvents.map((ev) => (
+                <div
+                  key={ev.id}
+                  onClick={() => openScheduleEventTab(ev.id, `${ev.eventNumber} — ${ev.title}`)}
+                  className="p-3 rounded-lg bg-artemis-950/80 border border-slate-800 hover:border-rose-500/40 cursor-pointer group transition-all"
+                >
+                  <div className="flex items-center justify-between">
+                    <span className="font-bold text-xs text-rose-400 font-mono">
+                      {ev.eventNumber}
+                    </span>
+                    <span className="text-[10px] uppercase font-bold text-slate-400 border border-slate-700 px-1.5 py-0.5 rounded">
+                      {ev.status}
+                    </span>
+                  </div>
+                  <h5 className="text-xs font-bold text-slate-200 group-hover:text-rose-300 transition-colors mt-1 truncate">
+                    {ev.title}
+                  </h5>
+                  <div className="text-[11px] text-slate-400 mt-1 font-mono flex items-center gap-1.5">
+                    <Clock className="w-3 h-3 text-slate-500 shrink-0" />
+                    <span>
+                      {ev.allDay
+                        ? 'All Day'
+                        : `${new Date(ev.startAt).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })} - ${new Date(ev.endAt).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })}`}
+                    </span>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
 
         {/* Directory Navigation & Search Bar */}

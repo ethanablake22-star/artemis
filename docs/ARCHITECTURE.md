@@ -24,15 +24,18 @@ export type ArtemisTabType =
   | 'cad'
   | 'pcb'
   | 'calendar'
+  | 'schedule'
+  | 'schedule-event'
   | 'automotive'
   | 'automotive-customer'
-  | 'automotive-vehicle';
+  | 'automotive-vehicle'
+  | 'automotive-work-order';
 
 export interface ArtemisTab {
   id: string;
   type: ArtemisTabType;
   title: string;
-  resourceId?: string; // Stable UUID for bound resources (e.g. Library documents, Customers, Vehicles)
+  resourceId?: string; // Stable UUID for bound resources (e.g. Documents, Customers, Vehicles, Work Orders, Events)
   icon?: string;
   closable: boolean;
   state?: Record<string, unknown>;
@@ -49,8 +52,8 @@ export interface ArtemisTab {
 ### Tab Lifecycle & Singleton Rules
 1. **Shell Independence**: The top-level tab shell governs window lifecycle, navigation, tab selection, reordering, and closure. The shell does not concern itself with the internal business logic of the hosted view.
 2. **Singleton & Resource Deduplication**:
-   - Singletons like **Home**, **Library**, and **Automotive Hub** are unique across the app.
-   - Resource-bound tabs (**Documents**, **Customers**, **Vehicles**) deduplicate by `resourceId`: opening an already open document or vehicle focuses the existing tab rather than spawning duplicates.
+   - Singletons like **Home**, **Library**, **Automotive Hub**, and **Schedule & Calendar** are unique across the app.
+   - Resource-bound tabs (**Documents**, **Customers**, **Vehicles**, **Work Orders**, **Schedule Events**) deduplicate by `tab.type + tab.resourceId`: opening an already open resource focuses the existing tab rather than spawning duplicates.
 3. **Immutability & Closability**: The initial **Artemis Home** tab is non-closable (`closable: false`), serving as the persistent mission control and workspace anchor.
 4. **Flush-on-Close Safety**: Document tabs register close hooks with `TabContext` to guarantee pending changes are flushed before unmounting, blocking closure if disk writes fail.
 
@@ -75,32 +78,21 @@ The native structured rich-text document workspace.
 - **Race-Safe Autosave & Flush**: Edit generation counter prevents stale status transitions, and tab closure flushes pending edits synchronously.
 - **Business Essentials**: Integrated interactive tables (add/remove rows/cols), embedded images, hyperlinks, print stylesheet (`@media print`), and native PDF export.
 
-### 4. Artemis Automotive (`automotive`, `automotive-customer`, `automotive-vehicle`)
-The business management foundation for customer directories and vehicle fleet tracking.
-- **Authoritative Main Storage (Schema V2)**: Customers and Vehicles stored in `userData/artemis_automotive_store.json` with atomic file writes and schema validation.
-- **Human-Facing Non-Reusable Identifiers**: Monotonic sequential numbers generated in Main (`CUS-000001`, `VEH-000001`). Numbers are never reused even if records are deleted.
-- **Individual & Business Accounts**: Support for individual names (`firstName`, `lastName`) and business accounts (`businessName`, `contactPerson`) with Main-synchronized display `name`.
-- **Powertrain Specification Separation**: Distinct optional fields for `engine`, `transmission`, and `drivetrain`.
-- **Global VIN Uniqueness**: Normalized uppercase VIN uniqueness enforced across all vehicles, including archived/soft-deleted records.
-- **Independent Vehicle Lifecycle**: Deleting a customer marks the customer as deleted without cascading to vehicles. Vehicles remain active, preserve ownership relations, and can be reassigned.
-- **First-Class Universal Tabs**:
-  - `Automotive Hub`: Overview statistics, search across customers and vehicles, directory views.
-  - `Customer Tab`: Contact profile, customer notes, and assigned vehicle fleet list with cross-tab links.
-  - `Vehicle Tab`: VIN, specs, license plate, mileage tracker, powertrain specs, and linked owner card (with archived indicator if owner is deleted).
+### 4. Artemis Automotive (`automotive`, `automotive-customer`, `automotive-vehicle`, `automotive-work-order`)
+The operational backbone for automotive repair management, fleet tracking, and customer history.
+- **Authoritative Main Storage (Schema V3)**: Customers, Vehicles, and Work Orders stored in `userData/artemis_automotive_store.json` with atomic writes.
+- **Human-Facing Non-Reusable Identifiers**: Monotonic sequential numbers generated in Main (`CUS-000001`, `VEH-000001`, `WO-000001`). Numbers are never reused even if records are deleted.
+- **Immutable Historical Snapshots**: Work Orders preserve immutable customer name, vehicle description, and VIN snapshots captured at creation.
+- **Repair Operations**: Labor line items with hours/technician notes, Part line items with part numbers/quantities, inspection/diagnosis notes, work performed summaries, and odometer tracking (`odometerIn`, `odometerOut`).
+- **Independent Lifecycles**: Deleting a customer or vehicle marks the record as deleted without cascading to linked repair history.
 
----
-
-## Future Extensibility & Hosted Engines
-
-The Artemis universal tab shell is decoupled from individual view engines. In future milestones, tabs may host diverse engines and environments, including:
-
-- **Work Orders & Invoicing**: Repair orders, diagnostic flows, labor rates, parts inventory, and invoicing.
-- **Scheduling & Calendar**: Dispatch calendars, service bays, technician assignment.
-- **Chromium Web Content**: Embedded WebViews / BrowserViews for full web browsing and SaaS integrations.
-- **Spreadsheet Editors**: Tabular calculation and ledger workspaces.
-- **Monaco & Code Environments**: Full-featured code editor with syntax highlighting, language servers, and git integration.
-- **CAD & 3D Engines**: WebGL/WebGPU parametric 3D modeling and mechanical assembly viewer.
-- **PCB Tools**: Interactive electronic schematic and PCB layout design canvas.
+### 5. Artemis Scheduling & Calendar (`schedule`, `schedule-event`)
+Native appointment scheduling, dispatch timelines, and service bookings.
+- **Authoritative Main Storage (Schema V1)**: Stored in `userData/artemis_schedule_store.json` with sequential numbers (`EVT-000001`).
+- **Time Model & Timezones**: Epoch millisecond timestamps (`startAt`, `endAt`) stored in UTC alongside IANA `timeZone` strings. All-day events span local calendar midnight to next local midnight.
+- **Main-Enforced Relationship Consistency**: When a Work Order is linked, Main guarantees customer and vehicle relationships match the authoritative Work Order.
+- **Live Overlap Detection**: Non-blocking interval intersection warnings (`existing.startAt < proposed.endAt && existing.endAt > proposed.startAt`) across active appointment statuses.
+- **Interval Date Queries**: Range listings query overlapping intervals to render events that span into selected ranges.
 
 ---
 

@@ -31,6 +31,14 @@ import {
   updateWorkOrder,
   deleteWorkOrder,
 } from './automotiveStorage';
+import {
+  listScheduleEvents,
+  getScheduleEvent,
+  createScheduleEvent,
+  updateScheduleEvent,
+  deleteScheduleEvent,
+  checkOverlap,
+} from './scheduleStorage';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
@@ -229,6 +237,34 @@ function createWindow() {
 
   ipcMain.handle('artemis:automotive:deleteWorkOrder', async (_event, id) => {
     return deleteWorkOrder(id);
+  });
+
+  // ---------------------------------------------------------------------------
+  // Authoritative Schedule IPC Endpoints (V0.0.6)
+  // ---------------------------------------------------------------------------
+
+  ipcMain.handle('artemis:schedule:list', async (_event, filter) => {
+    return listScheduleEvents(filter);
+  });
+
+  ipcMain.handle('artemis:schedule:get', async (_event, id) => {
+    return getScheduleEvent(id);
+  });
+
+  ipcMain.handle('artemis:schedule:create', async (_event, options) => {
+    return createScheduleEvent(options);
+  });
+
+  ipcMain.handle('artemis:schedule:update', async (_event, id, updates) => {
+    return updateScheduleEvent(id, updates);
+  });
+
+  ipcMain.handle('artemis:schedule:delete', async (_event, id) => {
+    return deleteScheduleEvent(id);
+  });
+
+  ipcMain.handle('artemis:schedule:checkOverlap', async (_event, startAt, endAt, excludeEventId) => {
+    return checkOverlap(startAt, endAt, excludeEventId);
   });
 
   // Open external URLs in the user's default browser

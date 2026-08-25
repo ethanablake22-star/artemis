@@ -20,11 +20,14 @@ interface TabContextValue {
   openCustomerTab: (customerId: string, name: string) => string;
   openVehicleTab: (vehicleId: string, title: string) => string;
   openWorkOrderTab: (workOrderId: string, title: string) => string;
+  openScheduleTab: () => string;
+  openScheduleEventTab: (eventId: string, title: string) => string;
   updateTab: (id: string, updates: Partial<ArtemisTab>) => void;
   syncDocumentTitle: (libraryItemId: string, newTitle: string) => void;
   syncCustomerTitle: (customerId: string, newName: string) => void;
   syncVehicleTitle: (vehicleId: string, newTitle: string) => void;
   syncWorkOrderTitle: (workOrderId: string, newTitle: string) => void;
+  syncScheduleEventTitle: (eventId: string, newTitle: string) => void;
   registerBeforeClose: (tabId: string, handler: () => Promise<boolean>) => () => void;
 }
 
@@ -42,7 +45,12 @@ const DEFAULT_HOME_TAB: ArtemisTab = {
   },
 };
 
-const SINGLETON_TAB_TYPES: Set<ArtemisTabType> = new Set(['home', 'library', 'automotive']);
+const SINGLETON_TAB_TYPES: Set<ArtemisTabType> = new Set([
+  'home',
+  'library',
+  'automotive',
+  'schedule',
+]);
 
 export const TabProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [tabs, setTabs] = useState<ArtemisTab[]>([DEFAULT_HOME_TAB]);
@@ -119,16 +127,18 @@ export const TabProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   }, []);
 
   const openTab = useCallback((tabOptions: Omit<ArtemisTab, 'id'> & { id?: string }) => {
-    // Deduplication by resourceId (for documents, customers, vehicles, work orders)
+    // Deduplication by tab.type + tab.resourceId (for documents, customers, vehicles, work orders, schedule events)
     if (tabOptions.resourceId) {
-      const existingResourceTab = tabs.find((t) => t.resourceId === tabOptions.resourceId);
+      const existingResourceTab = tabs.find(
+        (t) => t.type === tabOptions.type && t.resourceId === tabOptions.resourceId
+      );
       if (existingResourceTab) {
         selectTab(existingResourceTab.id);
         return existingResourceTab.id;
       }
     }
 
-    // Deduplication for singletons (Home, Library, Automotive Hub)
+    // Deduplication for singletons (Home, Library, Automotive Hub, Schedule)
     if (SINGLETON_TAB_TYPES.has(tabOptions.type)) {
       const existing = tabs.find((t) => t.type === tabOptions.type);
       if (existing) {
@@ -184,6 +194,11 @@ export const TabProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         icon = 'wrench';
         closable = true;
         break;
+      case 'schedule':
+        title = 'Schedule & Calendar';
+        icon = 'calendar';
+        closable = true;
+        break;
       case 'web':
         title = 'Browser';
         icon = 'globe';
@@ -205,12 +220,16 @@ export const TabProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         icon = 'cpu';
         break;
       case 'calendar':
-        title = 'Calendar & Schedule';
+        title = 'Schedule & Calendar';
         icon = 'calendar';
         break;
       case 'automotive-work-order':
         title = 'Work Order';
         icon = 'clipboard-list';
+        break;
+      case 'schedule-event':
+        title = 'Schedule Event';
+        icon = 'calendar';
         break;
       default:
         title = 'Artemis View';
@@ -230,7 +249,9 @@ export const TabProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
   const openDocumentTab = useCallback(
     (libraryItemId: string, title: string) => {
-      const existing = tabs.find((t) => t.resourceId === libraryItemId);
+      const existing = tabs.find(
+        (t) => t.type === 'document' && t.resourceId === libraryItemId
+      );
       if (existing) {
         selectTab(existing.id);
         return existing.id;
@@ -249,7 +270,9 @@ export const TabProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
   const openCustomerTab = useCallback(
     (customerId: string, name: string) => {
-      const existing = tabs.find((t) => t.resourceId === customerId);
+      const existing = tabs.find(
+        (t) => t.type === 'automotive-customer' && t.resourceId === customerId
+      );
       if (existing) {
         selectTab(existing.id);
         return existing.id;
@@ -268,7 +291,9 @@ export const TabProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
   const openVehicleTab = useCallback(
     (vehicleId: string, title: string) => {
-      const existing = tabs.find((t) => t.resourceId === vehicleId);
+      const existing = tabs.find(
+        (t) => t.type === 'automotive-vehicle' && t.resourceId === vehicleId
+      );
       if (existing) {
         selectTab(existing.id);
         return existing.id;
@@ -287,7 +312,9 @@ export const TabProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
   const openWorkOrderTab = useCallback(
     (workOrderId: string, title: string) => {
-      const existing = tabs.find((t) => t.resourceId === workOrderId);
+      const existing = tabs.find(
+        (t) => t.type === 'automotive-work-order' && t.resourceId === workOrderId
+      );
       if (existing) {
         selectTab(existing.id);
         return existing.id;
@@ -304,10 +331,37 @@ export const TabProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     [tabs, openTab, selectTab]
   );
 
+  const openScheduleTab = useCallback(() => {
+    return openOrFocusTab('schedule');
+  }, [openOrFocusTab]);
+
+  const openScheduleEventTab = useCallback(
+    (eventId: string, title: string) => {
+      const existing = tabs.find(
+        (t) => t.type === 'schedule-event' && t.resourceId === eventId
+      );
+      if (existing) {
+        selectTab(existing.id);
+        return existing.id;
+      }
+
+      return openTab({
+        type: 'schedule-event',
+        resourceId: eventId,
+        title: title || 'Schedule Event',
+        icon: 'calendar',
+        closable: true,
+      });
+    },
+    [tabs, openTab, selectTab]
+  );
+
   const syncDocumentTitle = useCallback((libraryItemId: string, newTitle: string) => {
     setTabs((prev) =>
       prev.map((tab) =>
-        tab.resourceId === libraryItemId ? { ...tab, title: newTitle } : tab
+        tab.type === 'document' && tab.resourceId === libraryItemId
+          ? { ...tab, title: newTitle }
+          : tab
       )
     );
   }, []);
@@ -315,7 +369,9 @@ export const TabProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const syncCustomerTitle = useCallback((customerId: string, newName: string) => {
     setTabs((prev) =>
       prev.map((tab) =>
-        tab.resourceId === customerId ? { ...tab, title: newName } : tab
+        tab.type === 'automotive-customer' && tab.resourceId === customerId
+          ? { ...tab, title: newName }
+          : tab
       )
     );
   }, []);
@@ -323,7 +379,9 @@ export const TabProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const syncVehicleTitle = useCallback((vehicleId: string, newTitle: string) => {
     setTabs((prev) =>
       prev.map((tab) =>
-        tab.resourceId === vehicleId ? { ...tab, title: newTitle } : tab
+        tab.type === 'automotive-vehicle' && tab.resourceId === vehicleId
+          ? { ...tab, title: newTitle }
+          : tab
       )
     );
   }, []);
@@ -331,7 +389,19 @@ export const TabProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const syncWorkOrderTitle = useCallback((workOrderId: string, newTitle: string) => {
     setTabs((prev) =>
       prev.map((tab) =>
-        tab.resourceId === workOrderId ? { ...tab, title: newTitle } : tab
+        tab.type === 'automotive-work-order' && tab.resourceId === workOrderId
+          ? { ...tab, title: newTitle }
+          : tab
+      )
+    );
+  }, []);
+
+  const syncScheduleEventTitle = useCallback((eventId: string, newTitle: string) => {
+    setTabs((prev) =>
+      prev.map((tab) =>
+        tab.type === 'schedule-event' && tab.resourceId === eventId
+          ? { ...tab, title: newTitle }
+          : tab
       )
     );
   }, []);
@@ -351,11 +421,14 @@ export const TabProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       openCustomerTab,
       openVehicleTab,
       openWorkOrderTab,
+      openScheduleTab,
+      openScheduleEventTab,
       updateTab,
       syncDocumentTitle,
       syncCustomerTitle,
       syncVehicleTitle,
       syncWorkOrderTitle,
+      syncScheduleEventTitle,
       registerBeforeClose,
     }),
     [
@@ -370,11 +443,14 @@ export const TabProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       openCustomerTab,
       openVehicleTab,
       openWorkOrderTab,
+      openScheduleTab,
+      openScheduleEventTab,
       updateTab,
       syncDocumentTitle,
       syncCustomerTitle,
       syncVehicleTitle,
       syncWorkOrderTitle,
+      syncScheduleEventTitle,
       registerBeforeClose,
     ]
   );

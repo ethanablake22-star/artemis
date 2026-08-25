@@ -21,6 +21,13 @@ import type {
   ListVehiclesFilter,
   ListWorkOrdersFilter,
 } from '../shared/automotiveTypes';
+import type {
+  ScheduleEventRecord,
+  CreateScheduleEventOptions,
+  UpdateScheduleEventOptions,
+  ListScheduleEventsFilter,
+  OverlapConflictInfo,
+} from '../shared/scheduleTypes';
 
 const bridge: ArtemisWindowBridge = {
   minimize: () => ipcRenderer.send('artemis:window:minimize'),
@@ -86,6 +93,24 @@ const bridge: ArtemisWindowBridge = {
       ipcRenderer.invoke('artemis:automotive:updateWorkOrder', id, updates),
     deleteWorkOrder: (id: string): Promise<boolean> =>
       ipcRenderer.invoke('artemis:automotive:deleteWorkOrder', id),
+  },
+  schedule: {
+    list: (filter?: ListScheduleEventsFilter): Promise<ScheduleEventRecord[]> =>
+      ipcRenderer.invoke('artemis:schedule:list', filter),
+    get: (id: string): Promise<ScheduleEventRecord | null> =>
+      ipcRenderer.invoke('artemis:schedule:get', id),
+    create: (options: CreateScheduleEventOptions): Promise<ScheduleEventRecord> =>
+      ipcRenderer.invoke('artemis:schedule:create', options),
+    update: (id: string, updates: UpdateScheduleEventOptions): Promise<ScheduleEventRecord> =>
+      ipcRenderer.invoke('artemis:schedule:update', id, updates),
+    delete: (id: string): Promise<boolean> =>
+      ipcRenderer.invoke('artemis:schedule:delete', id),
+    checkOverlap: (
+      startAt: number,
+      endAt: number,
+      excludeEventId?: string
+    ): Promise<OverlapConflictInfo> =>
+      ipcRenderer.invoke('artemis:schedule:checkOverlap', startAt, endAt, excludeEventId),
   },
 };
 

@@ -15,9 +15,12 @@ import {
   Plus,
   ExternalLink,
   X,
+  Calendar,
 } from 'lucide-react';
 import { useAutomotive } from '../../../state/AutomotiveContext';
+import { useSchedule } from '../../../state/ScheduleContext';
 import { useTabs } from '../../../state/TabContext';
+import { CreateEventModal } from '../schedule/CreateEventModal';
 import type {
   WorkOrderStatus,
   WorkOrderLaborLine,
@@ -92,11 +95,15 @@ export const WorkOrderDetailTab: React.FC<WorkOrderDetailTabProps> = ({ workOrde
     deleteWorkOrder,
   } = useAutomotive();
 
-  const { openCustomerTab, openVehicleTab, closeTab, activeTabId } = useTabs();
+  const { openCustomerTab, openVehicleTab, openScheduleEventTab, closeTab, activeTabId } = useTabs();
+  const { getWorkOrderEvents, createEvent } = useSchedule();
 
   const workOrder = getWorkOrderById(workOrderId);
   const liveVehicle = workOrder ? getVehicleById(workOrder.vehicleId) : undefined;
   const liveCustomer = workOrder?.customerId ? getCustomerById(workOrder.customerId) : undefined;
+  const woEvents = workOrder ? getWorkOrderEvents(workOrder.id) : [];
+
+  const [isScheduleModalOpen, setIsScheduleModalOpen] = useState(false);
 
   // Editable sections
   const [isEditingConcern, setIsEditingConcern] = useState(false);
@@ -333,6 +340,16 @@ export const WorkOrderDetailTab: React.FC<WorkOrderDetailTabProps> = ({ workOrde
 
         {/* Status Dropdown & Actions */}
         <div className="flex items-center gap-3">
+          {/* Schedule Appointment Button */}
+          <button
+            type="button"
+            onClick={() => setIsScheduleModalOpen(true)}
+            className="px-3 py-1.5 rounded-lg bg-rose-500/15 hover:bg-rose-500/25 text-rose-400 border border-rose-500/30 text-xs font-bold flex items-center gap-1.5 transition-colors"
+          >
+            <Calendar className="w-3.5 h-3.5" />
+            + Schedule Appointment
+          </button>
+
           {/* Status Dropdown */}
           <div className="flex items-center gap-1.5">
             <span className="text-[11px] text-slate-400 font-medium">Status:</span>
@@ -1002,7 +1019,76 @@ export const WorkOrderDetailTab: React.FC<WorkOrderDetailTabProps> = ({ workOrde
             </div>
           )}
         </div>
+
+        {/* Linked Appointments */}
+        <div className="p-5 rounded-xl bg-artemis-900/90 border border-slate-800 space-y-3">
+          <div className="flex items-center justify-between">
+            <h3 className="text-xs font-bold uppercase tracking-wider text-slate-300 flex items-center gap-1.5">
+              <Calendar className="w-3.5 h-3.5 text-rose-400" />
+              Scheduled Appointments ({woEvents.length})
+            </h3>
+            <button
+              type="button"
+              onClick={() => setIsScheduleModalOpen(true)}
+              className="text-xs text-rose-400 hover:text-rose-300 flex items-center gap-1 font-bold"
+            >
+              <Plus className="w-3 h-3" />
+              Book Appointment
+            </button>
+          </div>
+
+          {woEvents.length === 0 ? (
+            <p className="text-xs text-slate-500 italic bg-artemis-950/40 p-3 rounded-lg">
+              No appointments linked to this Work Order.
+            </p>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+              {woEvents.map((ev) => (
+                <div
+                  key={ev.id}
+                  onClick={() => openScheduleEventTab(ev.id, `${ev.eventNumber} — ${ev.title}`)}
+                  className="p-3 rounded-lg bg-artemis-950/80 border border-slate-800 hover:border-rose-500/40 cursor-pointer group transition-all"
+                >
+                  <div className="flex items-center justify-between">
+                    <span className="font-bold text-xs text-rose-400 font-mono">
+                      {ev.eventNumber}
+                    </span>
+                    <span className="text-[10px] uppercase font-bold text-slate-400 border border-slate-700 px-1.5 py-0.5 rounded">
+                      {ev.status}
+                    </span>
+                  </div>
+                  <h5 className="text-xs font-bold text-slate-200 group-hover:text-rose-300 transition-colors mt-1">
+                    {ev.title}
+                  </h5>
+                  <div className="text-[11px] text-slate-400 mt-1 font-mono flex items-center gap-2">
+                    <Clock className="w-3 h-3 text-slate-500" />
+                    <span>
+                      {new Date(ev.startAt).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}{' '}
+                      {ev.allDay
+                        ? '(All Day)'
+                        : `${new Date(ev.startAt).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })} - ${new Date(ev.endAt).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })}`}
+                    </span>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
       </div>
+
+      {/* Schedule Appointment Modal */}
+      <CreateEventModal
+        isOpen={isScheduleModalOpen}
+        initialWorkOrderId={workOrder.id}
+        initialVehicleId={workOrder.vehicleId}
+        initialCustomerId={workOrder.customerId || undefined}
+        initialTitle={`Service: ${workOrder.workOrderNumber} — ${workOrder.vehicleDescriptionSnapshot}`}
+        onClose={() => setIsScheduleModalOpen(false)}
+        onSubmit={async (opts) => {
+          const created = await createEvent(opts);
+          openScheduleEventTab(created.id, `${created.eventNumber} — ${created.title}`);
+        }}
+      />
     </div>
   );
 };

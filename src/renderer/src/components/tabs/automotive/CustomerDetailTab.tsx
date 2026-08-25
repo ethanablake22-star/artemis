@@ -14,10 +14,14 @@ import {
   Layers,
   ArrowRight,
   ClipboardList,
+  Calendar,
+  Clock,
 } from 'lucide-react';
 import { useAutomotive } from '../../../state/AutomotiveContext';
+import { useSchedule } from '../../../state/ScheduleContext';
 import { useTabs } from '../../../state/TabContext';
 import { CreateVehicleModal } from './CreateVehicleModal';
+import { CreateEventModal } from '../schedule/CreateEventModal';
 import type { CustomerType, WorkOrderStatus } from '@shared/automotiveTypes';
 import clsx from 'clsx';
 
@@ -50,11 +54,13 @@ export const CustomerDetailTab: React.FC<CustomerDetailTabProps> = ({ customerId
     getCustomerWorkOrders,
   } = useAutomotive();
 
-  const { openVehicleTab, openWorkOrderTab, closeTab, syncCustomerTitle, activeTabId } = useTabs();
+  const { openVehicleTab, openWorkOrderTab, openScheduleEventTab, closeTab, syncCustomerTitle, activeTabId } = useTabs();
+  const { getCustomerEvents, createEvent } = useSchedule();
 
   const customer = getCustomerById(customerId);
   const vehicles = getCustomerVehicles(customerId);
   const workOrders = customer ? getCustomerWorkOrders(customer.id) : [];
+  const customerEvents = customer ? getCustomerEvents(customer.id) : [];
 
   const [isEditing, setIsEditing] = useState(false);
   const [type, setType] = useState<CustomerType>(customer?.type || 'individual');
@@ -67,6 +73,7 @@ export const CustomerDetailTab: React.FC<CustomerDetailTabProps> = ({ customerId
   const [address, setAddress] = useState('');
   const [notes, setNotes] = useState('');
   const [isCreateVehicleOpen, setIsCreateVehicleOpen] = useState(false);
+  const [isScheduleModalOpen, setIsScheduleModalOpen] = useState(false);
 
   if (!customer) {
     return (
@@ -551,6 +558,61 @@ export const CustomerDetailTab: React.FC<CustomerDetailTabProps> = ({ customerId
             </div>
           )}
         </div>
+
+        {/* Scheduled Appointments */}
+        <div className="p-5 rounded-xl bg-artemis-900/90 border border-slate-800 space-y-3">
+          <div className="flex items-center justify-between">
+            <h3 className="text-xs font-bold uppercase tracking-wider text-slate-300 flex items-center gap-1.5">
+              <Calendar className="w-3.5 h-3.5 text-rose-400" />
+              Scheduled Appointments ({customerEvents.length})
+            </h3>
+            <button
+              type="button"
+              onClick={() => setIsScheduleModalOpen(true)}
+              className="text-xs text-rose-400 hover:text-rose-300 flex items-center gap-1 font-bold"
+            >
+              <Plus className="w-3 h-3" />
+              Schedule Appointment
+            </button>
+          </div>
+
+          {customerEvents.length === 0 ? (
+            <p className="text-xs text-slate-500 italic bg-artemis-950/40 p-3 rounded-lg">
+              No appointments scheduled for this customer.
+            </p>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+              {customerEvents.map((ev) => (
+                <div
+                  key={ev.id}
+                  onClick={() => openScheduleEventTab(ev.id, `${ev.eventNumber} — ${ev.title}`)}
+                  className="p-3 rounded-lg bg-artemis-950/80 border border-slate-800 hover:border-rose-500/40 cursor-pointer group transition-all"
+                >
+                  <div className="flex items-center justify-between">
+                    <span className="font-bold text-xs text-rose-400 font-mono">
+                      {ev.eventNumber}
+                    </span>
+                    <span className="text-[10px] uppercase font-bold text-slate-400 border border-slate-700 px-1.5 py-0.5 rounded">
+                      {ev.status}
+                    </span>
+                  </div>
+                  <h5 className="text-xs font-bold text-slate-200 group-hover:text-rose-300 transition-colors mt-1">
+                    {ev.title}
+                  </h5>
+                  <div className="text-[11px] text-slate-400 mt-1 font-mono flex items-center gap-2">
+                    <Clock className="w-3 h-3 text-slate-500" />
+                    <span>
+                      {new Date(ev.startAt).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}{' '}
+                      {ev.allDay
+                        ? '(All Day)'
+                        : `${new Date(ev.startAt).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })} - ${new Date(ev.endAt).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })}`}
+                    </span>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
       </div>
 
       {/* Register Vehicle Modal */}
@@ -561,6 +623,18 @@ export const CustomerDetailTab: React.FC<CustomerDetailTabProps> = ({ customerId
         onClose={() => setIsCreateVehicleOpen(false)}
         onSubmit={async (opts) => {
           await createVehicle(opts);
+        }}
+      />
+
+      {/* Schedule Event Modal */}
+      <CreateEventModal
+        isOpen={isScheduleModalOpen}
+        initialCustomerId={customer.id}
+        initialTitle={`Appointment: ${customer.name}`}
+        onClose={() => setIsScheduleModalOpen(false)}
+        onSubmit={async (opts) => {
+          const created = await createEvent(opts);
+          openScheduleEventTab(created.id, `${created.eventNumber} — ${created.title}`);
         }}
       />
     </div>
