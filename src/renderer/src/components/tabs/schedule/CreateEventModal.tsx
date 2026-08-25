@@ -19,6 +19,10 @@ import type {
   CreateScheduleEventOptions,
   OverlapConflictInfo,
 } from '@shared/scheduleTypes';
+import {
+  localDateTimeToUtc,
+  getAllDayBounds,
+} from '@shared/scheduleUtils';
 import clsx from 'clsx';
 
 interface CreateEventModalProps {
@@ -178,25 +182,23 @@ export const CreateEventModal: React.FC<CreateEventModalProps> = ({
     }
   };
 
-  // Calculate startAt and endAt timestamps in ms
+  // Calculate DST-safe startAt and endAt timestamps in ms
   const { startAt, endAt, timeRangeValid } = useMemo(() => {
     if (!date) return { startAt: 0, endAt: 0, timeRangeValid: false };
 
     try {
       if (allDay) {
-        const start = new Date(`${date}T00:00:00`).getTime();
-        // Exclusive boundary for all-day: +24 hours
-        const end = start + 24 * 60 * 60 * 1000;
-        return { startAt: start, endAt: end, timeRangeValid: !isNaN(start) && end > start };
+        const { startAt, endAt } = getAllDayBounds(date, date, timeZone);
+        return { startAt, endAt, timeRangeValid: !isNaN(startAt) && endAt > startAt };
       } else {
-        const start = new Date(`${date}T${startTime}:00`).getTime();
-        const end = new Date(`${date}T${endTime}:00`).getTime();
+        const start = localDateTimeToUtc(date, startTime, timeZone);
+        const end = localDateTimeToUtc(date, endTime, timeZone);
         return { startAt: start, endAt: end, timeRangeValid: !isNaN(start) && !isNaN(end) && end > start };
       }
     } catch {
       return { startAt: 0, endAt: 0, timeRangeValid: false };
     }
-  }, [date, startTime, endTime, allDay]);
+  }, [date, startTime, endTime, allDay, timeZone]);
 
   // Live conflict detection (non-blocking)
   useEffect(() => {

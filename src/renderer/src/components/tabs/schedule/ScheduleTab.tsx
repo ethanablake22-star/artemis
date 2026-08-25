@@ -20,6 +20,7 @@ import type {
   ScheduleEventType,
   ScheduleEventStatus,
 } from '@shared/scheduleTypes';
+import { getAllDayBounds } from '@shared/scheduleUtils';
 import clsx from 'clsx';
 
 type CalendarViewMode = 'today' | 'week' | 'month';
@@ -212,10 +213,9 @@ export const ScheduleTab: React.FC = () => {
     return grid;
   }, [currentDate]);
 
-  // Quick event filter for a single date (interval overlap)
+  // Quick event filter for a single date (DST-safe interval overlap)
   const getEventsForDate = (dateString: string) => {
-    const dayStart = new Date(`${dateString}T00:00:00`).getTime();
-    const dayEnd = dayStart + 24 * 60 * 60 * 1000;
+    const { startAt: dayStart, endAt: dayEnd } = getAllDayBounds(dateString, dateString);
     return filteredEvents.filter((e) => e.startAt < dayEnd && e.endAt > dayStart);
   };
 

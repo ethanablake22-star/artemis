@@ -139,6 +139,7 @@ export const ScheduleEventDetailTab: React.FC<ScheduleEventDetailTabProps> = ({ 
 
   const formatDate = (timestamp: number) => {
     return new Date(timestamp).toLocaleDateString(undefined, {
+      timeZone: event.timeZone,
       weekday: 'short',
       month: 'short',
       day: 'numeric',
@@ -148,14 +149,17 @@ export const ScheduleEventDetailTab: React.FC<ScheduleEventDetailTabProps> = ({ 
 
   const formatTimeRange = (start: number, end: number, allDay: boolean) => {
     if (allDay) return 'All Day';
-    const s = new Date(start).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' });
-    const e = new Date(end).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' });
+    const s = new Date(start).toLocaleTimeString([], { timeZone: event.timeZone, hour: 'numeric', minute: '2-digit' });
+    const e = new Date(end).toLocaleTimeString([], { timeZone: event.timeZone, hour: 'numeric', minute: '2-digit' });
     return `${s} – ${e}`;
   };
 
   const durationMinutes = Math.round((event.endAt - event.startAt) / (1000 * 60));
   const formatDuration = (mins: number) => {
-    if (event.allDay) return 'All Day';
+    if (event.allDay) {
+      const hours = mins / 60;
+      return hours === 24 ? 'All Day (24 hrs)' : `All Day (${hours} hrs DST)`;
+    }
     const h = Math.floor(mins / 60);
     const m = mins % 60;
     if (h > 0 && m > 0) return `${h} hr ${m} min`;

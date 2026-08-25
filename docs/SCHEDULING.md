@@ -79,10 +79,13 @@ export interface ScheduleEventRecord {
 }
 ```
 
-### Time Representation & Timezones
+### Time Representation & Timezones (DST-Safe)
 - `startAt` and `endAt` are stored as **UTC epoch milliseconds**.
 - Each event stores an IANA `timeZone` string (e.g. `"America/New_York"`).
-- **All-day events**: span local calendar day boundaries with an exclusive `endAt`. A 1-day all-day event spans local midnight of day 1 to local midnight of day 2 (`endAt - startAt === 86,400,000 ms`).
+- **All-day events**: represent local calendar-day boundaries in the event's `timeZone`, with `endAt` exclusive.
+  - A 1-day all-day event begins at local midnight of the selected date and ends at local midnight of the following calendar date.
+  - Depending on DST transitions (Spring forward vs Fall back), a local calendar day can represent 23, 24, or 25 elapsed hours ($82{,}800{,}000\text{ ms}$, $86{,}400{,}000\text{ ms}$, or $90{,}000{,}000\text{ ms}$). Artemis does NOT assume exactly 86,400,000 ms.
+  - Multi-day all-day events span from local midnight of the start date to local midnight of the day following the end date.
 - **Timed events**: `endAt` must be strictly greater than `startAt` (`endAt > startAt`).
 
 ---

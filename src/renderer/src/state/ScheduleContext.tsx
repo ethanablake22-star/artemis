@@ -5,6 +5,7 @@ import type {
   UpdateScheduleEventOptions,
   OverlapConflictInfo,
 } from '@shared/scheduleTypes';
+import { getAllDayBounds, getDateKeyInZone } from '@shared/scheduleUtils';
 import { scheduleRepository } from '../services/scheduleStorage';
 
 interface ScheduleContextValue {
@@ -139,11 +140,10 @@ export const ScheduleProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     []
   );
 
-  // Today and upcoming calculations using interval overlap
+  // Today and upcoming calculations using DST-safe interval overlap
   const todayEvents = useMemo(() => {
-    const now = new Date();
-    const startOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime();
-    const endOfDay = startOfDay + 24 * 60 * 60 * 1000;
+    const todayStr = getDateKeyInZone(Date.now());
+    const { startAt: startOfDay, endAt: endOfDay } = getAllDayBounds(todayStr, todayStr);
     return events.filter((e) => !e.isDeleted && e.startAt < endOfDay && e.endAt > startOfDay);
   }, [events]);
 
