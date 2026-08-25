@@ -25,6 +25,11 @@ import {
   createVehicle,
   updateVehicle,
   deleteVehicle,
+  listWorkOrders,
+  getWorkOrder,
+  createWorkOrder,
+  updateWorkOrder,
+  deleteWorkOrder,
 } from './automotiveStorage';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -204,6 +209,26 @@ function createWindow() {
 
   ipcMain.handle('artemis:automotive:deleteVehicle', async (_event, id) => {
     return deleteVehicle(id);
+  });
+
+  ipcMain.handle('artemis:automotive:listWorkOrders', async (_event, filter) => {
+    return listWorkOrders(filter);
+  });
+
+  ipcMain.handle('artemis:automotive:getWorkOrder', async (_event, id) => {
+    return getWorkOrder(id);
+  });
+
+  ipcMain.handle('artemis:automotive:createWorkOrder', async (_event, options) => {
+    return createWorkOrder(options);
+  });
+
+  ipcMain.handle('artemis:automotive:updateWorkOrder', async (_event, id, updates) => {
+    return updateWorkOrder(id, updates);
+  });
+
+  ipcMain.handle('artemis:automotive:deleteWorkOrder', async (_event, id) => {
+    return deleteWorkOrder(id);
   });
 
   // Open external URLs in the user's default browser

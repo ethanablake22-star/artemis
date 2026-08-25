@@ -5,16 +5,22 @@ import crypto from 'node:crypto';
 import type {
   CustomerRecord,
   VehicleRecord,
+  WorkOrderRecord,
+  WorkOrderLaborLine,
+  WorkOrderPartLine,
   ArtemisAutomotiveStoreData,
   CreateCustomerOptions,
   UpdateCustomerOptions,
   CreateVehicleOptions,
   UpdateVehicleOptions,
+  CreateWorkOrderOptions,
+  UpdateWorkOrderOptions,
   ListCustomersFilter,
   ListVehiclesFilter,
+  ListWorkOrdersFilter,
 } from '../shared/automotiveTypes';
 
-export const CURRENT_AUTOMOTIVE_SCHEMA_VERSION = 2;
+export const CURRENT_AUTOMOTIVE_SCHEMA_VERSION = 3;
 const AUTOMOTIVE_STORE_FILENAME = 'artemis_automotive_store.json';
 
 export class UnsupportedAutomotiveSchemaVersionError extends Error {
@@ -35,6 +41,10 @@ function formatCustomerNumber(seq: number): string {
 
 function formatVehicleNumber(seq: number): string {
   return `VEH-${String(seq).padStart(6, '0')}`;
+}
+
+function formatWorkOrderNumber(seq: number): string {
+  return `WO-${String(seq).padStart(6, '0')}`;
 }
 
 function deriveCustomerName(
@@ -63,11 +73,13 @@ function deriveCustomerName(
 function validateAndMigrateAutomotiveStore(raw: unknown): ArtemisAutomotiveStoreData {
   if (!raw || typeof raw !== 'object') {
     return {
-      schemaVersion: 2,
+      schemaVersion: 3,
       nextCustomerSequence: 1,
       nextVehicleSequence: 1,
+      nextWorkOrderSequence: 1,
       customers: [],
       vehicles: [],
+      workOrders: [],
     };
   }
 
@@ -76,7 +88,7 @@ function validateAndMigrateAutomotiveStore(raw: unknown): ArtemisAutomotiveStore
 
   switch (version) {
     case 1: {
-      // Deterministic migration from Schema 1 -> Schema 2
+      // Deterministic migration from Schema 1 -> Schema 3
       const rawCustomers = Array.isArray(obj.customers)
         ? (obj.customers as Record<string, unknown>[])
         : [];
@@ -84,7 +96,6 @@ function validateAndMigrateAutomotiveStore(raw: unknown): ArtemisAutomotiveStore
         ? (obj.vehicles as Record<string, unknown>[])
         : [];
 
-      // Sort existing records deterministically: createdAt ascending, id as tie-breaker
       const sortedCustomers = [...rawCustomers].sort((a, b) => {
         const timeDiff = ((a.createdAt as number) || 0) - ((b.createdAt as number) || 0);
         if (timeDiff !== 0) return timeDiff;
@@ -138,15 +149,18 @@ function validateAndMigrateAutomotiveStore(raw: unknown): ArtemisAutomotiveStore
       });
 
       return {
-        schemaVersion: 2,
+        schemaVersion: 3,
         nextCustomerSequence: migratedCustomers.length + 1,
         nextVehicleSequence: migratedVehicles.length + 1,
+        nextWorkOrderSequence: 1,
         customers: migratedCustomers,
         vehicles: migratedVehicles,
+        workOrders: [],
       };
     }
 
     case 2: {
+      // Migration from Schema 2 -> Schema 3
       const customers = Array.isArray(obj.customers)
         ? (obj.customers as CustomerRecord[])
         : [];
@@ -163,11 +177,48 @@ function validateAndMigrateAutomotiveStore(raw: unknown): ArtemisAutomotiveStore
           : vehicles.length + 1;
 
       return {
-        schemaVersion: 2,
+        schemaVersion: 3,
         nextCustomerSequence,
         nextVehicleSequence,
+        nextWorkOrderSequence: 1,
         customers,
         vehicles,
+        workOrders: [],
+      };
+    }
+
+    case 3: {
+      const customers = Array.isArray(obj.customers)
+        ? (obj.customers as CustomerRecord[])
+        : [];
+      const vehicles = Array.isArray(obj.vehicles)
+        ? (obj.vehicles as VehicleRecord[])
+        : [];
+      const workOrders = Array.isArray(obj.workOrders)
+        ? (obj.workOrders as WorkOrderRecord[])
+        : [];
+
+      const nextCustomerSequence =
+        typeof obj.nextCustomerSequence === 'number'
+          ? obj.nextCustomerSequence
+          : customers.length + 1;
+      const nextVehicleSequence =
+        typeof obj.nextVehicleSequence === 'number'
+          ? obj.nextVehicleSequence
+          : vehicles.length + 1;
+      const nextWorkOrderSequence =
+        typeof obj.nextWorkOrderSequence === 'number'
+          ? obj.nextWorkOrderSequence
+          : workOrders.length + 1;
+
+      return {
+        schemaVersion: 3,
+        nextCustomerSequence,
+        nextVehicleSequence,
+        nextWorkOrderSequence,
+        customers,
+        vehicles,
+        workOrders,
       };
     }
 
@@ -197,11 +248,13 @@ async function readAutomotiveStoreFile(): Promise<ArtemisAutomotiveStoreData> {
       throw err;
     }
     const initialStore: ArtemisAutomotiveStoreData = {
-      schemaVersion: 2,
+      schemaVersion: 3,
       nextCustomerSequence: 1,
       nextVehicleSequence: 1,
+      nextWorkOrderSequence: 1,
       customers: [],
       vehicles: [],
+      workOrders: [],
     };
     await writeAutomotiveStoreFile(initialStore);
     inMemoryCache = initialStore;
@@ -375,7 +428,7 @@ export async function deleteCustomer(id: string): Promise<boolean> {
   customer.isDeleted = true;
   customer.updatedAt = now;
 
-  // V0.0.4.1 Invariant: Do NOT delete associated vehicles. Vehicles remain active.
+  // Soft-deleting customer does not delete vehicles or work orders
   await writeAutomotiveStoreFile(store);
   return true;
 }
@@ -596,6 +649,333 @@ export async function deleteVehicle(id: string): Promise<boolean> {
 
   vehicle.isDeleted = true;
   vehicle.updatedAt = Date.now();
+  await writeAutomotiveStoreFile(store);
+  return true;
+}
+
+// -----------------------------------------------------------------------------
+// Authoritative Work Order Operations (V0.0.5)
+// -----------------------------------------------------------------------------
+
+export async function listWorkOrders(filter?: ListWorkOrdersFilter): Promise<WorkOrderRecord[]> {
+  const store = await readAutomotiveStoreFile();
+  let results = store.workOrders || [];
+
+  if (!filter?.includeDeleted) {
+    results = results.filter((w) => !w.isDeleted);
+  }
+
+  if (filter?.vehicleId) {
+    results = results.filter((w) => w.vehicleId === filter.vehicleId);
+  }
+
+  if (filter?.customerId !== undefined) {
+    results = results.filter((w) => w.customerId === filter.customerId);
+  }
+
+  if (filter?.status) {
+    results = results.filter((w) => w.status === filter.status);
+  }
+
+  if (filter?.query && filter.query.trim()) {
+    const q = filter.query.toLowerCase().trim();
+    results = results.filter(
+      (w) =>
+        w.workOrderNumber.toLowerCase().includes(q) ||
+        w.customerConcern.toLowerCase().includes(q) ||
+        (w.customerNameSnapshot && w.customerNameSnapshot.toLowerCase().includes(q)) ||
+        w.vehicleDescriptionSnapshot.toLowerCase().includes(q) ||
+        (w.vinSnapshot && w.vinSnapshot.toLowerCase().includes(q)) ||
+        w.status.toLowerCase().includes(q) ||
+        (w.inspectionNotes && w.inspectionNotes.toLowerCase().includes(q)) ||
+        (w.diagnosis && w.diagnosis.toLowerCase().includes(q)) ||
+        (w.workPerformed && w.workPerformed.toLowerCase().includes(q)) ||
+        (w.technicianNotes && w.technicianNotes.toLowerCase().includes(q))
+    );
+  }
+
+  return results.sort((a, b) => b.updatedAt - a.updatedAt);
+}
+
+export async function getWorkOrder(id: string): Promise<WorkOrderRecord | null> {
+  if (!id || typeof id !== 'string') {
+    throw new Error('Invalid work order ID provided');
+  }
+
+  const store = await readAutomotiveStoreFile();
+  const found = (store.workOrders || []).find((w) => w.id === id);
+  return found || null;
+}
+
+export async function createWorkOrder(options: CreateWorkOrderOptions): Promise<WorkOrderRecord> {
+  const { vehicleId, customerId, customerConcern } = options;
+
+  if (!vehicleId || typeof vehicleId !== 'string') {
+    throw new Error('Vehicle ID is required to create a Work Order');
+  }
+
+  const trimmedConcern = customerConcern?.trim();
+  if (!trimmedConcern) {
+    throw new Error('Customer concern / reason for service is required');
+  }
+
+  if (options.odometerIn !== undefined && options.odometerIn !== null) {
+    if (typeof options.odometerIn !== 'number' || options.odometerIn < 0) {
+      throw new Error('Intake odometer reading cannot be negative');
+    }
+  }
+
+  if (options.odometerOut !== undefined && options.odometerOut !== null) {
+    if (typeof options.odometerOut !== 'number' || options.odometerOut < 0) {
+      throw new Error('Out odometer reading cannot be negative');
+    }
+    if (options.odometerIn !== undefined && options.odometerOut < options.odometerIn) {
+      throw new Error('Odometer Out cannot be less than Odometer In');
+    }
+  }
+
+  const store = await readAutomotiveStoreFile();
+
+  // Validate vehicle exists and is not deleted
+  const vehicle = store.vehicles.find((v) => v.id === vehicleId);
+  if (!vehicle) {
+    throw new Error(`Vehicle "${vehicleId}" does not exist`);
+  }
+  if (vehicle.isDeleted) {
+    throw new Error(`Cannot open Work Order for archived vehicle "${vehicleId}"`);
+  }
+
+  // Capture immutable vehicle description snapshot
+  const vehicleDescParts = [
+    vehicle.year ? String(vehicle.year) : '',
+    vehicle.make,
+    vehicle.model,
+    vehicle.trim || '',
+  ].filter(Boolean);
+  const vehicleDescriptionSnapshot = vehicleDescParts.join(' ').trim();
+  const vinSnapshot = vehicle.vin;
+
+  // Validate customer (if supplied) and capture customer name snapshot
+  let assignedCustomerId: string | null = null;
+  let customerNameSnapshot: string | undefined = undefined;
+
+  const targetCustomerId = customerId !== undefined ? customerId : vehicle.customerId;
+  if (targetCustomerId) {
+    const customer = store.customers.find((c) => c.id === targetCustomerId);
+    if (!customer) {
+      throw new Error(`Customer "${targetCustomerId}" does not exist`);
+    }
+    assignedCustomerId = customer.id;
+    customerNameSnapshot = customer.name;
+  }
+
+  // Validate and sanitize labor lines
+  const laborLines: WorkOrderLaborLine[] = [];
+  if (Array.isArray(options.laborLines)) {
+    for (const line of options.laborLines) {
+      const desc = line.description?.trim();
+      if (!desc) throw new Error('Labor line description cannot be empty');
+      if (line.hours !== undefined && (typeof line.hours !== 'number' || line.hours < 0)) {
+        throw new Error('Labor hours cannot be negative');
+      }
+      laborLines.push({
+        id: crypto.randomUUID(),
+        description: desc,
+        hours: line.hours,
+        notes: line.notes?.trim() || undefined,
+      });
+    }
+  }
+
+  // Validate and sanitize parts lines
+  const partLines: WorkOrderPartLine[] = [];
+  if (Array.isArray(options.partLines)) {
+    for (const line of options.partLines) {
+      const desc = line.description?.trim();
+      if (!desc) throw new Error('Part line description cannot be empty');
+      if (typeof line.quantity !== 'number' || line.quantity <= 0) {
+        throw new Error('Part quantity must be greater than zero');
+      }
+      partLines.push({
+        id: crypto.randomUUID(),
+        description: desc,
+        partNumber: line.partNumber?.trim() || undefined,
+        quantity: line.quantity,
+        notes: line.notes?.trim() || undefined,
+      });
+    }
+  }
+
+  const seq = store.nextWorkOrderSequence++;
+  const workOrderNumber = formatWorkOrderNumber(seq);
+  const now = Date.now();
+  const status = options.status || 'open';
+  const completedAt = status === 'completed' ? now : undefined;
+
+  const newWorkOrder: WorkOrderRecord = {
+    id: crypto.randomUUID(),
+    workOrderNumber,
+    vehicleId,
+    customerId: assignedCustomerId,
+    customerNameSnapshot,
+    vehicleDescriptionSnapshot,
+    vinSnapshot,
+    status,
+    odometerIn: options.odometerIn !== undefined ? options.odometerIn : vehicle.mileage,
+    odometerOut: options.odometerOut,
+    customerConcern: trimmedConcern,
+    inspectionNotes: options.inspectionNotes?.trim() || undefined,
+    diagnosis: options.diagnosis?.trim() || undefined,
+    workPerformed: options.workPerformed?.trim() || undefined,
+    technicianNotes: options.technicianNotes?.trim() || undefined,
+    laborLines,
+    partLines,
+    openedAt: now,
+    completedAt,
+    createdAt: now,
+    updatedAt: now,
+    isDeleted: false,
+  };
+
+  if (!store.workOrders) store.workOrders = [];
+  store.workOrders.push(newWorkOrder);
+  await writeAutomotiveStoreFile(store);
+  return newWorkOrder;
+}
+
+export async function updateWorkOrder(
+  id: string,
+  updates: UpdateWorkOrderOptions
+): Promise<WorkOrderRecord> {
+  if (!id || typeof id !== 'string') {
+    throw new Error('Invalid work order ID provided');
+  }
+
+  const store = await readAutomotiveStoreFile();
+  const workOrder = (store.workOrders || []).find((w) => w.id === id);
+
+  if (!workOrder) {
+    throw new Error(`Work Order "${id}" not found`);
+  }
+
+  if (workOrder.isDeleted) {
+    throw new Error(`Cannot update Work Order "${id}": record is deleted`);
+  }
+
+  if (updates.customerId !== undefined) {
+    if (updates.customerId === null) {
+      workOrder.customerId = null;
+    } else {
+      const customer = store.customers.find((c) => c.id === updates.customerId);
+      if (!customer) {
+        throw new Error(`Target customer "${updates.customerId}" not found`);
+      }
+      workOrder.customerId = customer.id;
+    }
+  }
+
+  if (updates.customerConcern !== undefined) {
+    const trimmed = updates.customerConcern.trim();
+    if (!trimmed) throw new Error('Customer concern cannot be empty');
+    workOrder.customerConcern = trimmed;
+  }
+
+  if (updates.odometerIn !== undefined) {
+    if (updates.odometerIn !== null) {
+      if (typeof updates.odometerIn !== 'number' || updates.odometerIn < 0) {
+        throw new Error('Intake odometer reading cannot be negative');
+      }
+      workOrder.odometerIn = updates.odometerIn;
+    } else {
+      workOrder.odometerIn = undefined;
+    }
+  }
+
+  if (updates.odometerOut !== undefined) {
+    if (updates.odometerOut !== null) {
+      if (typeof updates.odometerOut !== 'number' || updates.odometerOut < 0) {
+        throw new Error('Out odometer reading cannot be negative');
+      }
+      if (workOrder.odometerIn !== undefined && updates.odometerOut < workOrder.odometerIn) {
+        throw new Error('Odometer Out cannot be less than Odometer In');
+      }
+      workOrder.odometerOut = updates.odometerOut;
+    } else {
+      workOrder.odometerOut = undefined;
+    }
+  }
+
+  if (updates.status !== undefined) {
+    const prevStatus = workOrder.status;
+    workOrder.status = updates.status;
+    if (updates.status === 'completed' && prevStatus !== 'completed') {
+      workOrder.completedAt = Date.now();
+    } else if (updates.status !== 'completed' && prevStatus === 'completed') {
+      workOrder.completedAt = undefined;
+    }
+  }
+
+  if (updates.inspectionNotes !== undefined) workOrder.inspectionNotes = updates.inspectionNotes.trim() || undefined;
+  if (updates.diagnosis !== undefined) workOrder.diagnosis = updates.diagnosis.trim() || undefined;
+  if (updates.workPerformed !== undefined) workOrder.workPerformed = updates.workPerformed.trim() || undefined;
+  if (updates.technicianNotes !== undefined) workOrder.technicianNotes = updates.technicianNotes.trim() || undefined;
+
+  if (updates.laborLines !== undefined) {
+    const validatedLabor: WorkOrderLaborLine[] = [];
+    for (const line of updates.laborLines) {
+      const desc = line.description?.trim();
+      if (!desc) throw new Error('Labor line description cannot be empty');
+      if (line.hours !== undefined && (typeof line.hours !== 'number' || line.hours < 0)) {
+        throw new Error('Labor hours cannot be negative');
+      }
+      validatedLabor.push({
+        id: 'id' in line && line.id ? line.id : crypto.randomUUID(),
+        description: desc,
+        hours: line.hours,
+        notes: line.notes?.trim() || undefined,
+      });
+    }
+    workOrder.laborLines = validatedLabor;
+  }
+
+  if (updates.partLines !== undefined) {
+    const validatedParts: WorkOrderPartLine[] = [];
+    for (const line of updates.partLines) {
+      const desc = line.description?.trim();
+      if (!desc) throw new Error('Part line description cannot be empty');
+      if (typeof line.quantity !== 'number' || line.quantity <= 0) {
+        throw new Error('Part quantity must be greater than zero');
+      }
+      validatedParts.push({
+        id: 'id' in line && line.id ? line.id : crypto.randomUUID(),
+        description: desc,
+        partNumber: line.partNumber?.trim() || undefined,
+        quantity: line.quantity,
+        notes: line.notes?.trim() || undefined,
+      });
+    }
+    workOrder.partLines = validatedParts;
+  }
+
+  workOrder.updatedAt = Date.now();
+  await writeAutomotiveStoreFile(store);
+  return workOrder;
+}
+
+export async function deleteWorkOrder(id: string): Promise<boolean> {
+  if (!id || typeof id !== 'string') {
+    throw new Error('Invalid work order ID provided');
+  }
+
+  const store = await readAutomotiveStoreFile();
+  const workOrder = (store.workOrders || []).find((w) => w.id === id);
+
+  if (!workOrder) {
+    throw new Error(`Work Order "${id}" not found`);
+  }
+
+  workOrder.isDeleted = true;
+  workOrder.updatedAt = Date.now();
   await writeAutomotiveStoreFile(store);
   return true;
 }

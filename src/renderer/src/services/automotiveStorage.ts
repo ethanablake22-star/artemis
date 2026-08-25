@@ -1,17 +1,22 @@
 import type {
   CustomerRecord,
   VehicleRecord,
+  WorkOrderRecord,
   CreateCustomerOptions,
   UpdateCustomerOptions,
   CreateVehicleOptions,
   UpdateVehicleOptions,
+  CreateWorkOrderOptions,
+  UpdateWorkOrderOptions,
   ListCustomersFilter,
   ListVehiclesFilter,
+  ListWorkOrdersFilter,
   IAutomotiveStorageRepository,
 } from '@shared/automotiveTypes';
 
 const LOCAL_STORAGE_CUSTOMERS_KEY = 'artemis_automotive_customers_browser_dev';
 const LOCAL_STORAGE_VEHICLES_KEY = 'artemis_automotive_vehicles_browser_dev';
+const LOCAL_STORAGE_WORK_ORDERS_KEY = 'artemis_automotive_work_orders_browser_dev';
 
 function isElectronEnvironment(): boolean {
   if (typeof window === 'undefined') return false;
@@ -25,8 +30,10 @@ function isElectronEnvironment(): boolean {
 export class LocalAutomotiveRepository implements IAutomotiveStorageRepository {
   private browserDevCustomers: CustomerRecord[] | null = null;
   private browserDevVehicles: VehicleRecord[] | null = null;
+  private browserDevWorkOrders: WorkOrderRecord[] | null = null;
   private nextCustomerSeq = 1;
   private nextVehicleSeq = 1;
+  private nextWorkOrderSeq = 1;
 
   async listCustomers(filter?: ListCustomersFilter): Promise<CustomerRecord[]> {
     if (isElectronEnvironment()) {
@@ -128,6 +135,56 @@ export class LocalAutomotiveRepository implements IAutomotiveStorageRepository {
     return this.browserDevDeleteVehicle(id);
   }
 
+  async listWorkOrders(filter?: ListWorkOrdersFilter): Promise<WorkOrderRecord[]> {
+    if (isElectronEnvironment()) {
+      if (!window.artemisAPI?.automotive?.listWorkOrders) {
+        throw new Error('Artemis Automotive IPC bridge unavailable in Electron environment.');
+      }
+      return window.artemisAPI.automotive.listWorkOrders(filter);
+    }
+    return this.browserDevListWorkOrders(filter);
+  }
+
+  async getWorkOrder(id: string): Promise<WorkOrderRecord | null> {
+    if (isElectronEnvironment()) {
+      if (!window.artemisAPI?.automotive?.getWorkOrder) {
+        throw new Error('Artemis Automotive IPC bridge unavailable in Electron environment.');
+      }
+      return window.artemisAPI.automotive.getWorkOrder(id);
+    }
+    return this.browserDevGetWorkOrder(id);
+  }
+
+  async createWorkOrder(options: CreateWorkOrderOptions): Promise<WorkOrderRecord> {
+    if (isElectronEnvironment()) {
+      if (!window.artemisAPI?.automotive?.createWorkOrder) {
+        throw new Error('Artemis Automotive IPC bridge unavailable in Electron environment.');
+      }
+      return window.artemisAPI.automotive.createWorkOrder(options);
+    }
+    return this.browserDevCreateWorkOrder(options);
+  }
+
+  async updateWorkOrder(id: string, updates: UpdateWorkOrderOptions): Promise<WorkOrderRecord> {
+    if (isElectronEnvironment()) {
+      if (!window.artemisAPI?.automotive?.updateWorkOrder) {
+        throw new Error('Artemis Automotive IPC bridge unavailable in Electron environment.');
+      }
+      return window.artemisAPI.automotive.updateWorkOrder(id, updates);
+    }
+    return this.browserDevUpdateWorkOrder(id, updates);
+  }
+
+  async deleteWorkOrder(id: string): Promise<boolean> {
+    if (isElectronEnvironment()) {
+      if (!window.artemisAPI?.automotive?.deleteWorkOrder) {
+        throw new Error('Artemis Automotive IPC bridge unavailable in Electron environment.');
+      }
+      return window.artemisAPI.automotive.deleteWorkOrder(id);
+    }
+    return this.browserDevDeleteWorkOrder(id);
+  }
+
   // ---------------------------------------------------------------------------
   // Browser Dev Mode Helpers
   // ---------------------------------------------------------------------------
@@ -173,6 +230,28 @@ export class LocalAutomotiveRepository implements IAutomotiveStorageRepository {
       localStorage.setItem(LOCAL_STORAGE_VEHICLES_KEY, JSON.stringify(items));
     } catch (e) {
       console.warn('LocalStorage save failed for vehicles:', e);
+    }
+  }
+
+  private async browserDevLoadWorkOrders(): Promise<WorkOrderRecord[]> {
+    if (this.browserDevWorkOrders === null) {
+      try {
+        const raw = localStorage.getItem(LOCAL_STORAGE_WORK_ORDERS_KEY);
+        this.browserDevWorkOrders = raw ? JSON.parse(raw) : [];
+        this.nextWorkOrderSeq = (this.browserDevWorkOrders?.length || 0) + 1;
+      } catch {
+        this.browserDevWorkOrders = [];
+      }
+    }
+    return this.browserDevWorkOrders || [];
+  }
+
+  private async browserDevSaveWorkOrders(items: WorkOrderRecord[]): Promise<void> {
+    this.browserDevWorkOrders = [...items];
+    try {
+      localStorage.setItem(LOCAL_STORAGE_WORK_ORDERS_KEY, JSON.stringify(items));
+    } catch (e) {
+      console.warn('LocalStorage save failed for work orders:', e);
     }
   }
 
@@ -369,6 +448,114 @@ export class LocalAutomotiveRepository implements IAutomotiveStorageRepository {
     item.isDeleted = true;
     item.updatedAt = Date.now();
     await this.browserDevSaveVehicles(list);
+    return true;
+  }
+
+  private async browserDevListWorkOrders(filter?: ListWorkOrdersFilter): Promise<WorkOrderRecord[]> {
+    const list = await this.browserDevLoadWorkOrders();
+    let res = list;
+    if (!filter?.includeDeleted) res = res.filter((w) => !w.isDeleted);
+    if (filter?.vehicleId) res = res.filter((w) => w.vehicleId === filter.vehicleId);
+    if (filter?.customerId !== undefined) res = res.filter((w) => w.customerId === filter.customerId);
+    if (filter?.status) res = res.filter((w) => w.status === filter.status);
+    if (filter?.query) {
+      const q = filter.query.toLowerCase();
+      res = res.filter(
+        (w) =>
+          w.workOrderNumber.toLowerCase().includes(q) ||
+          w.customerConcern.toLowerCase().includes(q) ||
+          (w.customerNameSnapshot && w.customerNameSnapshot.toLowerCase().includes(q)) ||
+          w.vehicleDescriptionSnapshot.toLowerCase().includes(q)
+      );
+    }
+    return res.sort((a, b) => b.updatedAt - a.updatedAt);
+  }
+
+  private async browserDevGetWorkOrder(id: string): Promise<WorkOrderRecord | null> {
+    const list = await this.browserDevLoadWorkOrders();
+    return list.find((w) => w.id === id) || null;
+  }
+
+  private async browserDevCreateWorkOrder(options: CreateWorkOrderOptions): Promise<WorkOrderRecord> {
+    const list = await this.browserDevLoadWorkOrders();
+    const now = Date.now();
+    const workOrderNumber = `WO-${String(this.nextWorkOrderSeq++).padStart(6, '0')}`;
+
+    const newWO: WorkOrderRecord = {
+      id: `wo-${now}-${Math.random().toString(36).substring(2, 6)}`,
+      workOrderNumber,
+      vehicleId: options.vehicleId,
+      customerId: options.customerId ?? null,
+      vehicleDescriptionSnapshot: 'Vehicle',
+      status: options.status || 'open',
+      odometerIn: options.odometerIn,
+      odometerOut: options.odometerOut,
+      customerConcern: options.customerConcern,
+      inspectionNotes: options.inspectionNotes,
+      diagnosis: options.diagnosis,
+      workPerformed: options.workPerformed,
+      technicianNotes: options.technicianNotes,
+      laborLines: (options.laborLines || []).map((l) => ({
+        ...l,
+        id: `labor-${Math.random().toString(36).substring(2, 6)}`,
+      })),
+      partLines: (options.partLines || []).map((p) => ({
+        ...p,
+        id: `part-${Math.random().toString(36).substring(2, 6)}`,
+      })),
+      openedAt: now,
+      completedAt: options.status === 'completed' ? now : undefined,
+      createdAt: now,
+      updatedAt: now,
+      isDeleted: false,
+    };
+    list.push(newWO);
+    await this.browserDevSaveWorkOrders(list);
+    return newWO;
+  }
+
+  private async browserDevUpdateWorkOrder(id: string, updates: UpdateWorkOrderOptions): Promise<WorkOrderRecord> {
+    const list = await this.browserDevLoadWorkOrders();
+    const item = list.find((w) => w.id === id);
+    if (!item) throw new Error('Work Order not found');
+    if (updates.customerId !== undefined) item.customerId = updates.customerId;
+    if (updates.status !== undefined) {
+      const prev = item.status;
+      item.status = updates.status;
+      if (updates.status === 'completed' && prev !== 'completed') item.completedAt = Date.now();
+      else if (updates.status !== 'completed' && prev === 'completed') item.completedAt = undefined;
+    }
+    if (updates.odometerIn !== undefined) item.odometerIn = updates.odometerIn;
+    if (updates.odometerOut !== undefined) item.odometerOut = updates.odometerOut;
+    if (updates.customerConcern !== undefined) item.customerConcern = updates.customerConcern;
+    if (updates.inspectionNotes !== undefined) item.inspectionNotes = updates.inspectionNotes;
+    if (updates.diagnosis !== undefined) item.diagnosis = updates.diagnosis;
+    if (updates.workPerformed !== undefined) item.workPerformed = updates.workPerformed;
+    if (updates.technicianNotes !== undefined) item.technicianNotes = updates.technicianNotes;
+    if (updates.laborLines !== undefined) {
+      item.laborLines = updates.laborLines.map((l) => ({
+        ...l,
+        id: 'id' in l && l.id ? l.id : `labor-${Math.random().toString(36).substring(2, 6)}`,
+      }));
+    }
+    if (updates.partLines !== undefined) {
+      item.partLines = updates.partLines.map((p) => ({
+        ...p,
+        id: 'id' in p && p.id ? p.id : `part-${Math.random().toString(36).substring(2, 6)}`,
+      }));
+    }
+    item.updatedAt = Date.now();
+    await this.browserDevSaveWorkOrders(list);
+    return item;
+  }
+
+  private async browserDevDeleteWorkOrder(id: string): Promise<boolean> {
+    const list = await this.browserDevLoadWorkOrders();
+    const item = list.find((w) => w.id === id);
+    if (!item) throw new Error('Work Order not found');
+    item.isDeleted = true;
+    item.updatedAt = Date.now();
+    await this.browserDevSaveWorkOrders(list);
     return true;
   }
 }

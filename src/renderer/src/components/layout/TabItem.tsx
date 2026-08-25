@@ -10,6 +10,9 @@ import {
   Cpu,
   Calendar,
   Wrench,
+  User,
+  Car,
+  ClipboardList,
   File,
   X,
 } from 'lucide-react';
@@ -47,6 +50,12 @@ const renderTabIcon = (type: ArtemisTab['type']) => {
       return <Calendar {...iconProps} className="w-4 h-4 shrink-0 text-rose-400" />;
     case 'automotive':
       return <Wrench {...iconProps} className="w-4 h-4 shrink-0 text-orange-400" />;
+    case 'automotive-customer':
+      return <User {...iconProps} className="w-4 h-4 shrink-0 text-cyan-400" />;
+    case 'automotive-vehicle':
+      return <Car {...iconProps} className="w-4 h-4 shrink-0 text-indigo-400" />;
+    case 'automotive-work-order':
+      return <ClipboardList {...iconProps} className="w-4 h-4 shrink-0 text-emerald-400" />;
     default:
       return <File {...iconProps} className="w-4 h-4 shrink-0 text-slate-400" />;
   }
@@ -73,7 +82,7 @@ export const TabItem: React.FC<TabItemProps> = ({ tab, isActive, onSelect, onClo
       onClick={() => onSelect(tab.id)}
       onAuxClick={handleAuxClick}
       className={clsx(
-        'group relative flex items-center gap-2 h-9 px-3.5 max-w-[220px] min-w-[130px] rounded-t-lg text-xs font-medium cursor-pointer transition-all duration-150 select-none border-t border-x',
+        'group relative flex items-center gap-2 h-9 px-3.5 max-w-[240px] min-w-[130px] rounded-t-lg text-xs font-medium cursor-pointer transition-all duration-150 select-none border-t border-x',
         isActive
           ? 'bg-artemis-900 text-slate-100 border-slate-700/60 shadow-sm tab-active-glow z-10'
           : 'bg-artemis-950/60 hover:bg-artemis-900/50 text-slate-400 hover:text-slate-200 border-transparent hover:border-slate-800/60'

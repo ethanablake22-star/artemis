@@ -6,6 +6,7 @@ import { DocumentTab } from './document/DocumentTab';
 import { AutomotiveHubTab } from './automotive/AutomotiveHubTab';
 import { CustomerDetailTab } from './automotive/CustomerDetailTab';
 import { VehicleDetailTab } from './automotive/VehicleDetailTab';
+import { WorkOrderDetailTab } from './automotive/WorkOrderDetailTab';
 import { Construction, Sparkles } from 'lucide-react';
 
 export const TabHost: React.FC = () => {
@@ -33,6 +34,8 @@ export const TabHost: React.FC = () => {
       return <CustomerDetailTab customerId={activeTab.resourceId || ''} />;
     case 'automotive-vehicle':
       return <VehicleDetailTab vehicleId={activeTab.resourceId || ''} />;
+    case 'automotive-work-order':
+      return <WorkOrderDetailTab workOrderId={activeTab.resourceId || ''} />;
     default:
       return (
         <div className="h-full w-full flex flex-col items-center justify-center p-8 text-center">

@@ -14,7 +14,8 @@ export type ArtemisTabType =
   | 'calendar'
   | 'automotive'
   | 'automotive-customer'
-  | 'automotive-vehicle';
+  | 'automotive-vehicle'
+  | 'automotive-work-order';
 
 export interface ArtemisTab {
   /** Unique tab identifier */
@@ -23,7 +24,7 @@ export interface ArtemisTab {
   type: ArtemisTabType;
   /** Display title in tab header */
   title: string;
-  /** Optional resource ID (e.g. Library item UUID or Customer/Vehicle UUID) */
+  /** Optional resource ID (e.g. Library item UUID or Customer/Vehicle/WorkOrder UUID) */
   resourceId?: string;
   /** Icon identifier or name */
   icon?: string;

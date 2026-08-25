@@ -19,10 +19,12 @@ interface TabContextValue {
   openDocumentTab: (libraryItemId: string, title: string) => string;
   openCustomerTab: (customerId: string, name: string) => string;
   openVehicleTab: (vehicleId: string, title: string) => string;
+  openWorkOrderTab: (workOrderId: string, title: string) => string;
   updateTab: (id: string, updates: Partial<ArtemisTab>) => void;
   syncDocumentTitle: (libraryItemId: string, newTitle: string) => void;
   syncCustomerTitle: (customerId: string, newName: string) => void;
   syncVehicleTitle: (vehicleId: string, newTitle: string) => void;
+  syncWorkOrderTitle: (workOrderId: string, newTitle: string) => void;
   registerBeforeClose: (tabId: string, handler: () => Promise<boolean>) => () => void;
 }
 
@@ -117,7 +119,7 @@ export const TabProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   }, []);
 
   const openTab = useCallback((tabOptions: Omit<ArtemisTab, 'id'> & { id?: string }) => {
-    // Deduplication by resourceId (for documents, customers, vehicles)
+    // Deduplication by resourceId (for documents, customers, vehicles, work orders)
     if (tabOptions.resourceId) {
       const existingResourceTab = tabs.find((t) => t.resourceId === tabOptions.resourceId);
       if (existingResourceTab) {
@@ -206,6 +208,10 @@ export const TabProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         title = 'Calendar & Schedule';
         icon = 'calendar';
         break;
+      case 'automotive-work-order':
+        title = 'Work Order';
+        icon = 'clipboard-list';
+        break;
       default:
         title = 'Artemis View';
         icon = 'layout';
@@ -279,6 +285,25 @@ export const TabProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     [tabs, openTab, selectTab]
   );
 
+  const openWorkOrderTab = useCallback(
+    (workOrderId: string, title: string) => {
+      const existing = tabs.find((t) => t.resourceId === workOrderId);
+      if (existing) {
+        selectTab(existing.id);
+        return existing.id;
+      }
+
+      return openTab({
+        type: 'automotive-work-order',
+        resourceId: workOrderId,
+        title: title || 'Work Order',
+        icon: 'clipboard-list',
+        closable: true,
+      });
+    },
+    [tabs, openTab, selectTab]
+  );
+
   const syncDocumentTitle = useCallback((libraryItemId: string, newTitle: string) => {
     setTabs((prev) =>
       prev.map((tab) =>
@@ -303,6 +328,14 @@ export const TabProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     );
   }, []);
 
+  const syncWorkOrderTitle = useCallback((workOrderId: string, newTitle: string) => {
+    setTabs((prev) =>
+      prev.map((tab) =>
+        tab.resourceId === workOrderId ? { ...tab, title: newTitle } : tab
+      )
+    );
+  }, []);
+
   const activeTab = useMemo(() => tabs.find((t) => t.id === activeTabId), [tabs, activeTabId]);
 
   const value = useMemo(
@@ -317,10 +350,12 @@ export const TabProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       openDocumentTab,
       openCustomerTab,
       openVehicleTab,
+      openWorkOrderTab,
       updateTab,
       syncDocumentTitle,
       syncCustomerTitle,
       syncVehicleTitle,
+      syncWorkOrderTitle,
       registerBeforeClose,
     }),
     [
@@ -334,10 +369,12 @@ export const TabProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       openDocumentTab,
       openCustomerTab,
       openVehicleTab,
+      openWorkOrderTab,
       updateTab,
       syncDocumentTitle,
       syncCustomerTitle,
       syncVehicleTitle,
+      syncWorkOrderTitle,
       registerBeforeClose,
     ]
   );

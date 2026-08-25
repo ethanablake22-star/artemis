@@ -10,29 +10,54 @@ import {
   ExternalLink,
   Cpu,
   UserX,
+  ClipboardList,
+  Plus,
+  ArrowRight,
 } from 'lucide-react';
 import { useAutomotive } from '../../../state/AutomotiveContext';
 import { useTabs } from '../../../state/TabContext';
+import { CreateWorkOrderModal } from './CreateWorkOrderModal';
+import type { WorkOrderStatus } from '@shared/automotiveTypes';
+import clsx from 'clsx';
 
 interface VehicleDetailTabProps {
   vehicleId: string;
 }
 
+const STATUS_BADGES: Record<
+  WorkOrderStatus,
+  { label: string; bg: string; text: string; border: string }
+> = {
+  draft: { label: 'Draft', bg: 'bg-slate-800', text: 'text-slate-400', border: 'border-slate-700' },
+  open: { label: 'Open', bg: 'bg-blue-500/10', text: 'text-blue-400', border: 'border-blue-500/20' },
+  diagnosing: { label: 'Diagnosing', bg: 'bg-purple-500/10', text: 'text-purple-400', border: 'border-purple-500/20' },
+  awaiting_approval: { label: 'Awaiting Approval', bg: 'bg-amber-500/10', text: 'text-amber-400', border: 'border-amber-500/20' },
+  waiting_parts: { label: 'Waiting Parts', bg: 'bg-orange-500/10', text: 'text-orange-400', border: 'border-orange-500/20' },
+  in_progress: { label: 'In Progress', bg: 'bg-cyan-500/10', text: 'text-cyan-400', border: 'border-cyan-500/20' },
+  completed: { label: 'Completed', bg: 'bg-emerald-500/10', text: 'text-emerald-400', border: 'border-emerald-500/20' },
+  cancelled: { label: 'Cancelled', bg: 'bg-red-500/10', text: 'text-red-400', border: 'border-red-500/20' },
+};
+
 export const VehicleDetailTab: React.FC<VehicleDetailTabProps> = ({ vehicleId }) => {
   const {
     customers,
+    vehicles,
     getVehicleById,
     getCustomerById,
     updateVehicle,
     deleteVehicle,
+    getVehicleWorkOrders,
+    createWorkOrder,
   } = useAutomotive();
 
-  const { openCustomerTab, closeTab, syncVehicleTitle, activeTabId } = useTabs();
+  const { openCustomerTab, openWorkOrderTab, closeTab, syncVehicleTitle, activeTabId } = useTabs();
 
   const vehicle = getVehicleById(vehicleId);
   const owner = vehicle?.customerId ? getCustomerById(vehicle.customerId) : null;
+  const workOrders = vehicle ? getVehicleWorkOrders(vehicle.id) : [];
 
   const [isEditing, setIsEditing] = useState(false);
+  const [isCreateWOOpen, setIsCreateWOOpen] = useState(false);
   const [customerId, setCustomerId] = useState<string>(vehicle?.customerId || '');
   const [year, setYear] = useState<string>(vehicle?.year ? vehicle.year.toString() : '');
   const [make, setMake] = useState(vehicle?.make || '');
@@ -59,6 +84,8 @@ export const VehicleDetailTab: React.FC<VehicleDetailTabProps> = ({ vehicleId })
       </div>
     );
   }
+
+  const vehicleTitle = `${vehicle.year ? `${vehicle.year} ` : ''}${vehicle.make} ${vehicle.model}`;
 
   const handleStartEdit = () => {
     setCustomerId(vehicle.customerId || '');
@@ -118,8 +145,7 @@ export const VehicleDetailTab: React.FC<VehicleDetailTabProps> = ({ vehicleId })
   };
 
   const handleDelete = async () => {
-    const title = `${vehicle.year ? `${vehicle.year} ` : ''}${vehicle.make} ${vehicle.model}`;
-    if (window.confirm(`Are you sure you want to archive ${title}?`)) {
+    if (window.confirm(`Are you sure you want to archive ${vehicleTitle}?`)) {
       await deleteVehicle(vehicle.id);
       closeTab(activeTabId);
     }
@@ -132,8 +158,6 @@ export const VehicleDetailTab: React.FC<VehicleDetailTabProps> = ({ vehicleId })
       year: 'numeric',
     });
   };
-
-  const vehicleTitle = `${vehicle.year ? `${vehicle.year} ` : ''}${vehicle.make} ${vehicle.model}`;
 
   return (
     <div className="h-full w-full bg-artemis-950 flex flex-col overflow-hidden text-slate-100 select-none">
@@ -167,6 +191,15 @@ export const VehicleDetailTab: React.FC<VehicleDetailTabProps> = ({ vehicleId })
 
         {/* Header Actions */}
         <div className="flex items-center gap-2">
+          <button
+            type="button"
+            onClick={() => setIsCreateWOOpen(true)}
+            className="px-3 py-1.5 rounded-lg bg-emerald-500/15 hover:bg-emerald-500/25 text-emerald-400 border border-emerald-500/30 text-xs font-bold flex items-center gap-1.5 transition-colors"
+          >
+            <Plus className="w-3.5 h-3.5" />
+            New Work Order
+          </button>
+
           {!isEditing ? (
             <button
               type="button"
@@ -446,6 +479,86 @@ export const VehicleDetailTab: React.FC<VehicleDetailTabProps> = ({ vehicleId })
           )}
         </div>
 
+        {/* Live Service History / Work Orders */}
+        <div className="p-5 rounded-xl bg-artemis-900/90 border border-slate-800 space-y-3">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <ClipboardList className="w-4 h-4 text-emerald-400" />
+              <h3 className="text-xs font-bold uppercase tracking-wider text-slate-300">
+                Service History & Work Orders ({workOrders.length})
+              </h3>
+            </div>
+            <button
+              type="button"
+              onClick={() => setIsCreateWOOpen(true)}
+              className="px-2.5 py-1 rounded-lg bg-emerald-500/15 hover:bg-emerald-500/25 text-emerald-400 border border-emerald-500/30 text-xs font-bold flex items-center gap-1 transition-colors"
+            >
+              <Plus className="w-3 h-3" />
+              New Work Order
+            </button>
+          </div>
+
+          {workOrders.length === 0 ? (
+            <div className="p-6 text-center text-slate-500 text-xs italic bg-artemis-950/40 rounded-xl border border-slate-800/60">
+              No work orders or service records recorded for this vehicle.
+            </div>
+          ) : (
+            <div className="border border-slate-800 rounded-xl overflow-hidden bg-artemis-950/60">
+              <table className="w-full text-left text-xs border-collapse">
+                <thead>
+                  <tr className="border-b border-slate-800 bg-artemis-950 text-slate-400 font-medium">
+                    <th className="py-2.5 px-3">Work Order #</th>
+                    <th className="py-2.5 px-3">Status</th>
+                    <th className="py-2.5 px-3">Date</th>
+                    <th className="py-2.5 px-3">Concern / Service Description</th>
+                    <th className="py-2.5 px-3 text-right">Action</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {workOrders.map((wo) => {
+                    const badge = STATUS_BADGES[wo.status] || STATUS_BADGES.open;
+                    return (
+                      <tr
+                        key={wo.id}
+                        onClick={() => openWorkOrderTab(wo.id, `${wo.workOrderNumber} — ${vehicleTitle}`)}
+                        className="border-b border-slate-800/60 hover:bg-slate-800/40 cursor-pointer transition-colors group"
+                      >
+                        <td className="py-2.5 px-3 font-mono font-bold text-emerald-400 group-hover:underline">
+                          {wo.workOrderNumber}
+                        </td>
+                        <td className="py-2.5 px-3">
+                          <span
+                            className={clsx(
+                              'text-[10px] font-bold px-2 py-0.5 rounded border',
+                              badge.bg,
+                              badge.text,
+                              badge.border
+                            )}
+                          >
+                            {badge.label}
+                          </span>
+                        </td>
+                        <td className="py-2.5 px-3 font-mono text-[11px] text-slate-400">
+                          {formatDate(wo.openedAt)}
+                        </td>
+                        <td className="py-2.5 px-3 text-slate-200 truncate max-w-xs">
+                          {wo.customerConcern}
+                        </td>
+                        <td className="py-2.5 px-3 text-right">
+                          <span className="text-slate-500 group-hover:text-artemis-accent text-[11px] font-semibold inline-flex items-center gap-1">
+                            Open
+                            <ArrowRight className="w-3 h-3" />
+                          </span>
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </div>
+
         {/* General Vehicle Notes */}
         <div className="p-5 rounded-xl bg-artemis-900/90 border border-slate-800 space-y-3">
           <h3 className="text-xs font-bold uppercase tracking-wider text-slate-400 flex items-center gap-1.5">
@@ -466,6 +579,19 @@ export const VehicleDetailTab: React.FC<VehicleDetailTabProps> = ({ vehicleId })
           )}
         </div>
       </div>
+
+      {/* Create Work Order Modal */}
+      <CreateWorkOrderModal
+        isOpen={isCreateWOOpen}
+        vehicles={vehicles}
+        customers={customers}
+        initialVehicleId={vehicle.id}
+        onClose={() => setIsCreateWOOpen(false)}
+        onSubmit={async (opts) => {
+          const created = await createWorkOrder(opts);
+          openWorkOrderTab(created.id, `${created.workOrderNumber} — ${vehicleTitle}`);
+        }}
+      />
     </div>
   );
 };

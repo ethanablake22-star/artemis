@@ -2,16 +2,20 @@ import React, { createContext, useContext, useState, useEffect, useCallback, use
 import type {
   CustomerRecord,
   VehicleRecord,
+  WorkOrderRecord,
   CreateCustomerOptions,
   UpdateCustomerOptions,
   CreateVehicleOptions,
   UpdateVehicleOptions,
+  CreateWorkOrderOptions,
+  UpdateWorkOrderOptions,
 } from '@shared/automotiveTypes';
 import { automotiveRepository } from '../services/automotiveStorage';
 
 interface AutomotiveContextValue {
   customers: CustomerRecord[];
   vehicles: VehicleRecord[];
+  workOrders: WorkOrderRecord[];
   isLoading: boolean;
   error: string | null;
   refreshData: () => Promise<void>;
@@ -21,9 +25,15 @@ interface AutomotiveContextValue {
   createVehicle: (options: CreateVehicleOptions) => Promise<VehicleRecord>;
   updateVehicle: (id: string, updates: UpdateVehicleOptions) => Promise<VehicleRecord>;
   deleteVehicle: (id: string) => Promise<boolean>;
+  createWorkOrder: (options: CreateWorkOrderOptions) => Promise<WorkOrderRecord>;
+  updateWorkOrder: (id: string, updates: UpdateWorkOrderOptions) => Promise<WorkOrderRecord>;
+  deleteWorkOrder: (id: string) => Promise<boolean>;
   getCustomerVehicles: (customerId: string) => VehicleRecord[];
   getCustomerById: (id: string) => CustomerRecord | undefined;
   getVehicleById: (id: string) => VehicleRecord | undefined;
+  getWorkOrderById: (id: string) => WorkOrderRecord | undefined;
+  getVehicleWorkOrders: (vehicleId: string) => WorkOrderRecord[];
+  getCustomerWorkOrders: (customerId: string) => WorkOrderRecord[];
 }
 
 const AutomotiveContext = createContext<AutomotiveContextValue | null>(null);
@@ -31,6 +41,7 @@ const AutomotiveContext = createContext<AutomotiveContextValue | null>(null);
 export const AutomotiveProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [customers, setCustomers] = useState<CustomerRecord[]>([]);
   const [vehicles, setVehicles] = useState<VehicleRecord[]>([]);
+  const [workOrders, setWorkOrders] = useState<WorkOrderRecord[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -38,12 +49,14 @@ export const AutomotiveProvider: React.FC<{ children: React.ReactNode }> = ({ ch
     setIsLoading(true);
     setError(null);
     try {
-      const [fetchedCustomers, fetchedVehicles] = await Promise.all([
+      const [fetchedCustomers, fetchedVehicles, fetchedWorkOrders] = await Promise.all([
         automotiveRepository.listCustomers(),
         automotiveRepository.listVehicles(),
+        automotiveRepository.listWorkOrders(),
       ]);
       setCustomers(fetchedCustomers);
       setVehicles(fetchedVehicles);
+      setWorkOrders(fetchedWorkOrders);
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : String(err);
       console.error('Failed to load automotive data:', err);
@@ -96,7 +109,6 @@ export const AutomotiveProvider: React.FC<{ children: React.ReactNode }> = ({ ch
         const success = await automotiveRepository.deleteCustomer(id);
         if (success) {
           setCustomers((prev) => prev.filter((c) => c.id !== id));
-          setVehicles((prev) => prev.filter((v) => v.customerId !== id));
         }
         return success;
       } catch (err: unknown) {
@@ -158,6 +170,56 @@ export const AutomotiveProvider: React.FC<{ children: React.ReactNode }> = ({ ch
     []
   );
 
+  const handleCreateWorkOrder = useCallback(
+    async (options: CreateWorkOrderOptions): Promise<WorkOrderRecord> => {
+      setError(null);
+      try {
+        const created = await automotiveRepository.createWorkOrder(options);
+        setWorkOrders((prev) => [created, ...prev]);
+        return created;
+      } catch (err: unknown) {
+        const msg = err instanceof Error ? err.message : String(err);
+        setError(msg);
+        throw err;
+      }
+    },
+    []
+  );
+
+  const handleUpdateWorkOrder = useCallback(
+    async (id: string, updates: UpdateWorkOrderOptions): Promise<WorkOrderRecord> => {
+      setError(null);
+      try {
+        const updated = await automotiveRepository.updateWorkOrder(id, updates);
+        setWorkOrders((prev) => prev.map((w) => (w.id === id ? updated : w)));
+        return updated;
+      } catch (err: unknown) {
+        const msg = err instanceof Error ? err.message : String(err);
+        setError(msg);
+        throw err;
+      }
+    },
+    []
+  );
+
+  const handleDeleteWorkOrder = useCallback(
+    async (id: string): Promise<boolean> => {
+      setError(null);
+      try {
+        const success = await automotiveRepository.deleteWorkOrder(id);
+        if (success) {
+          setWorkOrders((prev) => prev.filter((w) => w.id !== id));
+        }
+        return success;
+      } catch (err: unknown) {
+        const msg = err instanceof Error ? err.message : String(err);
+        setError(msg);
+        throw err;
+      }
+    },
+    []
+  );
+
   const getCustomerVehicles = useCallback(
     (customerId: string): VehicleRecord[] => {
       return vehicles.filter((v) => v.customerId === customerId && !v.isDeleted);
@@ -179,10 +241,32 @@ export const AutomotiveProvider: React.FC<{ children: React.ReactNode }> = ({ ch
     [vehicles]
   );
 
+  const getWorkOrderById = useCallback(
+    (id: string): WorkOrderRecord | undefined => {
+      return workOrders.find((w) => w.id === id);
+    },
+    [workOrders]
+  );
+
+  const getVehicleWorkOrders = useCallback(
+    (vehicleId: string): WorkOrderRecord[] => {
+      return workOrders.filter((w) => w.vehicleId === vehicleId && !w.isDeleted);
+    },
+    [workOrders]
+  );
+
+  const getCustomerWorkOrders = useCallback(
+    (customerId: string): WorkOrderRecord[] => {
+      return workOrders.filter((w) => w.customerId === customerId && !w.isDeleted);
+    },
+    [workOrders]
+  );
+
   const value = useMemo(
     () => ({
       customers,
       vehicles,
+      workOrders,
       isLoading,
       error,
       refreshData,
@@ -192,13 +276,20 @@ export const AutomotiveProvider: React.FC<{ children: React.ReactNode }> = ({ ch
       createVehicle: handleCreateVehicle,
       updateVehicle: handleUpdateVehicle,
       deleteVehicle: handleDeleteVehicle,
+      createWorkOrder: handleCreateWorkOrder,
+      updateWorkOrder: handleUpdateWorkOrder,
+      deleteWorkOrder: handleDeleteWorkOrder,
       getCustomerVehicles,
       getCustomerById,
       getVehicleById,
+      getWorkOrderById,
+      getVehicleWorkOrders,
+      getCustomerWorkOrders,
     }),
     [
       customers,
       vehicles,
+      workOrders,
       isLoading,
       error,
       refreshData,
@@ -208,9 +299,15 @@ export const AutomotiveProvider: React.FC<{ children: React.ReactNode }> = ({ ch
       handleCreateVehicle,
       handleUpdateVehicle,
       handleDeleteVehicle,
+      handleCreateWorkOrder,
+      handleUpdateWorkOrder,
+      handleDeleteWorkOrder,
       getCustomerVehicles,
       getCustomerById,
       getVehicleById,
+      getWorkOrderById,
+      getVehicleWorkOrders,
+      getCustomerWorkOrders,
     ]
   );
 

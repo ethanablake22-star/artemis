@@ -13,16 +13,31 @@ import {
   Check,
   Layers,
   ArrowRight,
+  ClipboardList,
 } from 'lucide-react';
 import { useAutomotive } from '../../../state/AutomotiveContext';
 import { useTabs } from '../../../state/TabContext';
 import { CreateVehicleModal } from './CreateVehicleModal';
-import type { CustomerType } from '@shared/automotiveTypes';
+import type { CustomerType, WorkOrderStatus } from '@shared/automotiveTypes';
 import clsx from 'clsx';
 
 interface CustomerDetailTabProps {
   customerId: string;
 }
+
+const STATUS_BADGES: Record<
+  WorkOrderStatus,
+  { label: string; bg: string; text: string; border: string }
+> = {
+  draft: { label: 'Draft', bg: 'bg-slate-800', text: 'text-slate-400', border: 'border-slate-700' },
+  open: { label: 'Open', bg: 'bg-blue-500/10', text: 'text-blue-400', border: 'border-blue-500/20' },
+  diagnosing: { label: 'Diagnosing', bg: 'bg-purple-500/10', text: 'text-purple-400', border: 'border-purple-500/20' },
+  awaiting_approval: { label: 'Awaiting Approval', bg: 'bg-amber-500/10', text: 'text-amber-400', border: 'border-amber-500/20' },
+  waiting_parts: { label: 'Waiting Parts', bg: 'bg-orange-500/10', text: 'text-orange-400', border: 'border-orange-500/20' },
+  in_progress: { label: 'In Progress', bg: 'bg-cyan-500/10', text: 'text-cyan-400', border: 'border-cyan-500/20' },
+  completed: { label: 'Completed', bg: 'bg-emerald-500/10', text: 'text-emerald-400', border: 'border-emerald-500/20' },
+  cancelled: { label: 'Cancelled', bg: 'bg-red-500/10', text: 'text-red-400', border: 'border-red-500/20' },
+};
 
 export const CustomerDetailTab: React.FC<CustomerDetailTabProps> = ({ customerId }) => {
   const {
@@ -32,12 +47,14 @@ export const CustomerDetailTab: React.FC<CustomerDetailTabProps> = ({ customerId
     updateCustomer,
     deleteCustomer,
     createVehicle,
+    getCustomerWorkOrders,
   } = useAutomotive();
 
-  const { openVehicleTab, closeTab, syncCustomerTitle, activeTabId } = useTabs();
+  const { openVehicleTab, openWorkOrderTab, closeTab, syncCustomerTitle, activeTabId } = useTabs();
 
   const customer = getCustomerById(customerId);
   const vehicles = getCustomerVehicles(customerId);
+  const workOrders = customer ? getCustomerWorkOrders(customer.id) : [];
 
   const [isEditing, setIsEditing] = useState(false);
   const [type, setType] = useState<CustomerType>(customer?.type || 'individual');
@@ -99,7 +116,7 @@ export const CustomerDetailTab: React.FC<CustomerDetailTabProps> = ({ customerId
   const handleDelete = async () => {
     if (
       window.confirm(
-        `Are you sure you want to archive customer "${customer.name}"? (Note: Owned vehicles will remain in the system and will not be deleted).`
+        `Are you sure you want to archive customer "${customer.name}"? (Note: Owned vehicles and work orders will remain in the system and will not be deleted).`
       )
     ) {
       await deleteCustomer(customer.id);
@@ -333,12 +350,12 @@ export const CustomerDetailTab: React.FC<CustomerDetailTabProps> = ({ customerId
                 <span className="font-bold text-slate-200">{vehicles.length}</span>
               </div>
               <div className="flex justify-between py-1 border-b border-slate-800">
-                <span className="text-slate-500">Member Since</span>
-                <span className="font-mono text-slate-300">{formatDate(customer.createdAt)}</span>
+                <span className="text-slate-500">Service Work Orders</span>
+                <span className="font-bold text-emerald-400">{workOrders.length}</span>
               </div>
               <div className="flex justify-between py-1">
-                <span className="text-slate-500">Last Profile Update</span>
-                <span className="font-mono text-slate-300">{formatDate(customer.updatedAt)}</span>
+                <span className="text-slate-500">Member Since</span>
+                <span className="font-mono text-slate-300">{formatDate(customer.createdAt)}</span>
               </div>
             </div>
           </div>
@@ -452,6 +469,85 @@ export const CustomerDetailTab: React.FC<CustomerDetailTabProps> = ({ customerId
                   </div>
                 );
               })}
+            </div>
+          )}
+        </div>
+
+        {/* Customer Service Work Orders */}
+        <div className="space-y-3 pt-4 border-t border-slate-800/80">
+          <div className="flex items-center gap-2">
+            <ClipboardList className="w-4 h-4 text-emerald-400" />
+            <h3 className="text-xs font-bold uppercase tracking-wider text-slate-300">
+              Customer Work Orders ({workOrders.length})
+            </h3>
+          </div>
+
+          {workOrders.length === 0 ? (
+            <div className="p-6 text-center text-slate-500 text-xs italic bg-artemis-900/40 rounded-xl border border-slate-800/60">
+              No work orders recorded for this customer account.
+            </div>
+          ) : (
+            <div className="border border-slate-800 rounded-xl overflow-hidden bg-artemis-900/60">
+              <table className="w-full text-left text-xs border-collapse">
+                <thead>
+                  <tr className="border-b border-slate-800 bg-artemis-950 text-slate-400 font-medium">
+                    <th className="py-2.5 px-3">Work Order #</th>
+                    <th className="py-2.5 px-3">Vehicle</th>
+                    <th className="py-2.5 px-3">Status</th>
+                    <th className="py-2.5 px-3">Date</th>
+                    <th className="py-2.5 px-3">Concern</th>
+                    <th className="py-2.5 px-3 text-right">Action</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {workOrders.map((wo) => {
+                    const badge = STATUS_BADGES[wo.status] || STATUS_BADGES.open;
+                    return (
+                      <tr
+                        key={wo.id}
+                        onClick={() =>
+                          openWorkOrderTab(
+                            wo.id,
+                            `${wo.workOrderNumber} — ${wo.vehicleDescriptionSnapshot}`
+                          )
+                        }
+                        className="border-b border-slate-800/60 hover:bg-slate-800/40 cursor-pointer transition-colors group"
+                      >
+                        <td className="py-2.5 px-3 font-mono font-bold text-emerald-400 group-hover:underline">
+                          {wo.workOrderNumber}
+                        </td>
+                        <td className="py-2.5 px-3 font-semibold text-slate-200">
+                          {wo.vehicleDescriptionSnapshot}
+                        </td>
+                        <td className="py-2.5 px-3">
+                          <span
+                            className={clsx(
+                              'text-[10px] font-bold px-2 py-0.5 rounded border',
+                              badge.bg,
+                              badge.text,
+                              badge.border
+                            )}
+                          >
+                            {badge.label}
+                          </span>
+                        </td>
+                        <td className="py-2.5 px-3 font-mono text-[11px] text-slate-400">
+                          {formatDate(wo.openedAt)}
+                        </td>
+                        <td className="py-2.5 px-3 text-slate-300 truncate max-w-xs">
+                          {wo.customerConcern}
+                        </td>
+                        <td className="py-2.5 px-3 text-right">
+                          <span className="text-slate-500 group-hover:text-artemis-accent text-[11px] font-semibold inline-flex items-center gap-1">
+                            Open
+                            <ArrowRight className="w-3 h-3" />
+                          </span>
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
             </div>
           )}
         </div>

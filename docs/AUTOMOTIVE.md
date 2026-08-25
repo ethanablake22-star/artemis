@@ -1,14 +1,14 @@
-# Artemis Automotive Architecture & Data Model (Schema V2)
+# Artemis Automotive Architecture & Data Model (Schema V3)
 
 ## Overview
 
-**Artemis Automotive** is the native customer relationship management and vehicle fleet tracking subsystem for the Artemis desktop platform. It provides an operational foundation for mechanic shops, fleet operators, and engineering teams to maintain customer accounts, vehicle profiles, VINs, mileage records, powertrain specifications, and service relationships directly within Artemis universal tabs.
+**Artemis Automotive** is the native customer relationship management, vehicle fleet tracking, and service work order subsystem for the Artemis desktop platform. It provides an operational foundation for mechanic shops, fleet operators, and engineering teams to maintain customer accounts, vehicle profiles, VINs, mileage records, powertrain specifications, and repair work orders directly within Artemis universal tabs.
 
 ---
 
-## Data Models & Entity Relationships (Schema V2)
+## Data Models & Entity Relationships (Schema V3)
 
-Automotive data is authoritatively stored, validated, and numbered in the Electron Main Process:
+Automotive data is authoritatively stored, validated, numbered, and snapshot-preserved in the Electron Main Process:
 
 ```
 ┌────────────────────────────────────────────────────────┐
@@ -45,58 +45,93 @@ Automotive data is authoritatively stored, validated, and numbered in the Electr
 │   color: "Obsidian Black"                              │
 │   notes: "ABC suspension serviced"                     │
 │   isDeleted: false                                     │
+└───────────────────────────┬────────────────────────────┘
+                            │
+              1 to Many Service History Events
+                            │
+┌───────────────────────────▼────────────────────────────┐
+│                   WorkOrderRecord                      │
+│   id: "wo-uuid-..." (Immutable UUID)                   │
+│   workOrderNumber: "WO-000001" (Authoritative Monotonic)│
+│   vehicleId: "veh-uuid-..." (FK)                       │
+│   customerId: "cust-uuid-..." | null (FK or null)      │
+│   customerNameSnapshot?: "Ethan Blake" (Immutable)     │
+│   vehicleDescriptionSnapshot: "2006 Mercedes SL500"    │
+│   vinSnapshot?: "WDBSK75F76F..." (Immutable)           │
+│   status: "open" | "diagnosing" | "completed" | ...    │
+│   odometerIn?: 64250, odometerOut?: 64262              │
+│   customerConcern: "ABC warning light illuminated"     │
+│   inspectionNotes?: "Tandem pump pressure tested"      │
+│   diagnosis?: "Valve block seals leaking"              │
+│   workPerformed?: "Rebuilt front ABC valve block"      │
+│   technicianNotes?: "Road tested 12 mi, level stable"  │
+│   laborLines: [ { id, description, hours, notes } ]    │
+│   partLines: [ { id, description, partNumber, qty } ]  │
+│   openedAt: 1787692000000, completedAt?: ...           │
+│   isDeleted: false                                     │
 └────────────────────────────────────────────────────────┘
 ```
 
 ### TypeScript Definitions
 ```typescript
-export type CustomerType = 'individual' | 'business';
+export type WorkOrderStatus =
+  | 'draft'
+  | 'open'
+  | 'diagnosing'
+  | 'awaiting_approval'
+  | 'waiting_parts'
+  | 'in_progress'
+  | 'completed'
+  | 'cancelled';
 
-export interface CustomerRecord {
+export interface WorkOrderLaborLine {
   id: string;
-  customerNumber: string; // CUS-000001
-  type: CustomerType;
-  name: string; // Authoritatively synchronized in Main
-  firstName?: string;
-  lastName?: string;
-  businessName?: string;
-  contactPerson?: string;
-  phone?: string;
-  email?: string;
-  address?: string;
+  description: string;
+  hours?: number;
   notes?: string;
-  createdAt: number;
-  updatedAt: number;
-  isDeleted: boolean;
 }
 
-export interface VehicleRecord {
+export interface WorkOrderPartLine {
   id: string;
-  vehicleNumber: string; // VEH-000001
-  customerId: string | null; // Nullable for shop/unassigned vehicles
-  vin?: string; // Globally unique across all records (including archived)
-  year?: number; // Optional
-  make: string;
-  model: string;
-  trim?: string;
-  engine?: string;
-  transmission?: string;
-  drivetrain?: string;
-  licensePlate?: string;
-  mileage?: number;
-  color?: string;
+  description: string;
+  partNumber?: string;
+  quantity: number;
   notes?: string;
+}
+
+export interface WorkOrderRecord {
+  id: string;
+  workOrderNumber: string; // WO-000001
+  vehicleId: string;
+  customerId: string | null;
+  customerNameSnapshot?: string; // Captured at creation
+  vehicleDescriptionSnapshot: string; // Captured at creation
+  vinSnapshot?: string; // Captured at creation
+  status: WorkOrderStatus;
+  odometerIn?: number;
+  odometerOut?: number;
+  customerConcern: string;
+  inspectionNotes?: string;
+  diagnosis?: string;
+  workPerformed?: string;
+  technicianNotes?: string;
+  laborLines: WorkOrderLaborLine[];
+  partLines: WorkOrderPartLine[];
+  openedAt: number;
+  completedAt?: number;
   createdAt: number;
   updatedAt: number;
   isDeleted: boolean;
 }
 
 export interface ArtemisAutomotiveStoreData {
-  schemaVersion: 2;
+  schemaVersion: 3;
   nextCustomerSequence: number;
   nextVehicleSequence: number;
+  nextWorkOrderSequence: number;
   customers: CustomerRecord[];
   vehicles: VehicleRecord[];
+  workOrders: WorkOrderRecord[];
 }
 ```
 
@@ -104,53 +139,38 @@ export interface ArtemisAutomotiveStoreData {
 
 ## Architectural Guarantees & Invariants
 
-1. **Non-Reusable Human Identifiers (`CUS-XXXXXX` / `VEH-XXXXXX`)**:
-   - Customer and vehicle numbers are generated strictly in Electron Main from monotonic counters (`nextCustomerSequence`, `nextVehicleSequence`).
-   - Deleting or soft-deleting a record **never** decreases the counter or permits reuse of assigned numbers.
-2. **Deterministic Schema Migration (V1 → V2)**:
-   - Existing V1 records are sorted by `createdAt ASC` (with immutable `id` UUID as a tie-breaker).
-   - Sequential numbers are assigned cleanly (`CUS-000001`, `VEH-000001`), and sequence counters are initialized to continue monotonically.
-3. **Independent Vehicle Lifecycle (No Cascading Deletion)**:
-   - Soft-deleting a customer marks `customer.isDeleted = true` but **leaves all owned vehicles active**.
-   - Preserves historical integrity for service histories and future work orders.
-   - When viewing a vehicle whose customer account has been soft-deleted, the UI clearly displays `(Archived Owner)`.
-   - Vehicle ownership can be reassigned at any time.
-4. **Global VIN Uniqueness**:
-   - Normalized (trimmed and uppercase) VINs must be unique across all vehicles in the store, **including soft-deleted vehicles**, preventing duplicate VIN entry and restoration conflicts.
-5. **Nullable Customer Relationships**:
-   - Vehicles may exist without an assigned customer (`customerId: null`), supporting shop fleet vehicles, project cars, inventory acquisitions, or pre-intake entries.
+1. **Historical Snapshot Integrity**:
+   - A Work Order is an authoritative historical business record.
+   - At creation time, Electron Main captures `customerNameSnapshot`, `vehicleDescriptionSnapshot`, and `vinSnapshot`.
+   - If the vehicle is subsequently sold to another customer, or if the customer changes their name, historical work orders remain unaltered.
+2. **Monotonic Sequential Work Order Numbering (`WO-XXXXXX`)**:
+   - Work order numbers are generated strictly in Electron Main from a monotonic counter (`nextWorkOrderSequence`).
+   - Counter numbers are never reused even if a work order is archived or cancelled.
+3. **Deterministic Schema Migration (V1/V2 → V3)**:
+   - Migration ensures `workOrders: []` and `nextWorkOrderSequence: 1` are cleanly initialized when loading stores from earlier versions.
+4. **Independent Vehicle Lifecycle & Preservation**:
+   - Soft-deleting a customer marks `customer.isDeleted = true` but leaves all owned vehicles and work orders intact.
+   - Soft-deleted owners appear in vehicle and work order views with `(Archived Owner)` or historical snapshot tags.
+5. **Strict Data Validation in Main**:
+   - `customerConcern` is required (non-empty).
+   - Labor hours must be non-negative (`>= 0`).
+   - Part quantities must be strictly positive (`> 0`).
+   - Odometer readings must be non-negative, and `odometerOut >= odometerIn`.
+   - Setting `status: 'completed'` automatically stamps `completedAt = Date.now()`; moving out of completed clears `completedAt`.
 
 ---
 
 ## Universal Tab Integration
 
 - **Automotive Hub (`type: 'automotive'`)**:
-  - Fleet metrics, real-time search across customer names, numbers, VINs, plates, makes, and models.
-- **Customer Tab (`type: 'automotive-customer'`, `resourceId: customerId`)**:
-  - Account profile, contact points, individual vs business data, notes, and owned vehicle cards.
-  - Clicking any vehicle opens that vehicle's tab.
+  - Top metric summary cards for Active Work Orders, Completed Repairs, Tracked Vehicles, and Customer Accounts.
+  - 3-way toggle between **Work Orders**, **Vehicles**, and **Customers** directories.
+  - Status filter pills (All, Open, Diagnosing, In Progress, Waiting Parts, Completed).
 - **Vehicle Tab (`type: 'automotive-vehicle'`, `resourceId: vehicleId`)**:
-  - Vehicle specs, dedicated powertrain grid (Engine, Transmission, Drivetrain), mileage tracker, and owner card with cross-navigation.
-
----
-
-## Next Milestone: Task 005 — Work Orders
-
-With the hardened Schema V2 model in place, the relationship expands to:
-```
-CUSTOMER (CUS-000001)
-   │
-   ▼
-VEHICLE (VEH-000001)
-   │
-   ▼
-WORK ORDER (WO-000001)
-   ├── Status (Draft → In Progress → Waiting Parts → Completed → Invoiced)
-   ├── Odometer In / Out
-   ├── Customer Concern & Symptoms
-   ├── Inspection / Diagnosis
-   ├── Labor Lines & Hours
-   ├── Parts & Quantities
-   ├── Technician Notes
-   └── Document / Photo Attachments
-```
+  - Live Service History & Work Orders table with direct `+ New Work Order` button.
+  - Clicking any work order opens its tab.
+- **Customer Tab (`type: 'automotive-customer'`, `resourceId: customerId`)**:
+  - Customer Work Orders history section displaying all repairs performed across the customer's fleet.
+- **Work Order Detail Tab (`type: 'automotive-work-order'`, `resourceId: workOrderId`)**:
+  - Universal Tab view for managing repair operations, odometer in/out, diagnosis, labor lines with total hours, parts lines with total item counts, and status transitions.
+  - Single-instance tab deduplication.

@@ -7,33 +7,64 @@ import {
   ArrowUpRight,
   Phone,
   Mail,
-  Sparkles,
   Building2,
   User,
+  ClipboardList,
+  CheckCircle2,
 } from 'lucide-react';
 import { useAutomotive } from '../../../state/AutomotiveContext';
 import { useTabs } from '../../../state/TabContext';
 import { CreateCustomerModal } from './CreateCustomerModal';
 import { CreateVehicleModal } from './CreateVehicleModal';
-import type { CustomerRecord, VehicleRecord } from '@shared/automotiveTypes';
+import { CreateWorkOrderModal } from './CreateWorkOrderModal';
+import type {
+  CustomerRecord,
+  VehicleRecord,
+  WorkOrderRecord,
+  WorkOrderStatus,
+} from '@shared/automotiveTypes';
 import clsx from 'clsx';
+
+const STATUS_BADGES: Record<
+  WorkOrderStatus,
+  { label: string; bg: string; text: string; border: string }
+> = {
+  draft: { label: 'Draft', bg: 'bg-slate-800', text: 'text-slate-400', border: 'border-slate-700' },
+  open: { label: 'Open', bg: 'bg-blue-500/10', text: 'text-blue-400', border: 'border-blue-500/20' },
+  diagnosing: { label: 'Diagnosing', bg: 'bg-purple-500/10', text: 'text-purple-400', border: 'border-purple-500/20' },
+  awaiting_approval: { label: 'Awaiting Approval', bg: 'bg-amber-500/10', text: 'text-amber-400', border: 'border-amber-500/20' },
+  waiting_parts: { label: 'Waiting Parts', bg: 'bg-orange-500/10', text: 'text-orange-400', border: 'border-orange-500/20' },
+  in_progress: { label: 'In Progress', bg: 'bg-cyan-500/10', text: 'text-cyan-400', border: 'border-cyan-500/20' },
+  completed: { label: 'Completed', bg: 'bg-emerald-500/10', text: 'text-emerald-400', border: 'border-emerald-500/20' },
+  cancelled: { label: 'Cancelled', bg: 'bg-red-500/10', text: 'text-red-400', border: 'border-red-500/20' },
+};
 
 export const AutomotiveHubTab: React.FC = () => {
   const {
     customers,
     vehicles,
+    workOrders,
     createCustomer,
     createVehicle,
+    createWorkOrder,
     getCustomerVehicles,
     getCustomerById,
   } = useAutomotive();
 
-  const { openCustomerTab, openVehicleTab } = useTabs();
+  const { openCustomerTab, openVehicleTab, openWorkOrderTab } = useTabs();
 
-  const [activeSection, setActiveSection] = useState<'customers' | 'vehicles'>('customers');
+  const [activeSection, setActiveSection] = useState<'customers' | 'vehicles' | 'workOrders'>('workOrders');
   const [searchQuery, setSearchQuery] = useState('');
+  const [statusFilter, setStatusFilter] = useState<string>('all');
   const [isCreateCustomerOpen, setIsCreateCustomerOpen] = useState(false);
   const [isCreateVehicleOpen, setIsCreateVehicleOpen] = useState(false);
+  const [isCreateWorkOrderOpen, setIsCreateWorkOrderOpen] = useState(false);
+
+  // Status Metrics
+  const activeWorkOrdersCount = workOrders.filter(
+    (w) => w.status !== 'completed' && w.status !== 'cancelled'
+  ).length;
+  const completedWorkOrdersCount = workOrders.filter((w) => w.status === 'completed').length;
 
   // Search filtering
   const filteredCustomers = customers.filter((c) => {
@@ -66,6 +97,20 @@ export const AutomotiveHubTab: React.FC = () => {
     );
   });
 
+  const filteredWorkOrders = workOrders.filter((w) => {
+    if (statusFilter !== 'all' && w.status !== statusFilter) return false;
+    if (!searchQuery.trim()) return true;
+    const q = searchQuery.toLowerCase().trim();
+    return (
+      w.workOrderNumber.toLowerCase().includes(q) ||
+      w.customerConcern.toLowerCase().includes(q) ||
+      (w.customerNameSnapshot && w.customerNameSnapshot.toLowerCase().includes(q)) ||
+      w.vehicleDescriptionSnapshot.toLowerCase().includes(q) ||
+      (w.vinSnapshot && w.vinSnapshot.toLowerCase().includes(q)) ||
+      (w.workPerformed && w.workPerformed.toLowerCase().includes(q))
+    );
+  });
+
   const formatDate = (timestamp: number) => {
     return new Date(timestamp).toLocaleDateString(undefined, {
       month: 'short',
@@ -83,6 +128,10 @@ export const AutomotiveHubTab: React.FC = () => {
     openVehicleTab(v.id, title);
   };
 
+  const handleOpenWorkOrder = (w: WorkOrderRecord) => {
+    openWorkOrderTab(w.id, `${w.workOrderNumber} — ${w.vehicleDescriptionSnapshot}`);
+  };
+
   return (
     <div className="h-full w-full bg-artemis-950 flex flex-col overflow-hidden text-slate-100 select-none">
       {/* Top Header Strip */}
@@ -96,13 +145,21 @@ export const AutomotiveHubTab: React.FC = () => {
               Automotive Operations
             </h1>
             <p className="text-[11px] text-slate-500 font-mono">
-              Customer Directory, Fleet Profiles & Work Orders
+              Work Orders, Vehicle Fleet & Customer Directory
             </p>
           </div>
         </div>
 
         {/* Action Buttons */}
         <div className="flex items-center gap-2">
+          <button
+            type="button"
+            onClick={() => setIsCreateWorkOrderOpen(true)}
+            className="px-3 py-1.5 rounded-lg bg-emerald-500/15 hover:bg-emerald-500/25 text-emerald-400 border border-emerald-500/30 text-xs font-bold flex items-center gap-1.5 transition-colors"
+          >
+            <Plus className="w-3.5 h-3.5" />
+            New Work Order
+          </button>
           <button
             type="button"
             onClick={() => setIsCreateCustomerOpen(true)}
@@ -125,27 +182,56 @@ export const AutomotiveHubTab: React.FC = () => {
       {/* Main Content Area */}
       <div className="flex-1 overflow-y-auto p-6 space-y-6 max-w-6xl w-full mx-auto">
         {/* Metric Summary Cards */}
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-          <div className="p-4 rounded-xl bg-artemis-900/90 border border-slate-800 flex items-center justify-between">
+        <div className="grid grid-cols-1 sm:grid-cols-4 gap-4">
+          <div
+            onClick={() => {
+              setActiveSection('workOrders');
+              setStatusFilter('all');
+            }}
+            className="p-4 rounded-xl bg-artemis-900/90 border border-slate-800 flex items-center justify-between cursor-pointer hover:border-emerald-500/40 transition-colors"
+          >
             <div>
               <span className="text-[10px] uppercase font-mono text-slate-500 font-bold block">
-                Total Accounts
+                Active Work Orders
               </span>
-              <span className="text-2xl font-bold text-slate-100 mt-0.5 block">
-                {customers.length}
+              <span className="text-2xl font-bold text-emerald-400 mt-0.5 block font-mono">
+                {activeWorkOrdersCount}
               </span>
             </div>
-            <div className="p-3 rounded-xl bg-cyan-500/10 text-cyan-400 border border-cyan-500/20">
-              <Users className="w-5 h-5" />
+            <div className="p-3 rounded-xl bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+              <ClipboardList className="w-5 h-5" />
             </div>
           </div>
 
-          <div className="p-4 rounded-xl bg-artemis-900/90 border border-slate-800 flex items-center justify-between">
+          <div
+            onClick={() => {
+              setActiveSection('workOrders');
+              setStatusFilter('completed');
+            }}
+            className="p-4 rounded-xl bg-artemis-900/90 border border-slate-800 flex items-center justify-between cursor-pointer hover:border-cyan-500/40 transition-colors"
+          >
+            <div>
+              <span className="text-[10px] uppercase font-mono text-slate-500 font-bold block">
+                Completed Repairs
+              </span>
+              <span className="text-2xl font-bold text-cyan-400 mt-0.5 block font-mono">
+                {completedWorkOrdersCount}
+              </span>
+            </div>
+            <div className="p-3 rounded-xl bg-cyan-500/10 text-cyan-400 border border-cyan-500/20">
+              <CheckCircle2 className="w-5 h-5" />
+            </div>
+          </div>
+
+          <div
+            onClick={() => setActiveSection('vehicles')}
+            className="p-4 rounded-xl bg-artemis-900/90 border border-slate-800 flex items-center justify-between cursor-pointer hover:border-indigo-500/40 transition-colors"
+          >
             <div>
               <span className="text-[10px] uppercase font-mono text-slate-500 font-bold block">
                 Tracked Vehicles
               </span>
-              <span className="text-2xl font-bold text-slate-100 mt-0.5 block">
+              <span className="text-2xl font-bold text-slate-100 mt-0.5 block font-mono">
                 {vehicles.length}
               </span>
             </div>
@@ -154,17 +240,20 @@ export const AutomotiveHubTab: React.FC = () => {
             </div>
           </div>
 
-          <div className="p-4 rounded-xl bg-artemis-900/90 border border-slate-800 flex items-center justify-between">
+          <div
+            onClick={() => setActiveSection('customers')}
+            className="p-4 rounded-xl bg-artemis-900/90 border border-slate-800 flex items-center justify-between cursor-pointer hover:border-cyan-500/40 transition-colors"
+          >
             <div>
               <span className="text-[10px] uppercase font-mono text-slate-500 font-bold block">
-                Work Orders (Task 005)
+                Customer Accounts
               </span>
-              <span className="text-xs font-mono text-slate-400 mt-1 block">
-                Next Subsystem Milestone
+              <span className="text-2xl font-bold text-slate-100 mt-0.5 block font-mono">
+                {customers.length}
               </span>
             </div>
-            <div className="p-3 rounded-xl bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
-              <Sparkles className="w-5 h-5" />
+            <div className="p-3 rounded-xl bg-cyan-500/10 text-cyan-400 border border-cyan-500/20">
+              <Users className="w-5 h-5" />
             </div>
           </div>
         </div>
@@ -175,16 +264,16 @@ export const AutomotiveHubTab: React.FC = () => {
           <div className="flex items-center p-1 bg-artemis-900 rounded-xl border border-slate-800 w-fit">
             <button
               type="button"
-              onClick={() => setActiveSection('customers')}
+              onClick={() => setActiveSection('workOrders')}
               className={clsx(
                 'px-4 py-1.5 rounded-lg text-xs font-bold transition-colors flex items-center gap-2',
-                activeSection === 'customers'
-                  ? 'bg-artemis-accent/20 text-artemis-accent border border-artemis-accent/30'
+                activeSection === 'workOrders'
+                  ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30'
                   : 'text-slate-400 hover:text-slate-200'
               )}
             >
-              <Users className="w-3.5 h-3.5" />
-              Customers ({customers.length})
+              <ClipboardList className="w-3.5 h-3.5" />
+              Work Orders ({workOrders.length})
             </button>
             <button
               type="button"
@@ -199,6 +288,19 @@ export const AutomotiveHubTab: React.FC = () => {
               <Car className="w-3.5 h-3.5" />
               Vehicles ({vehicles.length})
             </button>
+            <button
+              type="button"
+              onClick={() => setActiveSection('customers')}
+              className={clsx(
+                'px-4 py-1.5 rounded-lg text-xs font-bold transition-colors flex items-center gap-2',
+                activeSection === 'customers'
+                  ? 'bg-artemis-accent/20 text-artemis-accent border border-artemis-accent/30'
+                  : 'text-slate-400 hover:text-slate-200'
+              )}
+            >
+              <Users className="w-3.5 h-3.5" />
+              Customers ({customers.length})
+            </button>
           </div>
 
           {/* Search Input */}
@@ -207,7 +309,9 @@ export const AutomotiveHubTab: React.FC = () => {
             <input
               type="text"
               placeholder={
-                activeSection === 'customers'
+                activeSection === 'workOrders'
+                  ? 'Search by WO-#, vehicle, concern...'
+                  : activeSection === 'customers'
                   ? 'Search by name, CUS-#, phone...'
                   : 'Search by make, model, VEH-#, VIN...'
               }
@@ -218,7 +322,146 @@ export const AutomotiveHubTab: React.FC = () => {
           </div>
         </div>
 
-        {/* Section 1: Customers Table */}
+        {/* Section 1: Work Orders Directory */}
+        {activeSection === 'workOrders' && (
+          <div className="space-y-3">
+            {/* Status Filter Tabs */}
+            <div className="flex items-center gap-1.5 overflow-x-auto pb-1 text-xs">
+              {[
+                { key: 'all', label: 'All Orders' },
+                { key: 'open', label: 'Open' },
+                { key: 'diagnosing', label: 'Diagnosing' },
+                { key: 'in_progress', label: 'In Progress' },
+                { key: 'waiting_parts', label: 'Waiting Parts' },
+                { key: 'completed', label: 'Completed' },
+              ].map((pill) => (
+                <button
+                  key={pill.key}
+                  type="button"
+                  onClick={() => setStatusFilter(pill.key)}
+                  className={clsx(
+                    'px-3 py-1 rounded-lg text-xs font-semibold whitespace-nowrap transition-colors',
+                    statusFilter === pill.key
+                      ? 'bg-slate-800 text-slate-100 border border-slate-700'
+                      : 'text-slate-500 hover:text-slate-300'
+                  )}
+                >
+                  {pill.label}
+                </button>
+              ))}
+            </div>
+
+            {filteredWorkOrders.length === 0 ? (
+              <div className="p-12 rounded-2xl border border-slate-800 bg-artemis-900/40 text-center flex flex-col items-center justify-center">
+                <ClipboardList className="w-10 h-10 text-slate-600 mb-2" />
+                <h3 className="text-sm font-bold text-slate-300">No Work Orders Found</h3>
+                <p className="text-xs text-slate-500 mt-1 max-w-sm">
+                  {searchQuery || statusFilter !== 'all'
+                    ? 'No work order records match the active filter.'
+                    : 'Open your first automotive work order to start recording service history.'}
+                </p>
+                {!searchQuery && statusFilter === 'all' && (
+                  <button
+                    type="button"
+                    onClick={() => setIsCreateWorkOrderOpen(true)}
+                    className="mt-4 px-4 py-2 rounded-xl bg-emerald-500 text-slate-950 text-xs font-bold flex items-center gap-1.5 hover:bg-emerald-400"
+                  >
+                    <Plus className="w-3.5 h-3.5" />
+                    Open Work Order
+                  </button>
+                )}
+              </div>
+            ) : (
+              <div className="border border-slate-800 rounded-xl overflow-hidden bg-artemis-900/60">
+                <table className="w-full text-left text-xs border-collapse">
+                  <thead>
+                    <tr className="border-b border-slate-800 bg-artemis-950/80 text-slate-400 font-medium">
+                      <th className="py-3 px-4">Work Order #</th>
+                      <th className="py-3 px-4">Target Vehicle</th>
+                      <th className="py-3 px-4">Customer</th>
+                      <th className="py-3 px-4">Status</th>
+                      <th className="py-3 px-4">Concern / Description</th>
+                      <th className="py-3 px-4">Opened</th>
+                      <th className="py-3 px-4 text-right">Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {filteredWorkOrders.map((wo) => {
+                      const badge = STATUS_BADGES[wo.status] || STATUS_BADGES.open;
+                      return (
+                        <tr
+                          key={wo.id}
+                          onDoubleClick={() => handleOpenWorkOrder(wo)}
+                          className="border-b border-slate-800/60 hover:bg-slate-800/40 cursor-pointer transition-colors group"
+                        >
+                          <td className="py-3 px-4">
+                            <div className="flex items-center gap-2">
+                              <span className="font-mono text-xs font-bold text-emerald-400 group-hover:underline">
+                                {wo.workOrderNumber}
+                              </span>
+                            </div>
+                          </td>
+                          <td className="py-3 px-4">
+                            <span className="font-bold text-slate-200 block">
+                              {wo.vehicleDescriptionSnapshot}
+                            </span>
+                            {wo.vinSnapshot && (
+                              <span className="text-[10px] text-slate-500 font-mono">
+                                VIN: {wo.vinSnapshot}
+                              </span>
+                            )}
+                          </td>
+                          <td className="py-3 px-4 text-slate-300">
+                            {wo.customerNameSnapshot ? (
+                              <span className="font-semibold text-slate-200">
+                                {wo.customerNameSnapshot}
+                              </span>
+                            ) : (
+                              <span className="text-slate-500 italic text-[11px]">Unassigned</span>
+                            )}
+                          </td>
+                          <td className="py-3 px-4">
+                            <span
+                              className={clsx(
+                                'text-[10px] font-bold px-2 py-0.5 rounded border font-mono',
+                                badge.bg,
+                                badge.text,
+                                badge.border
+                              )}
+                            >
+                              {badge.label}
+                            </span>
+                          </td>
+                          <td className="py-3 px-4 text-slate-300 max-w-xs truncate">
+                            {wo.customerConcern}
+                          </td>
+                          <td className="py-3 px-4 font-mono text-[11px] text-slate-400">
+                            {formatDate(wo.openedAt)}
+                          </td>
+                          <td className="py-3 px-4 text-right">
+                            <button
+                              type="button"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleOpenWorkOrder(wo);
+                              }}
+                              className="px-2.5 py-1 rounded bg-slate-800 hover:bg-slate-700 text-slate-200 text-[11px] font-semibold inline-flex items-center gap-1"
+                            >
+                              Open Tab
+                              <ArrowUpRight className="w-3 h-3 text-emerald-400" />
+                            </button>
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* Section 2: Customers Table */}
         {activeSection === 'customers' && (
           <div className="space-y-3">
             {filteredCustomers.length === 0 ? (
@@ -339,7 +582,7 @@ export const AutomotiveHubTab: React.FC = () => {
           </div>
         )}
 
-        {/* Section 2: Vehicles Table */}
+        {/* Section 3: Vehicles Table */}
         {activeSection === 'vehicles' && (
           <div className="space-y-3">
             {filteredVehicles.length === 0 ? (
@@ -484,6 +727,17 @@ export const AutomotiveHubTab: React.FC = () => {
           const created = await createVehicle(opts);
           const title = `${created.year ? `${created.year} ` : ''}${created.make} ${created.model}`;
           openVehicleTab(created.id, title);
+        }}
+      />
+
+      <CreateWorkOrderModal
+        isOpen={isCreateWorkOrderOpen}
+        vehicles={vehicles}
+        customers={customers}
+        onClose={() => setIsCreateWorkOrderOpen(false)}
+        onSubmit={async (opts) => {
+          const created = await createWorkOrder(opts);
+          openWorkOrderTab(created.id, `${created.workOrderNumber} — ${created.vehicleDescriptionSnapshot}`);
         }}
       />
     </div>

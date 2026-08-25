@@ -10,12 +10,16 @@ import type { ArtemisDocumentRecord, ExportPdfResult } from '../shared/documentT
 import type {
   CustomerRecord,
   VehicleRecord,
+  WorkOrderRecord,
   CreateCustomerOptions,
   UpdateCustomerOptions,
   CreateVehicleOptions,
   UpdateVehicleOptions,
+  CreateWorkOrderOptions,
+  UpdateWorkOrderOptions,
   ListCustomersFilter,
   ListVehiclesFilter,
+  ListWorkOrdersFilter,
 } from '../shared/automotiveTypes';
 
 const bridge: ArtemisWindowBridge = {
@@ -71,6 +75,17 @@ const bridge: ArtemisWindowBridge = {
       ipcRenderer.invoke('artemis:automotive:updateVehicle', id, updates),
     deleteVehicle: (id: string): Promise<boolean> =>
       ipcRenderer.invoke('artemis:automotive:deleteVehicle', id),
+
+    listWorkOrders: (filter?: ListWorkOrdersFilter): Promise<WorkOrderRecord[]> =>
+      ipcRenderer.invoke('artemis:automotive:listWorkOrders', filter),
+    getWorkOrder: (id: string): Promise<WorkOrderRecord | null> =>
+      ipcRenderer.invoke('artemis:automotive:getWorkOrder', id),
+    createWorkOrder: (options: CreateWorkOrderOptions): Promise<WorkOrderRecord> =>
+      ipcRenderer.invoke('artemis:automotive:createWorkOrder', options),
+    updateWorkOrder: (id: string, updates: UpdateWorkOrderOptions): Promise<WorkOrderRecord> =>
+      ipcRenderer.invoke('artemis:automotive:updateWorkOrder', id, updates),
+    deleteWorkOrder: (id: string): Promise<boolean> =>
+      ipcRenderer.invoke('artemis:automotive:deleteWorkOrder', id),
   },
 };
 
