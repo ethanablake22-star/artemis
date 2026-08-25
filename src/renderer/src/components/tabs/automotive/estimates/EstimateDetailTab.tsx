@@ -16,6 +16,7 @@ import {
   Lock,
   Unlock,
   AlertCircle,
+  Receipt,
 } from 'lucide-react';
 import type {
   EstimateLineItem,
@@ -59,11 +60,14 @@ export const EstimateDetailTab: React.FC<EstimateDetailTabProps> = ({ estimateId
     updateEstimate,
     reopenEstimate,
     deleteEstimate,
+    getEstimateInvoices,
+    createInvoice,
   } = useAutomotive();
   const {
     openWorkOrderTab,
     openVehicleTab,
     openCustomerTab,
+    openInvoiceTab,
     closeTab,
     activeTabId,
     syncEstimateTitle,
@@ -85,6 +89,31 @@ export const EstimateDetailTab: React.FC<EstimateDetailTabProps> = ({ estimateId
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [showReopenModal, setShowReopenModal] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
+
+  // Associated Invoices (V0.0.9)
+  const associatedInvoices = useMemo(
+    () => (estimate ? getEstimateInvoices(estimate.id) : []),
+    [estimate, getEstimateInvoices]
+  );
+  const activeInvoice = useMemo(
+    () => associatedInvoices.find((i) => !i.isDeleted && i.status !== 'void'),
+    [associatedInvoices]
+  );
+
+  const handleCreateInvoiceClick = async () => {
+    if (!estimate || estimate.status !== 'approved') return;
+    setErrorMessage(null);
+    try {
+      const inv = await createInvoice({ estimateId: estimate.id });
+      openInvoiceTab(
+        inv.id,
+        `${inv.invoiceNumber} — ${inv.customerNameSnapshot || inv.vehicleDescriptionSnapshot}`
+      );
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : String(err);
+      setErrorMessage(msg);
+    }
+  };
 
   // Sync tab title when estimate loads
   useEffect(() => {
@@ -551,13 +580,39 @@ export const EstimateDetailTab: React.FC<EstimateDetailTabProps> = ({ estimateId
           )}
 
           {estimate.status === 'approved' && (
-            <button
-              onClick={() => setShowReopenModal(true)}
-              className="flex items-center space-x-1.5 px-3 py-1.5 bg-amber-600/20 hover:bg-amber-600/30 text-amber-300 border border-amber-500/30 rounded-lg text-xs font-semibold transition-colors"
-            >
-              <Unlock className="w-3.5 h-3.5" />
-              <span>Reopen Estimate</span>
-            </button>
+            <div className="flex items-center space-x-2">
+              {activeInvoice ? (
+                <button
+                  type="button"
+                  onClick={() =>
+                    openInvoiceTab(
+                      activeInvoice.id,
+                      `${activeInvoice.invoiceNumber} — ${activeInvoice.customerNameSnapshot || activeInvoice.vehicleDescriptionSnapshot}`
+                    )
+                  }
+                  className="flex items-center space-x-1.5 px-3.5 py-1.5 bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 border border-amber-500/40 rounded-lg text-xs font-bold transition-colors"
+                >
+                  <Receipt className="w-3.5 h-3.5" />
+                  <span>Open Invoice ({activeInvoice.invoiceNumber})</span>
+                </button>
+              ) : (
+                <button
+                  type="button"
+                  onClick={handleCreateInvoiceClick}
+                  className="flex items-center space-x-1.5 px-3.5 py-1.5 bg-amber-600 hover:bg-amber-500 text-white rounded-lg text-xs font-bold transition-colors shadow-lg shadow-amber-950/40"
+                >
+                  <Receipt className="w-3.5 h-3.5" />
+                  <span>Create Invoice</span>
+                </button>
+              )}
+              <button
+                onClick={() => setShowReopenModal(true)}
+                className="flex items-center space-x-1.5 px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700 rounded-lg text-xs font-semibold transition-colors"
+              >
+                <Unlock className="w-3.5 h-3.5" />
+                <span>Reopen Estimate</span>
+              </button>
+            </div>
           )}
 
           {estimate.status === 'declined' && (
@@ -963,6 +1018,74 @@ export const EstimateDetailTab: React.FC<EstimateDetailTabProps> = ({ estimateId
               </div>
             )}
 
+            {/* Associated Invoices Card (V0.0.9) */}
+            {associatedInvoices.length > 0 && (
+              <div className="bg-slate-900/60 border border-slate-800 rounded-xl p-4 space-y-3 print:hidden">
+                <div className="flex items-center justify-between">
+                  <h4 className="text-xs font-bold text-slate-300 uppercase tracking-wider flex items-center space-x-2">
+                    <Receipt className="w-4 h-4 text-amber-400" />
+                    <span>Invoices ({associatedInvoices.length})</span>
+                  </h4>
+                </div>
+                <div className="space-y-2">
+                  {associatedInvoices.map((inv) => (
+                    <div
+                      key={inv.id}
+                      className="flex items-center justify-between p-2.5 rounded-lg bg-slate-950/80 border border-slate-800 hover:border-slate-700 transition-colors"
+                    >
+                      <div className="flex items-center space-x-2.5">
+                        <button
+                          type="button"
+                          onClick={() =>
+                            openInvoiceTab(
+                              inv.id,
+                              `${inv.invoiceNumber} — ${inv.customerNameSnapshot || inv.vehicleDescriptionSnapshot}`
+                            )
+                          }
+                          className="font-mono font-bold text-xs text-amber-400 hover:underline"
+                        >
+                          {inv.invoiceNumber}
+                        </button>
+                        <span
+                          className={`px-2 py-0.5 rounded-full text-[10px] font-bold uppercase ${
+                            inv.status === 'issued'
+                              ? 'bg-emerald-950/60 text-emerald-300 border border-emerald-800/60'
+                              : inv.status === 'void'
+                              ? 'bg-rose-950/60 text-rose-300 border border-rose-800/60'
+                              : 'bg-slate-800 text-slate-300 border border-slate-700'
+                          }`}
+                        >
+                          {inv.status}
+                        </span>
+                        {inv.issuedAt && (
+                          <span className="text-[11px] text-slate-400">
+                            Issued {new Date(inv.issuedAt).toLocaleDateString()}
+                          </span>
+                        )}
+                      </div>
+                      <div className="flex items-center space-x-3">
+                        <span className="font-mono font-bold text-xs text-slate-200">
+                          {formatCents(inv.totalCents)}
+                        </span>
+                        <button
+                          type="button"
+                          onClick={() =>
+                            openInvoiceTab(
+                              inv.id,
+                              `${inv.invoiceNumber} — ${inv.customerNameSnapshot || inv.vehicleDescriptionSnapshot}`
+                            )
+                          }
+                          className="px-2 py-1 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded text-xs transition-colors"
+                        >
+                          Open
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
             {/* Internal notes */}
             <div className="bg-slate-900/60 border border-slate-800 rounded-xl p-4 space-y-2">
               <h4 className="text-xs font-bold text-slate-300 uppercase tracking-wider">
@@ -1075,10 +1198,24 @@ export const EstimateDetailTab: React.FC<EstimateDetailTabProps> = ({ estimateId
               <AlertTriangle className="w-6 h-6 shrink-0" />
               <h3 className="text-lg font-bold text-white">Reopen Estimate?</h3>
             </div>
-            <p className="text-sm text-slate-300">
-              This estimate has already been approved. Reopening will transition its status back to{' '}
-              <strong>Draft</strong> and allow its commercial terms and pricing to be modified.
-            </p>
+            {activeInvoice ? (
+              <div className="bg-rose-950/30 border border-rose-800/50 rounded-lg p-3 text-xs text-rose-300 space-y-1.5">
+                <p className="font-bold">
+                  Active Invoice Exists: {activeInvoice.invoiceNumber} ({activeInvoice.status})
+                </p>
+                <p>
+                  This Estimate cannot be reopened while active Invoice{' '}
+                  <span className="font-mono font-semibold">{activeInvoice.invoiceNumber}</span> is
+                  pending or issued. Please delete draft invoices or void issued invoices before
+                  reopening the estimate.
+                </p>
+              </div>
+            ) : (
+              <p className="text-sm text-slate-300">
+                This estimate has already been approved. Reopening will transition its status back to{' '}
+                <strong>Draft</strong> and allow its commercial terms and pricing to be modified.
+              </p>
+            )}
             <div className="flex items-center justify-end space-x-3 pt-2">
               <button
                 type="button"
@@ -1087,13 +1224,15 @@ export const EstimateDetailTab: React.FC<EstimateDetailTabProps> = ({ estimateId
               >
                 Cancel
               </button>
-              <button
-                type="button"
-                onClick={handleReopen}
-                className="px-4 py-2 bg-amber-600 hover:bg-amber-500 text-white text-sm font-bold rounded-lg shadow-lg shadow-amber-950/40 transition-colors"
-              >
-                Reopen Proposal
-              </button>
+              {!activeInvoice && (
+                <button
+                  type="button"
+                  onClick={handleReopen}
+                  className="px-4 py-2 bg-amber-600 hover:bg-amber-500 text-white text-sm font-bold rounded-lg shadow-lg shadow-amber-950/40 transition-colors"
+                >
+                  Reopen Proposal
+                </button>
+              )}
             </div>
           </div>
         </div>

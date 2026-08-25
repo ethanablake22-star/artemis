@@ -10,6 +10,8 @@ import type {
   WorkOrderPartLine,
   EstimateRecord,
   EstimateLineItem,
+  InvoiceRecord,
+  InvoiceLineItem,
   ArtemisAutomotiveStoreData,
   CreateCustomerOptions,
   UpdateCustomerOptions,
@@ -19,14 +21,17 @@ import type {
   UpdateWorkOrderOptions,
   CreateEstimateOptions,
   UpdateEstimateOptions,
+  CreateInvoiceOptions,
+  UpdateInvoiceOptions,
   ListCustomersFilter,
   ListVehiclesFilter,
   ListWorkOrdersFilter,
   ListEstimatesFilter,
+  ListInvoicesFilter,
 } from '../shared/automotiveTypes';
 import { calculateEstimateTotals } from '../shared/currencyUtils';
 
-export const CURRENT_AUTOMOTIVE_SCHEMA_VERSION = 4;
+export const CURRENT_AUTOMOTIVE_SCHEMA_VERSION = 5;
 const AUTOMOTIVE_STORE_FILENAME = 'artemis_automotive_store.json';
 
 export class UnsupportedAutomotiveSchemaVersionError extends Error {
@@ -57,6 +62,10 @@ function formatEstimateNumber(seq: number): string {
   return `EST-${String(seq).padStart(6, '0')}`;
 }
 
+function formatInvoiceNumber(seq: number): string {
+  return `INV-${String(seq).padStart(6, '0')}`;
+}
+
 function deriveCustomerName(
   type: 'individual' | 'business',
   options: {
@@ -83,15 +92,17 @@ function deriveCustomerName(
 function validateAndMigrateAutomotiveStore(raw: unknown): ArtemisAutomotiveStoreData {
   if (!raw || typeof raw !== 'object') {
     return {
-      schemaVersion: 4,
+      schemaVersion: 5,
       nextCustomerSequence: 1,
       nextVehicleSequence: 1,
       nextWorkOrderSequence: 1,
       nextEstimateSequence: 1,
+      nextInvoiceSequence: 1,
       customers: [],
       vehicles: [],
       workOrders: [],
       estimates: [],
+      invoices: [],
     };
   }
 
@@ -100,7 +111,7 @@ function validateAndMigrateAutomotiveStore(raw: unknown): ArtemisAutomotiveStore
 
   switch (version) {
     case 1: {
-      // Deterministic migration from Schema 1 -> Schema 4
+      // Deterministic migration from Schema 1 -> Schema 5
       const rawCustomers = Array.isArray(obj.customers)
         ? (obj.customers as Record<string, unknown>[])
         : [];
@@ -161,20 +172,22 @@ function validateAndMigrateAutomotiveStore(raw: unknown): ArtemisAutomotiveStore
       });
 
       return {
-        schemaVersion: 4,
+        schemaVersion: 5,
         nextCustomerSequence: migratedCustomers.length + 1,
         nextVehicleSequence: migratedVehicles.length + 1,
         nextWorkOrderSequence: 1,
         nextEstimateSequence: 1,
+        nextInvoiceSequence: 1,
         customers: migratedCustomers,
         vehicles: migratedVehicles,
         workOrders: [],
         estimates: [],
+        invoices: [],
       };
     }
 
     case 2: {
-      // Migration from Schema 2 -> Schema 4
+      // Migration from Schema 2 -> Schema 5
       const customers = Array.isArray(obj.customers)
         ? (obj.customers as CustomerRecord[])
         : [];
@@ -191,20 +204,22 @@ function validateAndMigrateAutomotiveStore(raw: unknown): ArtemisAutomotiveStore
           : vehicles.length + 1;
 
       return {
-        schemaVersion: 4,
+        schemaVersion: 5,
         nextCustomerSequence,
         nextVehicleSequence,
         nextWorkOrderSequence: 1,
         nextEstimateSequence: 1,
+        nextInvoiceSequence: 1,
         customers,
         vehicles,
         workOrders: [],
         estimates: [],
+        invoices: [],
       };
     }
 
     case 3: {
-      // Migration from Schema 3 -> Schema 4
+      // Migration from Schema 3 -> Schema 5
       const customers = Array.isArray(obj.customers)
         ? (obj.customers as CustomerRecord[])
         : [];
@@ -229,19 +244,22 @@ function validateAndMigrateAutomotiveStore(raw: unknown): ArtemisAutomotiveStore
           : workOrders.length + 1;
 
       return {
-        schemaVersion: 4,
+        schemaVersion: 5,
         nextCustomerSequence,
         nextVehicleSequence,
         nextWorkOrderSequence,
         nextEstimateSequence: 1,
+        nextInvoiceSequence: 1,
         customers,
         vehicles,
         workOrders,
         estimates: [],
+        invoices: [],
       };
     }
 
     case 4: {
+      // Migration from Schema 4 -> Schema 5
       const customers = Array.isArray(obj.customers)
         ? (obj.customers as CustomerRecord[])
         : [];
@@ -273,15 +291,70 @@ function validateAndMigrateAutomotiveStore(raw: unknown): ArtemisAutomotiveStore
           : estimates.length + 1;
 
       return {
-        schemaVersion: 4,
+        schemaVersion: 5,
         nextCustomerSequence,
         nextVehicleSequence,
         nextWorkOrderSequence,
         nextEstimateSequence,
+        nextInvoiceSequence: 1,
         customers,
         vehicles,
         workOrders,
         estimates,
+        invoices: [],
+      };
+    }
+
+    case 5: {
+      const customers = Array.isArray(obj.customers)
+        ? (obj.customers as CustomerRecord[])
+        : [];
+      const vehicles = Array.isArray(obj.vehicles)
+        ? (obj.vehicles as VehicleRecord[])
+        : [];
+      const workOrders = Array.isArray(obj.workOrders)
+        ? (obj.workOrders as WorkOrderRecord[])
+        : [];
+      const estimates = Array.isArray(obj.estimates)
+        ? (obj.estimates as EstimateRecord[])
+        : [];
+      const invoices = Array.isArray(obj.invoices)
+        ? (obj.invoices as InvoiceRecord[])
+        : [];
+
+      const nextCustomerSequence =
+        typeof obj.nextCustomerSequence === 'number'
+          ? obj.nextCustomerSequence
+          : customers.length + 1;
+      const nextVehicleSequence =
+        typeof obj.nextVehicleSequence === 'number'
+          ? obj.nextVehicleSequence
+          : vehicles.length + 1;
+      const nextWorkOrderSequence =
+        typeof obj.nextWorkOrderSequence === 'number'
+          ? obj.nextWorkOrderSequence
+          : workOrders.length + 1;
+      const nextEstimateSequence =
+        typeof obj.nextEstimateSequence === 'number'
+          ? obj.nextEstimateSequence
+          : estimates.length + 1;
+      const nextInvoiceSequence =
+        typeof obj.nextInvoiceSequence === 'number'
+          ? obj.nextInvoiceSequence
+          : invoices.length + 1;
+
+      return {
+        schemaVersion: 5,
+        nextCustomerSequence,
+        nextVehicleSequence,
+        nextWorkOrderSequence,
+        nextEstimateSequence,
+        nextInvoiceSequence,
+        customers,
+        vehicles,
+        workOrders,
+        estimates,
+        invoices,
       };
     }
 
@@ -311,15 +384,17 @@ async function readAutomotiveStoreFile(): Promise<ArtemisAutomotiveStoreData> {
       throw err;
     }
     const initialStore: ArtemisAutomotiveStoreData = {
-      schemaVersion: 4,
+      schemaVersion: 5,
       nextCustomerSequence: 1,
       nextVehicleSequence: 1,
       nextWorkOrderSequence: 1,
       nextEstimateSequence: 1,
+      nextInvoiceSequence: 1,
       customers: [],
       vehicles: [],
       workOrders: [],
       estimates: [],
+      invoices: [],
     };
     await writeAutomotiveStoreFile(initialStore);
     inMemoryCache = initialStore;
@@ -1395,6 +1470,16 @@ export async function reopenEstimate(id: string): Promise<EstimateRecord> {
     throw new Error(`Estimate "${id}" not found`);
   }
 
+  // Prevent reopening if an active (non-deleted, non-void) invoice exists
+  const activeInvoice = (store.invoices || []).find(
+    (inv) => inv.estimateId === id && !inv.isDeleted && inv.status !== 'void'
+  );
+  if (activeInvoice) {
+    throw new Error(
+      `Cannot reopen Estimate ${estimate.estimateNumber} while active Invoice ${activeInvoice.invoiceNumber} (${activeInvoice.status}) exists. Please delete draft invoices or void issued invoices before reopening the estimate.`
+    );
+  }
+
   estimate.status = 'draft';
   estimate.approvedAt = undefined;
   estimate.updatedAt = Date.now();
@@ -1425,3 +1510,386 @@ export async function deleteEstimate(id: string): Promise<boolean> {
   await writeAutomotiveStoreFile(store);
   return true;
 }
+
+// -----------------------------------------------------------------------------
+// Invoices
+// -----------------------------------------------------------------------------
+
+export async function listInvoices(filter?: ListInvoicesFilter): Promise<InvoiceRecord[]> {
+  const store = await readAutomotiveStoreFile();
+  let res = store.invoices || [];
+
+  if (!filter?.includeDeleted) {
+    res = res.filter((i) => !i.isDeleted);
+  }
+
+  if (filter?.estimateId) {
+    res = res.filter((i) => i.estimateId === filter.estimateId);
+  }
+
+  if (filter?.workOrderId) {
+    res = res.filter((i) => i.workOrderId === filter.workOrderId);
+  }
+
+  if (filter?.vehicleId) {
+    res = res.filter((i) => i.vehicleId === filter.vehicleId);
+  }
+
+  if (filter?.customerId !== undefined) {
+    res = res.filter((i) => i.customerId === filter.customerId);
+  }
+
+  if (filter?.status) {
+    res = res.filter((i) => i.status === filter.status);
+  }
+
+  if (filter?.query) {
+    const q = filter.query.toLowerCase();
+    res = res.filter(
+      (i) =>
+        i.invoiceNumber.toLowerCase().includes(q) ||
+        i.estimateNumberSnapshot.toLowerCase().includes(q) ||
+        i.workOrderNumberSnapshot.toLowerCase().includes(q) ||
+        i.vehicleDescriptionSnapshot.toLowerCase().includes(q) ||
+        (i.customerNameSnapshot && i.customerNameSnapshot.toLowerCase().includes(q)) ||
+        (i.customerMessage && i.customerMessage.toLowerCase().includes(q))
+    );
+  }
+
+  return res.sort((a, b) => b.createdAt - a.createdAt);
+}
+
+export async function getInvoice(id: string): Promise<InvoiceRecord | null> {
+  if (!id || typeof id !== 'string') {
+    return null;
+  }
+
+  const store = await readAutomotiveStoreFile();
+  const invoice = (store.invoices || []).find((i) => i.id === id);
+  return invoice || null;
+}
+
+export async function createInvoice(options: CreateInvoiceOptions): Promise<InvoiceRecord> {
+  if (!options || typeof options !== 'object' || !options.estimateId) {
+    throw new Error('Valid estimateId is required to create an Invoice');
+  }
+
+  const store = await readAutomotiveStoreFile();
+  const estimate = (store.estimates || []).find((e) => e.id === options.estimateId);
+  if (!estimate || estimate.isDeleted) {
+    throw new Error(`Estimate "${options.estimateId}" not found`);
+  }
+
+  if (estimate.status !== 'approved') {
+    throw new Error(
+      `Cannot create Invoice from Estimate ${estimate.estimateNumber}: status is "${estimate.status}". Only approved estimates may be invoiced.`
+    );
+  }
+
+  // Enforce single active (non-deleted, non-void) invoice per estimate
+  const existingActive = (store.invoices || []).find(
+    (i) => i.estimateId === estimate.id && !i.isDeleted && i.status !== 'void'
+  );
+  if (existingActive) {
+    throw new Error(
+      `An active Invoice (${existingActive.invoiceNumber}, status: ${existingActive.status}) already exists for Estimate ${estimate.estimateNumber}. Only one active invoice is permitted per estimate.`
+    );
+  }
+
+  const customer = estimate.customerId
+    ? (store.customers || []).find((c) => c.id === estimate.customerId)
+    : null;
+
+  const customerAddressSnapshot = customer?.address?.trim() || undefined;
+  const customerEmailSnapshot = customer?.email?.trim() || undefined;
+  const customerPhoneSnapshot = customer?.phone?.trim() || undefined;
+
+  // Deep-copy Estimate line items to new Invoice line items
+  const lineItems: InvoiceLineItem[] = (estimate.lineItems || []).map((item) => ({
+    id: crypto.randomUUID(),
+    type: item.type,
+    description: item.description,
+    quantityMilli: item.quantityMilli,
+    unitPriceCents: item.unitPriceCents,
+    taxable: item.taxable,
+    sourceEstimateLineItemId: item.id,
+    notes: item.notes,
+  }));
+
+  const discountType = estimate.discountType;
+  const fixedDiscountCents = estimate.fixedDiscountCents;
+  const discountPercentBps = estimate.discountPercentBps;
+  const taxRateBps = estimate.taxRateBps;
+
+  // Authoritative calculation
+  const totals = calculateEstimateTotals(
+    lineItems,
+    taxRateBps,
+    discountType,
+    fixedDiscountCents,
+    discountPercentBps
+  );
+
+  const invoiceNumber = formatInvoiceNumber(store.nextInvoiceSequence++);
+
+  const invoice: InvoiceRecord = {
+    id: crypto.randomUUID(),
+    invoiceNumber,
+    estimateId: estimate.id,
+    workOrderId: estimate.workOrderId,
+    vehicleId: estimate.vehicleId,
+    customerId: estimate.customerId,
+    estimateNumberSnapshot: estimate.estimateNumber,
+    estimateTotalSnapshotCents: estimate.totalCents,
+    workOrderNumberSnapshot: estimate.workOrderNumberSnapshot,
+    vehicleDescriptionSnapshot: estimate.vehicleDescriptionSnapshot,
+    customerNameSnapshot: estimate.customerNameSnapshot,
+    customerAddressSnapshot,
+    customerEmailSnapshot,
+    customerPhoneSnapshot,
+    status: 'draft',
+    lineItems,
+    discountType,
+    fixedDiscountCents,
+    discountPercentBps,
+    taxRateBps,
+    subtotalCents: totals.subtotalCents,
+    discountTotalCents: totals.discountTotalCents,
+    taxableSubtotalCents: totals.taxableSubtotalCents,
+    taxTotalCents: totals.taxTotalCents,
+    totalCents: totals.totalCents,
+    customerMessage: options.customerMessage?.trim() || estimate.customerMessage,
+    internalNotes: options.internalNotes?.trim() || undefined,
+    dueDate: options.dueDate?.trim() || undefined,
+    createdAt: Date.now(),
+    updatedAt: Date.now(),
+    isDeleted: false,
+  };
+
+  store.invoices.push(invoice);
+  await writeAutomotiveStoreFile(store);
+  return invoice;
+}
+
+export async function updateInvoice(
+  id: string,
+  updates: UpdateInvoiceOptions
+): Promise<InvoiceRecord> {
+  if (!id || typeof id !== 'string') {
+    throw new Error('Invalid invoice ID provided');
+  }
+
+  const store = await readAutomotiveStoreFile();
+  const invoice = (store.invoices || []).find((i) => i.id === id);
+  if (!invoice || invoice.isDeleted) {
+    throw new Error(`Invoice "${id}" not found`);
+  }
+
+  // Issued and Void invoices are permanently locked against content/financial mutation
+  if (invoice.status !== 'draft') {
+    throw new Error(
+      `Cannot modify ${invoice.status} Invoice ${invoice.invoiceNumber}. Only Draft invoices may be edited.`
+    );
+  }
+
+  // Update line items if provided
+  if (updates.lineItems !== undefined) {
+    const validatedLines: InvoiceLineItem[] = [];
+    for (const item of updates.lineItems) {
+      const desc = item.description?.trim();
+      if (!desc) {
+        throw new Error('Line item description cannot be empty');
+      }
+      if (typeof item.quantityMilli !== 'number' || item.quantityMilli < 0) {
+        throw new Error('Line item quantity must be a non-negative number');
+      }
+      if (typeof item.unitPriceCents !== 'number' || item.unitPriceCents < 0) {
+        throw new Error('Line item unit price cannot be negative');
+      }
+
+      validatedLines.push({
+        id: ('id' in item && typeof item.id === 'string' && item.id) ? item.id : crypto.randomUUID(),
+        type: item.type || 'labor',
+        description: desc,
+        quantityMilli: Math.round(item.quantityMilli),
+        unitPriceCents: Math.round(item.unitPriceCents),
+        taxable: Boolean(item.taxable),
+        sourceEstimateLineItemId: item.sourceEstimateLineItemId,
+        notes: item.notes?.trim() || undefined,
+      });
+    }
+    invoice.lineItems = validatedLines;
+  }
+
+  // Update discount & tax fields
+  if (updates.discountType !== undefined) {
+    invoice.discountType = updates.discountType;
+  }
+  if (updates.fixedDiscountCents !== undefined) {
+    invoice.fixedDiscountCents =
+      updates.fixedDiscountCents >= 0 ? Math.round(updates.fixedDiscountCents) : undefined;
+  }
+  if (updates.discountPercentBps !== undefined) {
+    invoice.discountPercentBps =
+      updates.discountPercentBps >= 0 ? Math.round(updates.discountPercentBps) : undefined;
+  }
+  if (updates.taxRateBps !== undefined) {
+    invoice.taxRateBps = Math.max(0, Math.round(updates.taxRateBps));
+  }
+
+  if (invoice.discountType === 'percent' && invoice.discountPercentBps !== undefined) {
+    if (invoice.discountPercentBps < 0 || invoice.discountPercentBps > 10000) {
+      throw new Error('Percentage discount cannot exceed 100% (10000 basis points)');
+    }
+  }
+
+  // Calculate authoritative totals
+  const totals = calculateEstimateTotals(
+    invoice.lineItems,
+    invoice.taxRateBps,
+    invoice.discountType,
+    invoice.fixedDiscountCents,
+    invoice.discountPercentBps
+  );
+
+  if (
+    invoice.discountType === 'fixed' &&
+    invoice.fixedDiscountCents !== undefined &&
+    invoice.fixedDiscountCents > totals.subtotalCents
+  ) {
+    throw new Error(
+      `Fixed discount ($${(invoice.fixedDiscountCents / 100).toFixed(2)}) cannot exceed subtotal ($${(totals.subtotalCents / 100).toFixed(2)})`
+    );
+  }
+
+  invoice.subtotalCents = totals.subtotalCents;
+  invoice.discountTotalCents = totals.discountTotalCents;
+  invoice.taxableSubtotalCents = totals.taxableSubtotalCents;
+  invoice.taxTotalCents = totals.taxTotalCents;
+  invoice.totalCents = totals.totalCents;
+
+  if (updates.customerMessage !== undefined) {
+    invoice.customerMessage = updates.customerMessage?.trim() || undefined;
+  }
+  if (updates.internalNotes !== undefined) {
+    invoice.internalNotes = updates.internalNotes?.trim() || undefined;
+  }
+  if (updates.dueDate !== undefined) {
+    invoice.dueDate = updates.dueDate?.trim() || undefined;
+  }
+
+  invoice.updatedAt = Date.now();
+  await writeAutomotiveStoreFile(store);
+  return invoice;
+}
+
+export async function issueInvoice(id: string): Promise<InvoiceRecord> {
+  if (!id || typeof id !== 'string') {
+    throw new Error('Invalid invoice ID provided');
+  }
+
+  const store = await readAutomotiveStoreFile();
+  const invoice = (store.invoices || []).find((i) => i.id === id);
+  if (!invoice || invoice.isDeleted) {
+    throw new Error(`Invoice "${id}" not found`);
+  }
+
+  if (invoice.status !== 'draft') {
+    throw new Error(
+      `Cannot issue Invoice ${invoice.invoiceNumber}: status is already "${invoice.status}".`
+    );
+  }
+
+  if (invoice.lineItems.length === 0) {
+    throw new Error(`Cannot issue Invoice ${invoice.invoiceNumber} with zero line items.`);
+  }
+
+  if (invoice.totalCents < 0) {
+    throw new Error(`Cannot issue Invoice ${invoice.invoiceNumber} with negative total.`);
+  }
+
+  // Integrity Rule: In V0.0.9, an invoice cannot exceed the approved source Estimate total
+  if (invoice.totalCents > invoice.estimateTotalSnapshotCents) {
+    throw new Error(
+      `Cannot issue Invoice ${invoice.invoiceNumber}: total ($${(invoice.totalCents / 100).toFixed(2)}) exceeds approved Estimate ${invoice.estimateNumberSnapshot} total ($${(invoice.estimateTotalSnapshotCents / 100).toFixed(2)}).`
+    );
+  }
+
+  invoice.status = 'issued';
+  invoice.issuedAt = Date.now();
+  invoice.updatedAt = Date.now();
+  await writeAutomotiveStoreFile(store);
+  return invoice;
+}
+
+export async function voidInvoice(id: string, reason: string): Promise<InvoiceRecord> {
+  if (!id || typeof id !== 'string') {
+    throw new Error('Invalid invoice ID provided');
+  }
+
+  const trimmedReason = reason?.trim();
+  if (!trimmedReason) {
+    throw new Error('A non-empty reason is required to void an Invoice.');
+  }
+
+  const store = await readAutomotiveStoreFile();
+  const invoice = (store.invoices || []).find((i) => i.id === id);
+  if (!invoice || invoice.isDeleted) {
+    throw new Error(`Invoice "${id}" not found`);
+  }
+
+  // Restrict voidInvoice to issued Invoices only
+  if (invoice.status === 'draft') {
+    throw new Error(
+      `Draft Invoice ${invoice.invoiceNumber} cannot be voided. Please delete the draft instead.`
+    );
+  }
+
+  if (invoice.status === 'void') {
+    throw new Error(`Invoice ${invoice.invoiceNumber} is already voided.`);
+  }
+
+  if (invoice.status !== 'issued') {
+    throw new Error(
+      `Cannot void Invoice ${invoice.invoiceNumber} with status "${invoice.status}". Only issued invoices may be voided.`
+    );
+  }
+
+  invoice.status = 'void';
+  invoice.voidedAt = Date.now();
+  invoice.voidReason = trimmedReason;
+  invoice.updatedAt = Date.now();
+  await writeAutomotiveStoreFile(store);
+  return invoice;
+}
+
+export async function deleteInvoice(id: string): Promise<boolean> {
+  if (!id || typeof id !== 'string') {
+    throw new Error('Invalid invoice ID provided');
+  }
+
+  const store = await readAutomotiveStoreFile();
+  const invoice = (store.invoices || []).find((i) => i.id === id);
+  if (!invoice) {
+    throw new Error(`Invoice "${id}" not found`);
+  }
+
+  // Deletion guard for issued and voided invoices
+  if (invoice.status === 'issued') {
+    throw new Error(
+      `Cannot delete issued Invoice ${invoice.invoiceNumber}. Issued commercial financial records must be preserved. Please void the invoice instead.`
+    );
+  }
+
+  if (invoice.status === 'void') {
+    throw new Error(
+      `Cannot delete voided Invoice ${invoice.invoiceNumber}. Voided financial records must be preserved for audit integrity.`
+    );
+  }
+
+  invoice.isDeleted = true;
+  invoice.updatedAt = Date.now();
+  await writeAutomotiveStoreFile(store);
+  return true;
+}
+

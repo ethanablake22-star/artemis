@@ -1,5 +1,4 @@
 import type {
-  EstimateLineItem,
   EstimateDiscountType,
 } from './estimateTypes';
 
@@ -138,8 +137,11 @@ export interface CalculatedEstimateTotals {
   totalCents: number;
 }
 
+export type CalculatedFinancialTotals = CalculatedEstimateTotals;
+
 /**
- * Authoritative/Preview Estimate arithmetic calculation engine using 100% integer cent arithmetic.
+ * Authoritative/Preview financial arithmetic calculation engine using 100% integer cent arithmetic.
+ * Shared across Estimates and Invoices.
  *
  * Rules:
  * 1. subtotalCents = sum(line totals)
@@ -151,7 +153,7 @@ export interface CalculatedEstimateTotals {
  * 7. totalCents = subtotalCents - discountTotalCents + taxTotalCents.
  */
 export function calculateEstimateTotals(
-  lineItems: Array<Pick<EstimateLineItem, 'quantityMilli' | 'unitPriceCents' | 'taxable'>>,
+  lineItems: Array<{ quantityMilli: number; unitPriceCents: number; taxable: boolean }>,
   taxRateBps: number = 0,
   discountType?: EstimateDiscountType,
   fixedDiscountCents?: number,
@@ -199,3 +201,5 @@ export function calculateEstimateTotals(
     totalCents,
   };
 }
+
+export const calculateFinancialTotals = calculateEstimateTotals;

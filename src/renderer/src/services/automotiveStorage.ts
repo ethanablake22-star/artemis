@@ -3,6 +3,7 @@ import type {
   VehicleRecord,
   WorkOrderRecord,
   EstimateRecord,
+  InvoiceRecord,
   CreateCustomerOptions,
   UpdateCustomerOptions,
   CreateVehicleOptions,
@@ -11,10 +12,13 @@ import type {
   UpdateWorkOrderOptions,
   CreateEstimateOptions,
   UpdateEstimateOptions,
+  CreateInvoiceOptions,
+  UpdateInvoiceOptions,
   ListCustomersFilter,
   ListVehiclesFilter,
   ListWorkOrdersFilter,
   ListEstimatesFilter,
+  ListInvoicesFilter,
   IAutomotiveStorageRepository,
 } from '@shared/automotiveTypes';
 import { calculateEstimateTotals } from '@shared/currencyUtils';
@@ -23,6 +27,7 @@ const LOCAL_STORAGE_CUSTOMERS_KEY = 'artemis_automotive_customers_browser_dev';
 const LOCAL_STORAGE_VEHICLES_KEY = 'artemis_automotive_vehicles_browser_dev';
 const LOCAL_STORAGE_WORK_ORDERS_KEY = 'artemis_automotive_work_orders_browser_dev';
 const LOCAL_STORAGE_ESTIMATES_KEY = 'artemis_automotive_estimates_browser_dev';
+const LOCAL_STORAGE_INVOICES_KEY = 'artemis_automotive_invoices_browser_dev';
 
 function isElectronEnvironment(): boolean {
   if (typeof window === 'undefined') return false;
@@ -38,10 +43,12 @@ export class LocalAutomotiveRepository implements IAutomotiveStorageRepository {
   private browserDevVehicles: VehicleRecord[] | null = null;
   private browserDevWorkOrders: WorkOrderRecord[] | null = null;
   private browserDevEstimates: EstimateRecord[] | null = null;
+  private browserDevInvoices: InvoiceRecord[] | null = null;
   private nextCustomerSeq = 1;
   private nextVehicleSeq = 1;
   private nextWorkOrderSeq = 1;
   private nextEstimateSeq = 1;
+  private nextInvoiceSeq = 1;
 
   async listCustomers(filter?: ListCustomersFilter): Promise<CustomerRecord[]> {
     if (isElectronEnvironment()) {
@@ -821,6 +828,277 @@ export class LocalAutomotiveRepository implements IAutomotiveStorageRepository {
     estimate.isDeleted = true;
     estimate.updatedAt = Date.now();
     await this.browserDevSaveEstimates(list);
+    return true;
+  }
+
+  // ---------------------------------------------------------------------------
+  // Invoices (V0.0.9)
+  // ---------------------------------------------------------------------------
+
+  async listInvoices(filter?: ListInvoicesFilter): Promise<InvoiceRecord[]> {
+    if (isElectronEnvironment()) {
+      if (!window.artemisAPI?.automotive?.invoices?.list) {
+        throw new Error('Artemis Automotive IPC bridge unavailable in Electron environment.');
+      }
+      return window.artemisAPI.automotive.invoices.list(filter);
+    }
+    return this.browserDevListInvoices(filter);
+  }
+
+  async getInvoice(id: string): Promise<InvoiceRecord | null> {
+    if (isElectronEnvironment()) {
+      if (!window.artemisAPI?.automotive?.invoices?.get) {
+        throw new Error('Artemis Automotive IPC bridge unavailable in Electron environment.');
+      }
+      return window.artemisAPI.automotive.invoices.get(id);
+    }
+    return this.browserDevGetInvoice(id);
+  }
+
+  async createInvoice(options: CreateInvoiceOptions): Promise<InvoiceRecord> {
+    if (isElectronEnvironment()) {
+      if (!window.artemisAPI?.automotive?.invoices?.create) {
+        throw new Error('Artemis Automotive IPC bridge unavailable in Electron environment.');
+      }
+      return window.artemisAPI.automotive.invoices.create(options);
+    }
+    return this.browserDevCreateInvoice(options);
+  }
+
+  async updateInvoice(id: string, updates: UpdateInvoiceOptions): Promise<InvoiceRecord> {
+    if (isElectronEnvironment()) {
+      if (!window.artemisAPI?.automotive?.invoices?.update) {
+        throw new Error('Artemis Automotive IPC bridge unavailable in Electron environment.');
+      }
+      return window.artemisAPI.automotive.invoices.update(id, updates);
+    }
+    return this.browserDevUpdateInvoice(id, updates);
+  }
+
+  async issueInvoice(id: string): Promise<InvoiceRecord> {
+    if (isElectronEnvironment()) {
+      if (!window.artemisAPI?.automotive?.invoices?.issue) {
+        throw new Error('Artemis Automotive IPC bridge unavailable in Electron environment.');
+      }
+      return window.artemisAPI.automotive.invoices.issue(id);
+    }
+    return this.browserDevIssueInvoice(id);
+  }
+
+  async voidInvoice(id: string, reason: string): Promise<InvoiceRecord> {
+    if (isElectronEnvironment()) {
+      if (!window.artemisAPI?.automotive?.invoices?.void) {
+        throw new Error('Artemis Automotive IPC bridge unavailable in Electron environment.');
+      }
+      return window.artemisAPI.automotive.invoices.void(id, reason);
+    }
+    return this.browserDevVoidInvoice(id, reason);
+  }
+
+  async deleteInvoice(id: string): Promise<boolean> {
+    if (isElectronEnvironment()) {
+      if (!window.artemisAPI?.automotive?.invoices?.delete) {
+        throw new Error('Artemis Automotive IPC bridge unavailable in Electron environment.');
+      }
+      return window.artemisAPI.automotive.invoices.delete(id);
+    }
+    return this.browserDevDeleteInvoice(id);
+  }
+
+  // ---------------------------------------------------------------------------
+  // Browser Dev Fallbacks for Invoices
+  // ---------------------------------------------------------------------------
+
+  private async browserDevLoadInvoices(): Promise<InvoiceRecord[]> {
+    if (this.browserDevInvoices !== null) {
+      return this.browserDevInvoices;
+    }
+    try {
+      const stored = localStorage.getItem(LOCAL_STORAGE_INVOICES_KEY);
+      if (stored) {
+        this.browserDevInvoices = JSON.parse(stored);
+        this.nextInvoiceSeq = (this.browserDevInvoices?.length || 0) + 1;
+        return this.browserDevInvoices!;
+      }
+    } catch {
+      // ignore
+    }
+    this.browserDevInvoices = [];
+    return this.browserDevInvoices;
+  }
+
+  private async browserDevSaveInvoices(invoices: InvoiceRecord[]): Promise<void> {
+    this.browserDevInvoices = invoices;
+    try {
+      localStorage.setItem(LOCAL_STORAGE_INVOICES_KEY, JSON.stringify(invoices));
+    } catch {
+      // ignore
+    }
+  }
+
+  private async browserDevListInvoices(filter?: ListInvoicesFilter): Promise<InvoiceRecord[]> {
+    const list = await this.browserDevLoadInvoices();
+    let res = list;
+    if (!filter?.includeDeleted) res = res.filter((i) => !i.isDeleted);
+    if (filter?.estimateId) res = res.filter((i) => i.estimateId === filter.estimateId);
+    if (filter?.workOrderId) res = res.filter((i) => i.workOrderId === filter.workOrderId);
+    if (filter?.vehicleId) res = res.filter((i) => i.vehicleId === filter.vehicleId);
+    if (filter?.customerId !== undefined) res = res.filter((i) => i.customerId === filter.customerId);
+    if (filter?.status) res = res.filter((i) => i.status === filter.status);
+    return res;
+  }
+
+  private async browserDevGetInvoice(id: string): Promise<InvoiceRecord | null> {
+    const list = await this.browserDevLoadInvoices();
+    return list.find((i) => i.id === id) || null;
+  }
+
+  private async browserDevCreateInvoice(options: CreateInvoiceOptions): Promise<InvoiceRecord> {
+    const list = await this.browserDevLoadInvoices();
+    const estimates = await this.browserDevLoadEstimates();
+    const estimate = estimates.find((e) => e.id === options.estimateId);
+    if (!estimate || estimate.isDeleted) throw new Error('Estimate not found');
+    if (estimate.status !== 'approved') throw new Error('Estimate must be approved to create an Invoice');
+
+    const seq = this.nextInvoiceSeq++;
+    const invoiceNumber = `INV-${String(seq).padStart(6, '0')}`;
+
+    const customers = await this.browserDevLoadCustomers();
+    const customer = estimate.customerId ? customers.find((c) => c.id === estimate.customerId) : null;
+
+    const lineItems = (estimate.lineItems || []).map((item) => ({
+      ...item,
+      id: `line-${Math.random().toString(36).substring(2, 8)}`,
+      sourceEstimateLineItemId: item.id,
+    }));
+
+    const totals = calculateEstimateTotals(
+      lineItems,
+      estimate.taxRateBps,
+      estimate.discountType,
+      estimate.fixedDiscountCents,
+      estimate.discountPercentBps
+    );
+
+    const invoice: InvoiceRecord = {
+      id: `inv-${Math.random().toString(36).substring(2, 10)}`,
+      invoiceNumber,
+      estimateId: estimate.id,
+      workOrderId: estimate.workOrderId,
+      vehicleId: estimate.vehicleId,
+      customerId: estimate.customerId,
+      estimateNumberSnapshot: estimate.estimateNumber,
+      estimateTotalSnapshotCents: estimate.totalCents,
+      workOrderNumberSnapshot: estimate.workOrderNumberSnapshot,
+      vehicleDescriptionSnapshot: estimate.vehicleDescriptionSnapshot,
+      customerNameSnapshot: estimate.customerNameSnapshot,
+      customerAddressSnapshot: customer?.address,
+      customerEmailSnapshot: customer?.email,
+      customerPhoneSnapshot: customer?.phone,
+      status: 'draft',
+      lineItems,
+      discountType: estimate.discountType,
+      fixedDiscountCents: estimate.fixedDiscountCents,
+      discountPercentBps: estimate.discountPercentBps,
+      taxRateBps: estimate.taxRateBps,
+      subtotalCents: totals.subtotalCents,
+      discountTotalCents: totals.discountTotalCents,
+      taxableSubtotalCents: totals.taxableSubtotalCents,
+      taxTotalCents: totals.taxTotalCents,
+      totalCents: totals.totalCents,
+      customerMessage: options.customerMessage || estimate.customerMessage,
+      internalNotes: options.internalNotes,
+      dueDate: options.dueDate,
+      createdAt: Date.now(),
+      updatedAt: Date.now(),
+      isDeleted: false,
+    };
+
+    list.push(invoice);
+    await this.browserDevSaveInvoices(list);
+    return invoice;
+  }
+
+  private async browserDevUpdateInvoice(
+    id: string,
+    updates: UpdateInvoiceOptions
+  ): Promise<InvoiceRecord> {
+    const list = await this.browserDevLoadInvoices();
+    const invoice = list.find((i) => i.id === id);
+    if (!invoice || invoice.isDeleted) throw new Error('Invoice not found');
+    if (invoice.status !== 'draft') throw new Error('Cannot modify issued or void invoice');
+
+    if (updates.lineItems !== undefined) {
+      invoice.lineItems = updates.lineItems.map((l) => ({
+        ...l,
+        id: 'id' in l && l.id ? l.id : `line-${Math.random().toString(36).substring(2, 6)}`,
+      }));
+    }
+    if (updates.discountType !== undefined) invoice.discountType = updates.discountType;
+    if (updates.fixedDiscountCents !== undefined) invoice.fixedDiscountCents = updates.fixedDiscountCents;
+    if (updates.discountPercentBps !== undefined) invoice.discountPercentBps = updates.discountPercentBps;
+    if (updates.taxRateBps !== undefined) invoice.taxRateBps = updates.taxRateBps;
+    if (updates.customerMessage !== undefined) invoice.customerMessage = updates.customerMessage;
+    if (updates.internalNotes !== undefined) invoice.internalNotes = updates.internalNotes;
+    if (updates.dueDate !== undefined) invoice.dueDate = updates.dueDate;
+
+    const totals = calculateEstimateTotals(
+      invoice.lineItems,
+      invoice.taxRateBps,
+      invoice.discountType,
+      invoice.fixedDiscountCents,
+      invoice.discountPercentBps
+    );
+
+    invoice.subtotalCents = totals.subtotalCents;
+    invoice.discountTotalCents = totals.discountTotalCents;
+    invoice.taxableSubtotalCents = totals.taxableSubtotalCents;
+    invoice.taxTotalCents = totals.taxTotalCents;
+    invoice.totalCents = totals.totalCents;
+    invoice.updatedAt = Date.now();
+
+    await this.browserDevSaveInvoices(list);
+    return invoice;
+  }
+
+  private async browserDevIssueInvoice(id: string): Promise<InvoiceRecord> {
+    const list = await this.browserDevLoadInvoices();
+    const invoice = list.find((i) => i.id === id);
+    if (!invoice || invoice.isDeleted) throw new Error('Invoice not found');
+    if (invoice.status !== 'draft') throw new Error('Invoice is already issued or void');
+    if (invoice.totalCents > invoice.estimateTotalSnapshotCents) {
+      throw new Error('Invoice total cannot exceed source estimate total');
+    }
+    invoice.status = 'issued';
+    invoice.issuedAt = Date.now();
+    invoice.updatedAt = Date.now();
+    await this.browserDevSaveInvoices(list);
+    return invoice;
+  }
+
+  private async browserDevVoidInvoice(id: string, reason: string): Promise<InvoiceRecord> {
+    const list = await this.browserDevLoadInvoices();
+    const invoice = list.find((i) => i.id === id);
+    if (!invoice || invoice.isDeleted) throw new Error('Invoice not found');
+    if (invoice.status !== 'issued') throw new Error('Only issued invoices may be voided');
+    if (!reason || !reason.trim()) throw new Error('Void reason is required');
+    invoice.status = 'void';
+    invoice.voidedAt = Date.now();
+    invoice.voidReason = reason.trim();
+    invoice.updatedAt = Date.now();
+    await this.browserDevSaveInvoices(list);
+    return invoice;
+  }
+
+  private async browserDevDeleteInvoice(id: string): Promise<boolean> {
+    const list = await this.browserDevLoadInvoices();
+    const invoice = list.find((i) => i.id === id);
+    if (!invoice) throw new Error('Invoice not found');
+    if (invoice.status === 'issued') throw new Error('Cannot delete issued Invoice');
+    if (invoice.status === 'void') throw new Error('Cannot delete voided Invoice');
+    invoice.isDeleted = true;
+    invoice.updatedAt = Date.now();
+    await this.browserDevSaveInvoices(list);
     return true;
   }
 }

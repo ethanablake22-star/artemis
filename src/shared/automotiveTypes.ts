@@ -6,7 +6,16 @@ import type {
   EstimatesBridge,
 } from './estimateTypes';
 
+import type {
+  InvoiceRecord,
+  CreateInvoiceOptions,
+  UpdateInvoiceOptions,
+  ListInvoicesFilter,
+  InvoicesBridge,
+} from './invoiceTypes';
+
 export * from './estimateTypes';
+export * from './invoiceTypes';
 
 export type CustomerType = 'individual' | 'business';
 
@@ -128,15 +137,17 @@ export interface WorkOrderRecord {
 }
 
 export interface ArtemisAutomotiveStoreData {
-  schemaVersion: 4;
+  schemaVersion: 5;
   nextCustomerSequence: number;
   nextVehicleSequence: number;
   nextWorkOrderSequence: number;
   nextEstimateSequence: number;
+  nextInvoiceSequence: number;
   customers: CustomerRecord[];
   vehicles: VehicleRecord[];
   workOrders: WorkOrderRecord[];
   estimates: EstimateRecord[];
+  invoices: InvoiceRecord[];
 }
 
 export interface CreateCustomerOptions {
@@ -266,6 +277,7 @@ export interface AutomotiveBridge {
   deleteWorkOrder: (id: string) => Promise<boolean>;
 
   estimates: EstimatesBridge;
+  invoices: InvoicesBridge;
 }
 
 export interface IAutomotiveStorageRepository {
@@ -293,4 +305,12 @@ export interface IAutomotiveStorageRepository {
   updateEstimate(id: string, updates: UpdateEstimateOptions): Promise<EstimateRecord>;
   reopenEstimate(id: string): Promise<EstimateRecord>;
   deleteEstimate(id: string): Promise<boolean>;
+
+  listInvoices(filter?: ListInvoicesFilter): Promise<InvoiceRecord[]>;
+  getInvoice(id: string): Promise<InvoiceRecord | null>;
+  createInvoice(options: CreateInvoiceOptions): Promise<InvoiceRecord>;
+  updateInvoice(id: string, updates: UpdateInvoiceOptions): Promise<InvoiceRecord>;
+  issueInvoice(id: string): Promise<InvoiceRecord>;
+  voidInvoice(id: string, reason: string): Promise<InvoiceRecord>;
+  deleteInvoice(id: string): Promise<boolean>;
 }

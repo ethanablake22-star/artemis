@@ -20,7 +20,8 @@ export type ArtemisTabType =
   | 'automotive-customer'
   | 'automotive-vehicle'
   | 'automotive-work-order'
-  | 'automotive-estimate';
+  | 'automotive-estimate'
+  | 'automotive-invoice';
 
 export interface ArtemisTab {
   /** Unique tab identifier */

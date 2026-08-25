@@ -4,6 +4,7 @@ import type {
   VehicleRecord,
   WorkOrderRecord,
   EstimateRecord,
+  InvoiceRecord,
   CreateCustomerOptions,
   UpdateCustomerOptions,
   CreateVehicleOptions,
@@ -12,6 +13,8 @@ import type {
   UpdateWorkOrderOptions,
   CreateEstimateOptions,
   UpdateEstimateOptions,
+  CreateInvoiceOptions,
+  UpdateInvoiceOptions,
 } from '@shared/automotiveTypes';
 import { automotiveRepository } from '../services/automotiveStorage';
 
@@ -20,6 +23,7 @@ interface AutomotiveContextValue {
   vehicles: VehicleRecord[];
   workOrders: WorkOrderRecord[];
   estimates: EstimateRecord[];
+  invoices: InvoiceRecord[];
   isLoading: boolean;
   error: string | null;
   refreshData: () => Promise<void>;
@@ -36,16 +40,26 @@ interface AutomotiveContextValue {
   updateEstimate: (id: string, updates: UpdateEstimateOptions) => Promise<EstimateRecord>;
   reopenEstimate: (id: string) => Promise<EstimateRecord>;
   deleteEstimate: (id: string) => Promise<boolean>;
+  createInvoice: (options: CreateInvoiceOptions) => Promise<InvoiceRecord>;
+  updateInvoice: (id: string, updates: UpdateInvoiceOptions) => Promise<InvoiceRecord>;
+  issueInvoice: (id: string) => Promise<InvoiceRecord>;
+  voidInvoice: (id: string, reason: string) => Promise<InvoiceRecord>;
+  deleteInvoice: (id: string) => Promise<boolean>;
   getCustomerVehicles: (customerId: string) => VehicleRecord[];
   getCustomerById: (id: string) => CustomerRecord | undefined;
   getVehicleById: (id: string) => VehicleRecord | undefined;
   getWorkOrderById: (id: string) => WorkOrderRecord | undefined;
   getEstimateById: (id: string) => EstimateRecord | undefined;
+  getInvoiceById: (id: string) => InvoiceRecord | undefined;
   getVehicleWorkOrders: (vehicleId: string) => WorkOrderRecord[];
   getCustomerWorkOrders: (customerId: string) => WorkOrderRecord[];
   getWorkOrderEstimates: (workOrderId: string) => EstimateRecord[];
   getVehicleEstimates: (vehicleId: string) => EstimateRecord[];
   getCustomerEstimates: (customerId: string) => EstimateRecord[];
+  getEstimateInvoices: (estimateId: string) => InvoiceRecord[];
+  getWorkOrderInvoices: (workOrderId: string) => InvoiceRecord[];
+  getVehicleInvoices: (vehicleId: string) => InvoiceRecord[];
+  getCustomerInvoices: (customerId: string) => InvoiceRecord[];
 }
 
 const AutomotiveContext = createContext<AutomotiveContextValue | null>(null);
@@ -55,6 +69,7 @@ export const AutomotiveProvider: React.FC<{ children: React.ReactNode }> = ({ ch
   const [vehicles, setVehicles] = useState<VehicleRecord[]>([]);
   const [workOrders, setWorkOrders] = useState<WorkOrderRecord[]>([]);
   const [estimates, setEstimates] = useState<EstimateRecord[]>([]);
+  const [invoices, setInvoices] = useState<InvoiceRecord[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -62,21 +77,28 @@ export const AutomotiveProvider: React.FC<{ children: React.ReactNode }> = ({ ch
     setIsLoading(true);
     setError(null);
     try {
-      const [fetchedCustomers, fetchedVehicles, fetchedWorkOrders, fetchedEstimates] =
-        await Promise.all([
-          automotiveRepository.listCustomers(),
-          automotiveRepository.listVehicles(),
-          automotiveRepository.listWorkOrders(),
-          automotiveRepository.listEstimates(),
-        ]);
+      const [
+        fetchedCustomers,
+        fetchedVehicles,
+        fetchedWorkOrders,
+        fetchedEstimates,
+        fetchedInvoices,
+      ] = await Promise.all([
+        automotiveRepository.listCustomers(),
+        automotiveRepository.listVehicles(),
+        automotiveRepository.listWorkOrders(),
+        automotiveRepository.listEstimates(),
+        automotiveRepository.listInvoices(),
+      ]);
       setCustomers(fetchedCustomers);
       setVehicles(fetchedVehicles);
       setWorkOrders(fetchedWorkOrders);
       setEstimates(fetchedEstimates);
+      setInvoices(fetchedInvoices);
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : String(err);
-      console.error('Failed to load automotive data:', err);
       setError(msg);
+      console.error('Failed to load automotive data:', err);
     } finally {
       setIsLoading(false);
     }
@@ -236,7 +258,6 @@ export const AutomotiveProvider: React.FC<{ children: React.ReactNode }> = ({ ch
     []
   );
 
-  // Estimates Handlers
   const handleCreateEstimate = useCallback(
     async (options: CreateEstimateOptions): Promise<EstimateRecord> => {
       setError(null);
@@ -303,6 +324,89 @@ export const AutomotiveProvider: React.FC<{ children: React.ReactNode }> = ({ ch
     []
   );
 
+  // Invoices (V0.0.9)
+  const handleCreateInvoice = useCallback(
+    async (options: CreateInvoiceOptions): Promise<InvoiceRecord> => {
+      setError(null);
+      try {
+        const created = await automotiveRepository.createInvoice(options);
+        setInvoices((prev) => [created, ...prev]);
+        return created;
+      } catch (err: unknown) {
+        const msg = err instanceof Error ? err.message : String(err);
+        setError(msg);
+        throw err;
+      }
+    },
+    []
+  );
+
+  const handleUpdateInvoice = useCallback(
+    async (id: string, updates: UpdateInvoiceOptions): Promise<InvoiceRecord> => {
+      setError(null);
+      try {
+        const updated = await automotiveRepository.updateInvoice(id, updates);
+        setInvoices((prev) => prev.map((i) => (i.id === id ? updated : i)));
+        return updated;
+      } catch (err: unknown) {
+        const msg = err instanceof Error ? err.message : String(err);
+        setError(msg);
+        throw err;
+      }
+    },
+    []
+  );
+
+  const handleIssueInvoice = useCallback(
+    async (id: string): Promise<InvoiceRecord> => {
+      setError(null);
+      try {
+        const issued = await automotiveRepository.issueInvoice(id);
+        setInvoices((prev) => prev.map((i) => (i.id === id ? issued : i)));
+        return issued;
+      } catch (err: unknown) {
+        const msg = err instanceof Error ? err.message : String(err);
+        setError(msg);
+        throw err;
+      }
+    },
+    []
+  );
+
+  const handleVoidInvoice = useCallback(
+    async (id: string, reason: string): Promise<InvoiceRecord> => {
+      setError(null);
+      try {
+        const voided = await automotiveRepository.voidInvoice(id, reason);
+        setInvoices((prev) => prev.map((i) => (i.id === id ? voided : i)));
+        return voided;
+      } catch (err: unknown) {
+        const msg = err instanceof Error ? err.message : String(err);
+        setError(msg);
+        throw err;
+      }
+    },
+    []
+  );
+
+  const handleDeleteInvoice = useCallback(
+    async (id: string): Promise<boolean> => {
+      setError(null);
+      try {
+        const success = await automotiveRepository.deleteInvoice(id);
+        if (success) {
+          setInvoices((prev) => prev.filter((i) => i.id !== id));
+        }
+        return success;
+      } catch (err: unknown) {
+        const msg = err instanceof Error ? err.message : String(err);
+        setError(msg);
+        throw err;
+      }
+    },
+    []
+  );
+
   const getCustomerVehicles = useCallback(
     (customerId: string): VehicleRecord[] => {
       return vehicles.filter((v) => v.customerId === customerId && !v.isDeleted);
@@ -336,6 +440,13 @@ export const AutomotiveProvider: React.FC<{ children: React.ReactNode }> = ({ ch
       return estimates.find((e) => e.id === id && !e.isDeleted);
     },
     [estimates]
+  );
+
+  const getInvoiceById = useCallback(
+    (id: string): InvoiceRecord | undefined => {
+      return invoices.find((i) => i.id === id && !i.isDeleted);
+    },
+    [invoices]
   );
 
   const getVehicleWorkOrders = useCallback(
@@ -373,12 +484,41 @@ export const AutomotiveProvider: React.FC<{ children: React.ReactNode }> = ({ ch
     [estimates]
   );
 
+  const getEstimateInvoices = useCallback(
+    (estimateId: string): InvoiceRecord[] => {
+      return invoices.filter((i) => i.estimateId === estimateId && !i.isDeleted);
+    },
+    [invoices]
+  );
+
+  const getWorkOrderInvoices = useCallback(
+    (workOrderId: string): InvoiceRecord[] => {
+      return invoices.filter((i) => i.workOrderId === workOrderId && !i.isDeleted);
+    },
+    [invoices]
+  );
+
+  const getVehicleInvoices = useCallback(
+    (vehicleId: string): InvoiceRecord[] => {
+      return invoices.filter((i) => i.vehicleId === vehicleId && !i.isDeleted);
+    },
+    [invoices]
+  );
+
+  const getCustomerInvoices = useCallback(
+    (customerId: string): InvoiceRecord[] => {
+      return invoices.filter((i) => i.customerId === customerId && !i.isDeleted);
+    },
+    [invoices]
+  );
+
   const value = useMemo(
     () => ({
       customers,
       vehicles,
       workOrders,
       estimates,
+      invoices,
       isLoading,
       error,
       refreshData,
@@ -395,22 +535,33 @@ export const AutomotiveProvider: React.FC<{ children: React.ReactNode }> = ({ ch
       updateEstimate: handleUpdateEstimate,
       reopenEstimate: handleReopenEstimate,
       deleteEstimate: handleDeleteEstimate,
+      createInvoice: handleCreateInvoice,
+      updateInvoice: handleUpdateInvoice,
+      issueInvoice: handleIssueInvoice,
+      voidInvoice: handleVoidInvoice,
+      deleteInvoice: handleDeleteInvoice,
       getCustomerVehicles,
       getCustomerById,
       getVehicleById,
       getWorkOrderById,
       getEstimateById,
+      getInvoiceById,
       getVehicleWorkOrders,
       getCustomerWorkOrders,
       getWorkOrderEstimates,
       getVehicleEstimates,
       getCustomerEstimates,
+      getEstimateInvoices,
+      getWorkOrderInvoices,
+      getVehicleInvoices,
+      getCustomerInvoices,
     }),
     [
       customers,
       vehicles,
       workOrders,
       estimates,
+      invoices,
       isLoading,
       error,
       refreshData,
@@ -427,16 +578,26 @@ export const AutomotiveProvider: React.FC<{ children: React.ReactNode }> = ({ ch
       handleUpdateEstimate,
       handleReopenEstimate,
       handleDeleteEstimate,
+      handleCreateInvoice,
+      handleUpdateInvoice,
+      handleIssueInvoice,
+      handleVoidInvoice,
+      handleDeleteInvoice,
       getCustomerVehicles,
       getCustomerById,
       getVehicleById,
       getWorkOrderById,
       getEstimateById,
+      getInvoiceById,
       getVehicleWorkOrders,
       getCustomerWorkOrders,
       getWorkOrderEstimates,
       getVehicleEstimates,
       getCustomerEstimates,
+      getEstimateInvoices,
+      getWorkOrderInvoices,
+      getVehicleInvoices,
+      getCustomerInvoices,
     ]
   );
 

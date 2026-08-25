@@ -17,6 +17,7 @@ import {
   Calendar,
   Clock,
   Calculator,
+  Receipt,
 } from 'lucide-react';
 import { useAutomotive } from '../../../state/AutomotiveContext';
 import { useSchedule } from '../../../state/ScheduleContext';
@@ -55,6 +56,7 @@ export const CustomerDetailTab: React.FC<CustomerDetailTabProps> = ({ customerId
     createVehicle,
     getCustomerWorkOrders,
     getCustomerEstimates,
+    getCustomerInvoices,
   } = useAutomotive();
 
   const {
@@ -62,6 +64,7 @@ export const CustomerDetailTab: React.FC<CustomerDetailTabProps> = ({ customerId
     openWorkOrderTab,
     openScheduleEventTab,
     openEstimateTab,
+    openInvoiceTab,
     closeTab,
     syncCustomerTitle,
     activeTabId,
@@ -72,6 +75,7 @@ export const CustomerDetailTab: React.FC<CustomerDetailTabProps> = ({ customerId
   const vehicles = getCustomerVehicles(customerId);
   const workOrders = customer ? getCustomerWorkOrders(customer.id) : [];
   const customerEstimates = customer ? getCustomerEstimates(customer.id) : [];
+  const customerInvoices = customer ? getCustomerInvoices(customer.id) : [];
   const customerEvents = customer ? getCustomerEvents(customer.id) : [];
 
   const [isEditing, setIsEditing] = useState(false);
@@ -626,6 +630,71 @@ export const CustomerDetailTab: React.FC<CustomerDetailTabProps> = ({ customerId
                         month: 'short',
                         day: 'numeric',
                       })}
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+
+        {/* Commercial Invoices (V0.0.9) */}
+        <div className="p-5 rounded-xl bg-artemis-900/90 border border-slate-800 space-y-3">
+          <div className="flex items-center justify-between">
+            <h3 className="text-xs font-bold uppercase tracking-wider text-slate-300 flex items-center gap-1.5">
+              <Receipt className="w-3.5 h-3.5 text-amber-400" />
+              Invoices ({customerInvoices.length})
+            </h3>
+          </div>
+
+          {customerInvoices.length === 0 ? (
+            <p className="text-xs text-slate-500 italic bg-artemis-950/40 p-3 rounded-lg">
+              No invoices generated for this customer yet.
+            </p>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+              {customerInvoices.map((inv) => (
+                <div
+                  key={inv.id}
+                  onClick={() =>
+                    openInvoiceTab(
+                      inv.id,
+                      `${inv.invoiceNumber} — ${inv.customerNameSnapshot || inv.vehicleDescriptionSnapshot}`
+                    )
+                  }
+                  className="p-3 rounded-lg bg-artemis-950/80 border border-slate-800 hover:border-amber-500/40 cursor-pointer group transition-all"
+                >
+                  <div className="flex items-center justify-between">
+                    <span className="font-bold text-xs text-amber-400 font-mono">
+                      {inv.invoiceNumber}
+                    </span>
+                    <span
+                      className={clsx(
+                        'text-[10px] uppercase font-bold px-1.5 py-0.5 rounded border',
+                        inv.status === 'issued'
+                          ? 'bg-emerald-950/60 text-emerald-400 border-emerald-800/80'
+                          : inv.status === 'void'
+                            ? 'bg-rose-950/60 text-rose-400 border-rose-800/80'
+                            : 'bg-slate-800 text-slate-400 border-slate-700'
+                      )}
+                    >
+                      {inv.status}
+                    </span>
+                  </div>
+                  <div className="flex items-center justify-between mt-2">
+                    <div className="text-sm font-black text-white font-mono">
+                      {formatCents(inv.totalCents)}
+                    </div>
+                    <div className="text-[11px] text-slate-400">
+                      {inv.issuedAt
+                        ? `Issued ${new Date(inv.issuedAt).toLocaleDateString(undefined, {
+                            month: 'short',
+                            day: 'numeric',
+                          })}`
+                        : `Created ${new Date(inv.createdAt).toLocaleDateString(undefined, {
+                            month: 'short',
+                            day: 'numeric',
+                          })}`}
                     </div>
                   </div>
                 </div>

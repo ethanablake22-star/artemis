@@ -1,12 +1,12 @@
-# Artemis Automotive Architecture & Data Model (Schema V4)
+# Artemis Automotive Architecture & Data Model (Schema V5)
 
 ## Overview
 
-**Artemis Automotive** is the native customer relationship management, vehicle fleet tracking, service work order, and commercial estimating subsystem for the Artemis desktop platform. It provides an operational foundation for mechanic shops, fleet operators, and engineering teams to maintain customer accounts, vehicle profiles, VINs, mileage records, powertrain specifications, repair work orders, and commercial price proposals directly within Artemis universal tabs.
+**Artemis Automotive** is the native customer relationship management, vehicle fleet tracking, service work order, commercial estimating, and invoicing subsystem for the Artemis desktop platform. It provides an operational foundation for mechanic shops, fleet operators, and engineering teams to maintain customer accounts, vehicle profiles, VINs, mileage records, powertrain specifications, repair work orders, commercial price proposals, and final invoices directly within Artemis universal tabs.
 
 ---
 
-## Data Models & Entity Relationships (Schema V4)
+## Data Models & Entity Relationships (Schema V5)
 
 Automotive data is authoritatively stored, validated, numbered, and snapshot-preserved in the Electron Main Process:
 
@@ -66,15 +66,40 @@ Automotive data is authoritatively stored, validated, numbered, and snapshot-pre
 │   totalCents: 49450 ($494.50)                          │
 │   status: "draft" | "ready" | "approved" | "declined"  │
 │   isDeleted: false                                     │
+└───────────────────────────┬────────────────────────────┘
+                            │
+              1 to Many Point-in-Time Invoices (1 active)
+                            │
+┌───────────────────────────▼────────────────────────────┐
+│                    InvoiceRecord                       │
+│   id: "inv-uuid-..." (Immutable UUID)                  │
+│   invoiceNumber: "INV-000001" (Monotonic)              │
+│   estimateId: "est-uuid-..." (FK)                      │
+│   workOrderId: "wo-uuid-..." (FK)                      │
+│   vehicleId: "veh-uuid-..." (FK)                       │
+│   customerId: "cust-uuid-..." | null (FK)              │
+│   estimateNumberSnapshot: "EST-000001"                 │
+│   estimateTotalSnapshotCents: 49450                    │
+│   customerAddressSnapshot: "123 Main St..."            │
+│   customerEmailSnapshot: "ethan@example.com"           │
+│   customerPhoneSnapshot: "555-0199"                    │
+│   lineItems: [ { id, type, desc, qtyMilli, unitCents } ]│
+│   dueDate: "2026-09-15" (Calendar Date)                │
+│   totalCents: 49450 ($494.50)                          │
+│   status: "draft" | "issued" | "void"                  │
+│   isDeleted: false                                     │
 └────────────────────────────────────────────────────────┘
 ```
 
 ---
 
-## Separation of Work Orders & Estimates
+## Separation of Operational Entities
 
-> **A Work Order records what happened to the vehicle. An Estimate records what you proposed to charge.**
-> See full details in [docs/ESTIMATES.md](file:///home/EthanABlake/Projects/artemis/docs/ESTIMATES.md).
+> - **Work Order:** *"What happened to the vehicle?"* (Technical repair record).
+> - **Estimate:** *"What did we offer to do, and for how much?"* (Commercial proposal).
+> - **Invoice:** *"What does the customer actually owe?"* (Formal billed financial record).
+>
+> See full details in [docs/ESTIMATES.md](file:///home/EthanABlake/Projects/artemis/docs/ESTIMATES.md) and [docs/INVOICES.md](file:///home/EthanABlake/Projects/artemis/docs/INVOICES.md).
 
 ---
 
@@ -84,12 +109,14 @@ Automotive data is authoritatively stored, validated, numbered, and snapshot-pre
    - Zero floating-point arithmetic for money storage and calculations.
    - All currencies stored as integer cents (`*Cents`), percentages as basis points (`*Bps`), quantities as scaled milli-units (`*Milli`).
 2. **Historical Snapshot Integrity**:
-   - Work Orders and Estimates preserve customer and vehicle snapshots independently.
-   - Modifying a repair log does not alter commercial proposals already presented to the customer.
+   - Work Orders, Estimates, and Invoices preserve snapshots independently.
+   - Modifying a repair log does not alter commercial proposals or issued invoices.
 3. **Monotonic Sequential Numbering**:
-   - `CUS-XXXXXX`, `VEH-XXXXXX`, `WO-XXXXXX`, `EST-XXXXXX` generated authoritatively in Electron Main without number recycling.
-4. **Approved Estimate Immutability**:
-   - Estimates in `approved` status cannot be mutated or deleted via ordinary APIs.
-   - An explicit `reopenEstimate(id)` operation transitions status back to `draft` and clears `approvedAt`.
-5. **Deterministic Schema Migration (V1/V2/V3 → V4)**:
-   - Upgrades data files seamlessly to `schemaVersion: 4` with initialized `estimates: []` and `nextEstimateSequence: 1`.
+   - `CUS-XXXXXX`, `VEH-XXXXXX`, `WO-XXXXXX`, `EST-XXXXXX`, `INV-XXXXXX` generated authoritatively in Electron Main without number recycling.
+4. **Approved Estimate & Issued Invoice Protection**:
+   - Estimates in `approved` status and Invoices in `issued` status cannot be mutated via normal update APIs.
+   - Invoices cannot be issued if their total exceeds the approved source Estimate total.
+   - Voiding an issued invoice is a permanent lifecycle transition requiring an explicit reason.
+   - Reopening an estimate is locked out while an active invoice exists.
+5. **Deterministic Schema Migration (V1..V4 → V5)**:
+   - Upgrades data files seamlessly to `schemaVersion: 5` with initialized `invoices: []` and `nextInvoiceSequence: 1`.

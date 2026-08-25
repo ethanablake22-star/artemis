@@ -36,6 +36,13 @@ import {
   updateEstimate,
   reopenEstimate,
   deleteEstimate,
+  listInvoices,
+  getInvoice,
+  createInvoice,
+  updateInvoice,
+  issueInvoice,
+  voidInvoice,
+  deleteInvoice,
 } from './automotiveStorage';
 import {
   listScheduleEvents,
@@ -273,6 +280,35 @@ function createWindow() {
 
   ipcMain.handle('artemis:automotive:estimates:delete', async (_event, id) => {
     return deleteEstimate(id);
+  });
+
+  // Invoices (V0.0.9)
+  ipcMain.handle('artemis:automotive:invoices:list', async (_event, filter) => {
+    return listInvoices(filter);
+  });
+
+  ipcMain.handle('artemis:automotive:invoices:get', async (_event, id) => {
+    return getInvoice(id);
+  });
+
+  ipcMain.handle('artemis:automotive:invoices:create', async (_event, options) => {
+    return createInvoice(options);
+  });
+
+  ipcMain.handle('artemis:automotive:invoices:update', async (_event, id, updates) => {
+    return updateInvoice(id, updates);
+  });
+
+  ipcMain.handle('artemis:automotive:invoices:issue', async (_event, id) => {
+    return issueInvoice(id);
+  });
+
+  ipcMain.handle('artemis:automotive:invoices:void', async (_event, id, reason) => {
+    return voidInvoice(id, reason);
+  });
+
+  ipcMain.handle('artemis:automotive:invoices:delete', async (_event, id) => {
+    return deleteInvoice(id);
   });
 
   // ---------------------------------------------------------------------------

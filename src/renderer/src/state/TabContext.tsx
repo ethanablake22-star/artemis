@@ -23,6 +23,7 @@ interface TabContextValue {
   openScheduleTab: () => string;
   openScheduleEventTab: (eventId: string, title: string) => string;
   openEstimateTab: (estimateId: string, title: string) => string;
+  openInvoiceTab: (invoiceId: string, title: string) => string;
   updateTab: (id: string, updates: Partial<ArtemisTab>) => void;
   syncDocumentTitle: (libraryItemId: string, newTitle: string) => void;
   syncCustomerTitle: (customerId: string, newName: string) => void;
@@ -30,6 +31,7 @@ interface TabContextValue {
   syncWorkOrderTitle: (workOrderId: string, newTitle: string) => void;
   syncScheduleEventTitle: (eventId: string, newTitle: string) => void;
   syncEstimateTitle: (estimateId: string, newTitle: string) => void;
+  syncInvoiceTitle: (invoiceId: string, newTitle: string) => void;
   registerBeforeClose: (tabId: string, handler: () => Promise<boolean>) => () => void;
 }
 
@@ -379,6 +381,27 @@ export const TabProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     [tabs, openTab, selectTab]
   );
 
+  const openInvoiceTab = useCallback(
+    (invoiceId: string, title: string) => {
+      const existing = tabs.find(
+        (t) => t.type === 'automotive-invoice' && t.resourceId === invoiceId
+      );
+      if (existing) {
+        selectTab(existing.id);
+        return existing.id;
+      }
+
+      return openTab({
+        type: 'automotive-invoice',
+        resourceId: invoiceId,
+        title: title || 'Invoice',
+        icon: 'receipt',
+        closable: true,
+      });
+    },
+    [tabs, openTab, selectTab]
+  );
+
   const syncDocumentTitle = useCallback((libraryItemId: string, newTitle: string) => {
     setTabs((prev) =>
       prev.map((tab) =>
@@ -439,6 +462,16 @@ export const TabProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     );
   }, []);
 
+  const syncInvoiceTitle = useCallback((invoiceId: string, newTitle: string) => {
+    setTabs((prev) =>
+      prev.map((tab) =>
+        tab.type === 'automotive-invoice' && tab.resourceId === invoiceId
+          ? { ...tab, title: newTitle }
+          : tab
+      )
+    );
+  }, []);
+
   const activeTab = useMemo(() => tabs.find((t) => t.id === activeTabId), [tabs, activeTabId]);
 
   const value = useMemo(
@@ -457,6 +490,7 @@ export const TabProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       openScheduleTab,
       openScheduleEventTab,
       openEstimateTab,
+      openInvoiceTab,
       updateTab,
       syncDocumentTitle,
       syncCustomerTitle,
@@ -464,6 +498,7 @@ export const TabProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       syncWorkOrderTitle,
       syncScheduleEventTitle,
       syncEstimateTitle,
+      syncInvoiceTitle,
       registerBeforeClose,
     }),
     [
@@ -481,6 +516,7 @@ export const TabProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       openScheduleTab,
       openScheduleEventTab,
       openEstimateTab,
+      openInvoiceTab,
       updateTab,
       syncDocumentTitle,
       syncCustomerTitle,
@@ -488,6 +524,7 @@ export const TabProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       syncWorkOrderTitle,
       syncScheduleEventTitle,
       syncEstimateTitle,
+      syncInvoiceTitle,
       registerBeforeClose,
     ]
   );
