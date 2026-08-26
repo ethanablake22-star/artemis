@@ -66,7 +66,7 @@ export const DocumentToolbar: React.FC<DocumentToolbarProps> = ({
 
   return (
     <>
-      <div className="h-11 bg-artemis-950/90 border-b border-slate-800 px-4 flex items-center justify-between gap-1 shrink-0 overflow-x-auto no-scrollbar select-none z-10">
+      <div className="h-11 bg-artemis-950/90 border-b border-zinc-800 px-4 flex items-center justify-between gap-1 shrink-0 overflow-x-auto no-scrollbar select-none z-10">
         <div className="flex items-center gap-1">
           {/* Undo / Redo */}
           <button
@@ -74,7 +74,7 @@ export const DocumentToolbar: React.FC<DocumentToolbarProps> = ({
             onClick={() => editor.chain().focus().undo().run()}
             disabled={!editor.can().undo()}
             title="Undo (Ctrl+Z)"
-            className="p-1.5 rounded-lg text-slate-400 hover:text-slate-100 hover:bg-slate-800 disabled:opacity-30 disabled:hover:bg-transparent transition-colors"
+            className="p-1.5 rounded-lg text-zinc-400 hover:text-zinc-100 hover:bg-zinc-800 disabled:opacity-30 disabled:hover:bg-transparent transition-colors"
           >
             <Undo2 className="w-3.5 h-3.5" />
           </button>
@@ -84,12 +84,12 @@ export const DocumentToolbar: React.FC<DocumentToolbarProps> = ({
             onClick={() => editor.chain().focus().redo().run()}
             disabled={!editor.can().redo()}
             title="Redo (Ctrl+Y)"
-            className="p-1.5 rounded-lg text-slate-400 hover:text-slate-100 hover:bg-slate-800 disabled:opacity-30 disabled:hover:bg-transparent transition-colors mr-1"
+            className="p-1.5 rounded-lg text-zinc-400 hover:text-zinc-100 hover:bg-zinc-800 disabled:opacity-30 disabled:hover:bg-transparent transition-colors mr-1"
           >
             <Redo2 className="w-3.5 h-3.5" />
           </button>
 
-          <div className="w-px h-5 bg-slate-800 mx-1" />
+          <div className="w-px h-5 bg-zinc-800 mx-1" />
 
           {/* Hierarchy / Paragraph & Headings */}
           <button
@@ -100,7 +100,7 @@ export const DocumentToolbar: React.FC<DocumentToolbarProps> = ({
               'p-1.5 rounded-lg transition-colors flex items-center gap-1 text-xs font-medium',
               editor.isActive('paragraph')
                 ? 'bg-artemis-accent/15 text-artemis-accent border border-artemis-accent/30'
-                : 'text-slate-400 hover:text-slate-100 hover:bg-slate-800'
+                : 'text-zinc-400 hover:text-zinc-100 hover:bg-zinc-800'
             )}
           >
             <Pilcrow className="w-3.5 h-3.5" />
@@ -114,7 +114,7 @@ export const DocumentToolbar: React.FC<DocumentToolbarProps> = ({
               'p-1.5 rounded-lg transition-colors',
               editor.isActive('heading', { level: 1 })
                 ? 'bg-artemis-accent/15 text-artemis-accent border border-artemis-accent/30'
-                : 'text-slate-400 hover:text-slate-100 hover:bg-slate-800'
+                : 'text-zinc-400 hover:text-zinc-100 hover:bg-zinc-800'
             )}
           >
             <Heading1 className="w-3.5 h-3.5" />
@@ -128,7 +128,7 @@ export const DocumentToolbar: React.FC<DocumentToolbarProps> = ({
               'p-1.5 rounded-lg transition-colors',
               editor.isActive('heading', { level: 2 })
                 ? 'bg-artemis-accent/15 text-artemis-accent border border-artemis-accent/30'
-                : 'text-slate-400 hover:text-slate-100 hover:bg-slate-800'
+                : 'text-zinc-400 hover:text-zinc-100 hover:bg-zinc-800'
             )}
           >
             <Heading2 className="w-3.5 h-3.5" />
@@ -142,13 +142,13 @@ export const DocumentToolbar: React.FC<DocumentToolbarProps> = ({
               'p-1.5 rounded-lg transition-colors',
               editor.isActive('heading', { level: 3 })
                 ? 'bg-artemis-accent/15 text-artemis-accent border border-artemis-accent/30'
-                : 'text-slate-400 hover:text-slate-100 hover:bg-slate-800'
+                : 'text-zinc-400 hover:text-zinc-100 hover:bg-zinc-800'
             )}
           >
             <Heading3 className="w-3.5 h-3.5" />
           </button>
 
-          <div className="w-px h-5 bg-slate-800 mx-1" />
+          <div className="w-px h-5 bg-zinc-800 mx-1" />
 
           {/* Formatting: Bold, Italic, Underline, Strike, Highlight */}
           <button
@@ -159,7 +159,7 @@ export const DocumentToolbar: React.FC<DocumentToolbarProps> = ({
               'p-1.5 rounded-lg transition-colors',
               editor.isActive('bold')
                 ? 'bg-artemis-accent/15 text-artemis-accent border border-artemis-accent/30'
-                : 'text-slate-400 hover:text-slate-100 hover:bg-slate-800'
+                : 'text-zinc-400 hover:text-zinc-100 hover:bg-zinc-800'
             )}
           >
             <Bold className="w-3.5 h-3.5" />
@@ -173,7 +173,7 @@ export const DocumentToolbar: React.FC<DocumentToolbarProps> = ({
               'p-1.5 rounded-lg transition-colors',
               editor.isActive('italic')
                 ? 'bg-artemis-accent/15 text-artemis-accent border border-artemis-accent/30'
-                : 'text-slate-400 hover:text-slate-100 hover:bg-slate-800'
+                : 'text-zinc-400 hover:text-zinc-100 hover:bg-zinc-800'
             )}
           >
             <Italic className="w-3.5 h-3.5" />
@@ -187,7 +187,7 @@ export const DocumentToolbar: React.FC<DocumentToolbarProps> = ({
               'p-1.5 rounded-lg transition-colors',
               editor.isActive('underline')
                 ? 'bg-artemis-accent/15 text-artemis-accent border border-artemis-accent/30'
-                : 'text-slate-400 hover:text-slate-100 hover:bg-slate-800'
+                : 'text-zinc-400 hover:text-zinc-100 hover:bg-zinc-800'
             )}
           >
             <UnderlineIcon className="w-3.5 h-3.5" />
@@ -201,7 +201,7 @@ export const DocumentToolbar: React.FC<DocumentToolbarProps> = ({
               'p-1.5 rounded-lg transition-colors',
               editor.isActive('strike')
                 ? 'bg-artemis-accent/15 text-artemis-accent border border-artemis-accent/30'
-                : 'text-slate-400 hover:text-slate-100 hover:bg-slate-800'
+                : 'text-zinc-400 hover:text-zinc-100 hover:bg-zinc-800'
             )}
           >
             <Strikethrough className="w-3.5 h-3.5" />
@@ -214,14 +214,14 @@ export const DocumentToolbar: React.FC<DocumentToolbarProps> = ({
             className={clsx(
               'p-1.5 rounded-lg transition-colors',
               editor.isActive('highlight')
-                ? 'bg-amber-400/20 text-amber-300 border border-amber-400/40'
-                : 'text-slate-400 hover:text-slate-100 hover:bg-slate-800'
+                ? 'bg-bronze-400/20 text-bronze-300 border border-bronze-400/40'
+                : 'text-zinc-400 hover:text-zinc-100 hover:bg-zinc-800'
             )}
           >
             <Highlighter className="w-3.5 h-3.5" />
           </button>
 
-          <div className="w-px h-5 bg-slate-800 mx-1" />
+          <div className="w-px h-5 bg-zinc-800 mx-1" />
 
           {/* Alignment */}
           <button
@@ -232,7 +232,7 @@ export const DocumentToolbar: React.FC<DocumentToolbarProps> = ({
               'p-1.5 rounded-lg transition-colors',
               editor.isActive({ textAlign: 'left' })
                 ? 'bg-artemis-accent/15 text-artemis-accent border border-artemis-accent/30'
-                : 'text-slate-400 hover:text-slate-100 hover:bg-slate-800'
+                : 'text-zinc-400 hover:text-zinc-100 hover:bg-zinc-800'
             )}
           >
             <AlignLeft className="w-3.5 h-3.5" />
@@ -246,7 +246,7 @@ export const DocumentToolbar: React.FC<DocumentToolbarProps> = ({
               'p-1.5 rounded-lg transition-colors',
               editor.isActive({ textAlign: 'center' })
                 ? 'bg-artemis-accent/15 text-artemis-accent border border-artemis-accent/30'
-                : 'text-slate-400 hover:text-slate-100 hover:bg-slate-800'
+                : 'text-zinc-400 hover:text-zinc-100 hover:bg-zinc-800'
             )}
           >
             <AlignCenter className="w-3.5 h-3.5" />
@@ -260,13 +260,13 @@ export const DocumentToolbar: React.FC<DocumentToolbarProps> = ({
               'p-1.5 rounded-lg transition-colors',
               editor.isActive({ textAlign: 'right' })
                 ? 'bg-artemis-accent/15 text-artemis-accent border border-artemis-accent/30'
-                : 'text-slate-400 hover:text-slate-100 hover:bg-slate-800'
+                : 'text-zinc-400 hover:text-zinc-100 hover:bg-zinc-800'
             )}
           >
             <AlignRight className="w-3.5 h-3.5" />
           </button>
 
-          <div className="w-px h-5 bg-slate-800 mx-1" />
+          <div className="w-px h-5 bg-zinc-800 mx-1" />
 
           {/* Lists & Quote & Horizontal Rule */}
           <button
@@ -277,7 +277,7 @@ export const DocumentToolbar: React.FC<DocumentToolbarProps> = ({
               'p-1.5 rounded-lg transition-colors',
               editor.isActive('bulletList')
                 ? 'bg-artemis-accent/15 text-artemis-accent border border-artemis-accent/30'
-                : 'text-slate-400 hover:text-slate-100 hover:bg-slate-800'
+                : 'text-zinc-400 hover:text-zinc-100 hover:bg-zinc-800'
             )}
           >
             <List className="w-3.5 h-3.5" />
@@ -291,7 +291,7 @@ export const DocumentToolbar: React.FC<DocumentToolbarProps> = ({
               'p-1.5 rounded-lg transition-colors',
               editor.isActive('orderedList')
                 ? 'bg-artemis-accent/15 text-artemis-accent border border-artemis-accent/30'
-                : 'text-slate-400 hover:text-slate-100 hover:bg-slate-800'
+                : 'text-zinc-400 hover:text-zinc-100 hover:bg-zinc-800'
             )}
           >
             <ListOrdered className="w-3.5 h-3.5" />
@@ -305,7 +305,7 @@ export const DocumentToolbar: React.FC<DocumentToolbarProps> = ({
               'p-1.5 rounded-lg transition-colors',
               editor.isActive('blockquote')
                 ? 'bg-artemis-accent/15 text-artemis-accent border border-artemis-accent/30'
-                : 'text-slate-400 hover:text-slate-100 hover:bg-slate-800'
+                : 'text-zinc-400 hover:text-zinc-100 hover:bg-zinc-800'
             )}
           >
             <Quote className="w-3.5 h-3.5" />
@@ -315,12 +315,12 @@ export const DocumentToolbar: React.FC<DocumentToolbarProps> = ({
             type="button"
             onClick={() => editor.chain().focus().setHorizontalRule().run()}
             title="Horizontal Divider"
-            className="p-1.5 rounded-lg text-slate-400 hover:text-slate-100 hover:bg-slate-800 transition-colors"
+            className="p-1.5 rounded-lg text-zinc-400 hover:text-zinc-100 hover:bg-zinc-800 transition-colors"
           >
             <Minus className="w-3.5 h-3.5" />
           </button>
 
-          <div className="w-px h-5 bg-slate-800 mx-1" />
+          <div className="w-px h-5 bg-zinc-800 mx-1" />
 
           {/* Hyperlinks, Tables, Images */}
           <button
@@ -330,8 +330,8 @@ export const DocumentToolbar: React.FC<DocumentToolbarProps> = ({
             className={clsx(
               'p-1.5 rounded-lg transition-colors',
               editor.isActive('link')
-                ? 'bg-sky-500/20 text-sky-400 border border-sky-500/30'
-                : 'text-slate-400 hover:text-slate-100 hover:bg-slate-800'
+                ? 'bg-silver-500/20 text-silver-400 border border-silver-500/30'
+                : 'text-zinc-400 hover:text-zinc-100 hover:bg-zinc-800'
             )}
           >
             <Link2 className="w-3.5 h-3.5" />
@@ -343,7 +343,7 @@ export const DocumentToolbar: React.FC<DocumentToolbarProps> = ({
             type="button"
             onClick={() => setIsImageModalOpen(true)}
             title="Insert Image"
-            className="p-1.5 rounded-lg text-slate-400 hover:text-slate-100 hover:bg-slate-800 transition-colors"
+            className="p-1.5 rounded-lg text-zinc-400 hover:text-zinc-100 hover:bg-zinc-800 transition-colors"
           >
             <ImageIcon className="w-3.5 h-3.5" />
           </button>
@@ -356,7 +356,7 @@ export const DocumentToolbar: React.FC<DocumentToolbarProps> = ({
               type="button"
               onClick={onPrint}
               title="Print Document"
-              className="p-1.5 rounded-lg text-slate-400 hover:text-slate-100 hover:bg-slate-800 transition-colors"
+              className="p-1.5 rounded-lg text-zinc-400 hover:text-zinc-100 hover:bg-zinc-800 transition-colors"
             >
               <Printer className="w-3.5 h-3.5" />
             </button>
@@ -367,7 +367,7 @@ export const DocumentToolbar: React.FC<DocumentToolbarProps> = ({
               type="button"
               onClick={onExportPDF}
               title="Export as PDF"
-              className="p-1.5 rounded-lg text-slate-400 hover:text-cyan-300 hover:bg-cyan-950/40 transition-colors"
+              className="p-1.5 rounded-lg text-zinc-400 hover:text-silver-300 hover:bg-silver-950/40 transition-colors"
             >
               <FileDown className="w-3.5 h-3.5 text-artemis-accent" />
             </button>

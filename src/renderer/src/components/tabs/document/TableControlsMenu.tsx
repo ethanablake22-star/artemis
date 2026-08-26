@@ -44,14 +44,14 @@ export const TableControlsMenu: React.FC<TableControlsMenuProps> = ({ editor }) 
           'p-1.5 rounded-lg transition-colors flex items-center gap-1 text-xs font-medium',
           isTableActive
             ? 'bg-artemis-accent/15 text-artemis-accent border border-artemis-accent/30'
-            : 'text-slate-400 hover:text-slate-100 hover:bg-slate-800'
+            : 'text-zinc-400 hover:text-zinc-100 hover:bg-zinc-800'
         )}
       >
         <TableIcon className="w-3.5 h-3.5" />
       </button>
 
       {isOpen && (
-        <div className="absolute left-0 mt-1 w-52 rounded-xl bg-artemis-900 border border-slate-700/80 shadow-2xl py-1.5 z-40 animate-fadeIn">
+        <div className="absolute left-0 mt-1 w-52 rounded-xl bg-artemis-900 border border-zinc-700/80 shadow-2xl py-1.5 z-40 animate-fadeIn">
           {!isTableActive ? (
             <button
               type="button"
@@ -59,14 +59,14 @@ export const TableControlsMenu: React.FC<TableControlsMenuProps> = ({ editor }) 
                 editor.chain().focus().insertTable({ rows: 3, cols: 3, withHeaderRow: true }).run();
                 setIsOpen(false);
               }}
-              className="w-full flex items-center gap-2 px-3 py-1.5 text-xs text-slate-200 hover:text-slate-100 hover:bg-slate-800 transition-colors text-left"
+              className="w-full flex items-center gap-2 px-3 py-1.5 text-xs text-zinc-200 hover:text-zinc-100 hover:bg-zinc-800 transition-colors text-left"
             >
               <Plus className="w-3.5 h-3.5 text-artemis-accent" />
               <span>Insert 3×3 Table</span>
             </button>
           ) : (
             <>
-              <div className="px-3 py-1 text-[10px] uppercase font-mono text-slate-500 font-bold">
+              <div className="px-3 py-1 text-[10px] uppercase font-mono text-zinc-500 font-bold">
                 Table Options
               </div>
 
@@ -76,9 +76,9 @@ export const TableControlsMenu: React.FC<TableControlsMenuProps> = ({ editor }) 
                   editor.chain().focus().addRowBefore().run();
                   setIsOpen(false);
                 }}
-                className="w-full flex items-center gap-2 px-3 py-1.5 text-xs text-slate-200 hover:text-slate-100 hover:bg-slate-800 transition-colors text-left"
+                className="w-full flex items-center gap-2 px-3 py-1.5 text-xs text-zinc-200 hover:text-zinc-100 hover:bg-zinc-800 transition-colors text-left"
               >
-                <Rows className="w-3.5 h-3.5 text-slate-400" />
+                <Rows className="w-3.5 h-3.5 text-zinc-400" />
                 <span>Add Row Above</span>
               </button>
 
@@ -88,9 +88,9 @@ export const TableControlsMenu: React.FC<TableControlsMenuProps> = ({ editor }) 
                   editor.chain().focus().addRowAfter().run();
                   setIsOpen(false);
                 }}
-                className="w-full flex items-center gap-2 px-3 py-1.5 text-xs text-slate-200 hover:text-slate-100 hover:bg-slate-800 transition-colors text-left"
+                className="w-full flex items-center gap-2 px-3 py-1.5 text-xs text-zinc-200 hover:text-zinc-100 hover:bg-zinc-800 transition-colors text-left"
               >
-                <Rows className="w-3.5 h-3.5 text-slate-400" />
+                <Rows className="w-3.5 h-3.5 text-zinc-400" />
                 <span>Add Row Below</span>
               </button>
 
@@ -106,7 +106,7 @@ export const TableControlsMenu: React.FC<TableControlsMenuProps> = ({ editor }) 
                 <span>Delete Row</span>
               </button>
 
-              <div className="w-full h-px bg-slate-800 my-1" />
+              <div className="w-full h-px bg-zinc-800 my-1" />
 
               <button
                 type="button"
@@ -114,9 +114,9 @@ export const TableControlsMenu: React.FC<TableControlsMenuProps> = ({ editor }) 
                   editor.chain().focus().addColumnBefore().run();
                   setIsOpen(false);
                 }}
-                className="w-full flex items-center gap-2 px-3 py-1.5 text-xs text-slate-200 hover:text-slate-100 hover:bg-slate-800 transition-colors text-left"
+                className="w-full flex items-center gap-2 px-3 py-1.5 text-xs text-zinc-200 hover:text-zinc-100 hover:bg-zinc-800 transition-colors text-left"
               >
-                <Columns className="w-3.5 h-3.5 text-slate-400" />
+                <Columns className="w-3.5 h-3.5 text-zinc-400" />
                 <span>Add Column Left</span>
               </button>
 
@@ -126,9 +126,9 @@ export const TableControlsMenu: React.FC<TableControlsMenuProps> = ({ editor }) 
                   editor.chain().focus().addColumnAfter().run();
                   setIsOpen(false);
                 }}
-                className="w-full flex items-center gap-2 px-3 py-1.5 text-xs text-slate-200 hover:text-slate-100 hover:bg-slate-800 transition-colors text-left"
+                className="w-full flex items-center gap-2 px-3 py-1.5 text-xs text-zinc-200 hover:text-zinc-100 hover:bg-zinc-800 transition-colors text-left"
               >
-                <Columns className="w-3.5 h-3.5 text-slate-400" />
+                <Columns className="w-3.5 h-3.5 text-zinc-400" />
                 <span>Add Column Right</span>
               </button>
 
@@ -144,7 +144,7 @@ export const TableControlsMenu: React.FC<TableControlsMenuProps> = ({ editor }) 
                 <span>Delete Column</span>
               </button>
 
-              <div className="w-full h-px bg-slate-800 my-1" />
+              <div className="w-full h-px bg-zinc-800 my-1" />
 
               <button
                 type="button"
@@ -152,9 +152,9 @@ export const TableControlsMenu: React.FC<TableControlsMenuProps> = ({ editor }) 
                   editor.chain().focus().toggleHeaderRow().run();
                   setIsOpen(false);
                 }}
-                className="w-full flex items-center gap-2 px-3 py-1.5 text-xs text-slate-200 hover:text-slate-100 hover:bg-slate-800 transition-colors text-left"
+                className="w-full flex items-center gap-2 px-3 py-1.5 text-xs text-zinc-200 hover:text-zinc-100 hover:bg-zinc-800 transition-colors text-left"
               >
-                <ToggleLeft className="w-3.5 h-3.5 text-slate-400" />
+                <ToggleLeft className="w-3.5 h-3.5 text-zinc-400" />
                 <span>Toggle Header Row</span>
               </button>
 

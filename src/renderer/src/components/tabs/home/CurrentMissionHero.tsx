@@ -18,14 +18,14 @@ import { formatDateInZone, formatTimeInZone } from '@shared/scheduleUtils';
 import clsx from 'clsx';
 
 const WO_STATUS_CONFIG: Record<string, { label: string; bg: string; text: string; border: string }> = {
-  open: { label: 'Open', bg: 'bg-blue-500/10', text: 'text-blue-400', border: 'border-blue-500/30' },
+  open: { label: 'Open', bg: 'bg-silver-500/10', text: 'text-silver-400', border: 'border-silver-500/30' },
   diagnosing: { label: 'Diagnosing', bg: 'bg-purple-500/10', text: 'text-purple-400', border: 'border-purple-500/30' },
-  awaiting_approval: { label: 'Awaiting Approval', bg: 'bg-amber-500/10', text: 'text-amber-400', border: 'border-amber-500/30' },
+  awaiting_approval: { label: 'Awaiting Approval', bg: 'bg-bronze-500/10', text: 'text-bronze-400', border: 'border-bronze-500/30' },
   waiting_parts: { label: 'Waiting on Parts', bg: 'bg-orange-500/10', text: 'text-orange-400', border: 'border-orange-500/30' },
-  in_progress: { label: 'In Progress', bg: 'bg-emerald-500/10', text: 'text-emerald-400', border: 'border-emerald-500/30' },
-  completed: { label: 'Completed', bg: 'bg-slate-500/10', text: 'text-slate-400', border: 'border-slate-500/30' },
+  in_progress: { label: 'In Progress', bg: 'bg-bronze-500/10', text: 'text-bronze-400', border: 'border-bronze-500/30' },
+  completed: { label: 'Completed', bg: 'bg-zinc-500/10', text: 'text-zinc-400', border: 'border-zinc-500/30' },
   cancelled: { label: 'Cancelled', bg: 'bg-red-500/10', text: 'text-red-400', border: 'border-red-500/30' },
-  draft: { label: 'Draft', bg: 'bg-slate-500/10', text: 'text-slate-400', border: 'border-slate-500/30' },
+  draft: { label: 'Draft', bg: 'bg-zinc-500/10', text: 'text-zinc-400', border: 'border-zinc-500/30' },
 };
 
 export const CurrentMissionHero: React.FC = () => {
@@ -37,28 +37,28 @@ export const CurrentMissionHero: React.FC = () => {
 
   if (!currentMission) {
     return (
-      <div className="bg-gradient-to-br from-artemis-900 to-artemis-950 border border-slate-800 rounded-2xl p-6 shadow-xl relative overflow-hidden">
+      <div className="bg-gradient-to-br from-artemis-900 to-artemis-950 border border-zinc-800 rounded-2xl p-6 shadow-xl relative overflow-hidden">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-amber-500/10 border border-amber-500/20 text-amber-400 flex items-center justify-center shrink-0">
+            <div className="w-10 h-10 rounded-xl bg-bronze-500/10 border border-bronze-500/20 text-bronze-400 flex items-center justify-center shrink-0">
               <Target className="w-5 h-5" />
             </div>
             <div>
               <div className="flex items-center gap-2">
-                <span className="text-xs font-mono font-bold uppercase tracking-wider text-amber-400">
+                <span className="text-xs font-mono font-bold uppercase tracking-wider text-bronze-400">
                   Current Mission
                 </span>
-                <span className="text-[10px] text-slate-500 font-medium px-2 py-0.5 rounded bg-slate-800 border border-slate-700">
+                <span className="text-[10px] text-zinc-500 font-medium px-2 py-0.5 rounded bg-zinc-800 border border-zinc-700">
                   Unassigned
                 </span>
               </div>
-              <h2 className="text-base font-bold text-slate-200 mt-0.5">
+              <h2 className="text-base font-bold text-zinc-200 mt-0.5">
                 No active mission set
               </h2>
             </div>
           </div>
-          <p className="text-xs text-slate-400 max-w-md hidden md:block text-right">
-            Open any Work Order, appointment, or document and click <strong className="text-amber-300">Set as Current Mission</strong> to lock your cockpit focus.
+          <p className="text-xs text-zinc-400 max-w-md hidden md:block text-right">
+            Open any Work Order, appointment, or document and click <strong className="text-bronze-300">Set as Current Mission</strong> to lock your cockpit focus.
           </p>
         </div>
       </div>
@@ -72,16 +72,16 @@ export const CurrentMissionHero: React.FC = () => {
 
     if (isArchived) {
       return (
-        <div className="bg-artemis-900 border border-amber-500/30 rounded-2xl p-6 shadow-xl flex items-center justify-between">
+        <div className="bg-artemis-900 border border-bronze-500/30 rounded-2xl p-6 shadow-xl flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-amber-500/10 border border-amber-500/20 text-amber-400 flex items-center justify-center shrink-0">
+            <div className="w-10 h-10 rounded-xl bg-bronze-500/10 border border-bronze-500/20 text-bronze-400 flex items-center justify-center shrink-0">
               <AlertTriangle className="w-5 h-5" />
             </div>
             <div>
-              <div className="text-xs font-mono font-bold uppercase tracking-wider text-amber-400">
+              <div className="text-xs font-mono font-bold uppercase tracking-wider text-bronze-400">
                 Current Mission · Work Order
               </div>
-              <h2 className="text-sm font-bold text-slate-200 mt-0.5">
+              <h2 className="text-sm font-bold text-zinc-200 mt-0.5">
                 Referenced Work Order is archived or deleted
               </h2>
             </div>
@@ -89,7 +89,7 @@ export const CurrentMissionHero: React.FC = () => {
           <button
             type="button"
             onClick={() => clearCurrentMission()}
-            className="px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-xs font-bold text-slate-300 border border-slate-700 transition-colors flex items-center gap-1.5"
+            className="px-3 py-1.5 rounded-lg bg-zinc-800 hover:bg-zinc-700 text-xs font-bold text-zinc-300 border border-zinc-700 transition-colors flex items-center gap-1.5"
           >
             <X className="w-3.5 h-3.5" />
             Clear Mission
@@ -101,19 +101,19 @@ export const CurrentMissionHero: React.FC = () => {
     const statusStyle = WO_STATUS_CONFIG[workOrder.status] || WO_STATUS_CONFIG.open;
 
     return (
-      <div className="bg-gradient-to-br from-artemis-900 via-artemis-900 to-artemis-950 border border-amber-500/30 rounded-2xl p-6 shadow-xl relative overflow-hidden group">
+      <div className="bg-gradient-to-br from-artemis-900 via-artemis-900 to-artemis-950 border border-bronze-500/30 rounded-2xl p-6 shadow-xl relative overflow-hidden group">
         {/* Glow accent */}
-        <div className="absolute top-0 right-0 w-96 h-96 bg-amber-500/5 rounded-full blur-3xl pointer-events-none" />
+        <div className="absolute top-0 right-0 w-96 h-96 bg-bronze-500/5 rounded-full blur-3xl pointer-events-none" />
 
         <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-6">
           <div className="min-w-0 flex-1">
             <div className="flex items-center gap-2 mb-2">
-              <span className="text-[11px] font-mono font-bold uppercase tracking-wider text-amber-400 flex items-center gap-1.5">
+              <span className="text-[11px] font-mono font-bold uppercase tracking-wider text-bronze-400 flex items-center gap-1.5">
                 <Target className="w-3.5 h-3.5" />
                 Current Mission
               </span>
-              <span className="text-[11px] font-mono text-slate-500">•</span>
-              <span className="text-[11px] font-mono font-bold text-slate-400">
+              <span className="text-[11px] font-mono text-zinc-500">•</span>
+              <span className="text-[11px] font-mono font-bold text-zinc-400">
                 {workOrder.workOrderNumber}
               </span>
               <span
@@ -128,21 +128,21 @@ export const CurrentMissionHero: React.FC = () => {
               </span>
             </div>
 
-            <h2 className="text-xl font-extrabold text-slate-100 tracking-tight truncate flex items-center gap-2">
-              <Car className="w-5 h-5 text-slate-400 shrink-0" />
+            <h2 className="text-xl font-extrabold text-zinc-100 tracking-tight truncate flex items-center gap-2">
+              <Car className="w-5 h-5 text-zinc-400 shrink-0" />
               <span>{workOrder.vehicleDescriptionSnapshot}</span>
             </h2>
 
             {workOrder.customerConcern && (
-              <div className="mt-2.5 text-xs text-slate-300 bg-artemis-950/60 border border-slate-800 rounded-xl px-3.5 py-2 max-w-3xl line-clamp-2">
-                <span className="text-slate-500 font-medium mr-1.5 font-mono uppercase text-[10px]">Concern:</span>
+              <div className="mt-2.5 text-xs text-zinc-300 bg-artemis-950/60 border border-zinc-800 rounded-xl px-3.5 py-2 max-w-3xl line-clamp-2">
+                <span className="text-zinc-500 font-medium mr-1.5 font-mono uppercase text-[10px]">Concern:</span>
                 {workOrder.customerConcern}
               </div>
             )}
 
-            <div className="mt-3 flex items-center gap-4 text-xs font-mono text-slate-400">
+            <div className="mt-3 flex items-center gap-4 text-xs font-mono text-zinc-400">
               {workOrder.customerNameSnapshot && (
-                <span>Customer: <strong className="text-slate-200">{workOrder.customerNameSnapshot}</strong></span>
+                <span>Customer: <strong className="text-zinc-200">{workOrder.customerNameSnapshot}</strong></span>
               )}
               <span>Opened: {new Date(workOrder.openedAt).toLocaleDateString()}</span>
             </div>
@@ -152,7 +152,7 @@ export const CurrentMissionHero: React.FC = () => {
             <button
               type="button"
               onClick={() => openWorkOrderTab(workOrder.id, workOrder.workOrderNumber)}
-              className="px-4 py-2.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold text-xs flex items-center gap-2 shadow-lg shadow-amber-500/20 transition-all cursor-pointer"
+              className="px-4 py-2.5 rounded-xl bg-bronze-500 hover:bg-bronze-400 text-zinc-950 font-bold text-xs flex items-center gap-2 shadow-lg shadow-bronze-500/20 transition-all cursor-pointer"
             >
               <span>Open Work Order</span>
               <ArrowRight className="w-4 h-4" />
@@ -161,7 +161,7 @@ export const CurrentMissionHero: React.FC = () => {
               type="button"
               onClick={() => clearCurrentMission()}
               title="Clear Current Mission"
-              className="p-2.5 rounded-xl bg-slate-800/80 hover:bg-slate-700 text-slate-400 hover:text-slate-200 border border-slate-700 transition-colors"
+              className="p-2.5 rounded-xl bg-zinc-800/80 hover:bg-zinc-700 text-zinc-400 hover:text-zinc-200 border border-zinc-700 transition-colors"
             >
               <X className="w-4 h-4" />
             </button>
@@ -178,16 +178,16 @@ export const CurrentMissionHero: React.FC = () => {
 
     if (isArchived) {
       return (
-        <div className="bg-artemis-900 border border-amber-500/30 rounded-2xl p-6 shadow-xl flex items-center justify-between">
+        <div className="bg-artemis-900 border border-bronze-500/30 rounded-2xl p-6 shadow-xl flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-amber-500/10 border border-amber-500/20 text-amber-400 flex items-center justify-center shrink-0">
+            <div className="w-10 h-10 rounded-xl bg-bronze-500/10 border border-bronze-500/20 text-bronze-400 flex items-center justify-center shrink-0">
               <AlertTriangle className="w-5 h-5" />
             </div>
             <div>
-              <div className="text-xs font-mono font-bold uppercase tracking-wider text-amber-400">
+              <div className="text-xs font-mono font-bold uppercase tracking-wider text-bronze-400">
                 Current Mission · Schedule Event
               </div>
-              <h2 className="text-sm font-bold text-slate-200 mt-0.5">
+              <h2 className="text-sm font-bold text-zinc-200 mt-0.5">
                 Referenced Appointment is archived or deleted
               </h2>
             </div>
@@ -195,7 +195,7 @@ export const CurrentMissionHero: React.FC = () => {
           <button
             type="button"
             onClick={() => clearCurrentMission()}
-            className="px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-xs font-bold text-slate-300 border border-slate-700 transition-colors flex items-center gap-1.5"
+            className="px-3 py-1.5 rounded-lg bg-zinc-800 hover:bg-zinc-700 text-xs font-bold text-zinc-300 border border-zinc-700 transition-colors flex items-center gap-1.5"
           >
             <X className="w-3.5 h-3.5" />
             Clear Mission
@@ -210,18 +210,18 @@ export const CurrentMissionHero: React.FC = () => {
     const dateString = formatDateInZone(event.startAt, event.timeZone);
 
     return (
-      <div className="bg-gradient-to-br from-artemis-900 via-artemis-900 to-artemis-950 border border-amber-500/30 rounded-2xl p-6 shadow-xl relative overflow-hidden group">
-        <div className="absolute top-0 right-0 w-96 h-96 bg-amber-500/5 rounded-full blur-3xl pointer-events-none" />
+      <div className="bg-gradient-to-br from-artemis-900 via-artemis-900 to-artemis-950 border border-bronze-500/30 rounded-2xl p-6 shadow-xl relative overflow-hidden group">
+        <div className="absolute top-0 right-0 w-96 h-96 bg-bronze-500/5 rounded-full blur-3xl pointer-events-none" />
 
         <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-6">
           <div className="min-w-0 flex-1">
             <div className="flex items-center gap-2 mb-2">
-              <span className="text-[11px] font-mono font-bold uppercase tracking-wider text-amber-400 flex items-center gap-1.5">
+              <span className="text-[11px] font-mono font-bold uppercase tracking-wider text-bronze-400 flex items-center gap-1.5">
                 <Target className="w-3.5 h-3.5" />
                 Current Mission
               </span>
-              <span className="text-[11px] font-mono text-slate-500">•</span>
-              <span className="text-[11px] font-mono font-bold text-slate-400">
+              <span className="text-[11px] font-mono text-zinc-500">•</span>
+              <span className="text-[11px] font-mono font-bold text-zinc-400">
                 {event.eventNumber}
               </span>
               <span className="text-[10px] font-bold uppercase px-2 py-0.5 rounded bg-rose-500/10 text-rose-400 border border-rose-500/30">
@@ -229,22 +229,22 @@ export const CurrentMissionHero: React.FC = () => {
               </span>
             </div>
 
-            <h2 className="text-xl font-extrabold text-slate-100 tracking-tight truncate flex items-center gap-2">
+            <h2 className="text-xl font-extrabold text-zinc-100 tracking-tight truncate flex items-center gap-2">
               <Calendar className="w-5 h-5 text-rose-400 shrink-0" />
               <span>{event.title}</span>
             </h2>
 
-            <div className="mt-2.5 flex items-center gap-3 text-xs text-slate-300 font-mono">
-              <span className="flex items-center gap-1 text-slate-200">
-                <Clock className="w-3.5 h-3.5 text-slate-400" />
+            <div className="mt-2.5 flex items-center gap-3 text-xs text-zinc-300 font-mono">
+              <span className="flex items-center gap-1 text-zinc-200">
+                <Clock className="w-3.5 h-3.5 text-zinc-400" />
                 {dateString} • {timeString}
               </span>
               <span>({event.timeZone})</span>
             </div>
 
             {event.notes && (
-              <div className="mt-2.5 text-xs text-slate-300 bg-artemis-950/60 border border-slate-800 rounded-xl px-3.5 py-2 max-w-3xl line-clamp-2">
-                <span className="text-slate-500 font-medium mr-1.5 font-mono uppercase text-[10px]">Notes:</span>
+              <div className="mt-2.5 text-xs text-zinc-300 bg-artemis-950/60 border border-zinc-800 rounded-xl px-3.5 py-2 max-w-3xl line-clamp-2">
+                <span className="text-zinc-500 font-medium mr-1.5 font-mono uppercase text-[10px]">Notes:</span>
                 {event.notes}
               </div>
             )}
@@ -254,7 +254,7 @@ export const CurrentMissionHero: React.FC = () => {
             <button
               type="button"
               onClick={() => openScheduleEventTab(event.id, event.title)}
-              className="px-4 py-2.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold text-xs flex items-center gap-2 shadow-lg shadow-amber-500/20 transition-all cursor-pointer"
+              className="px-4 py-2.5 rounded-xl bg-bronze-500 hover:bg-bronze-400 text-zinc-950 font-bold text-xs flex items-center gap-2 shadow-lg shadow-bronze-500/20 transition-all cursor-pointer"
             >
               <span>Open Appointment</span>
               <ArrowRight className="w-4 h-4" />
@@ -263,7 +263,7 @@ export const CurrentMissionHero: React.FC = () => {
               type="button"
               onClick={() => clearCurrentMission()}
               title="Clear Current Mission"
-              className="p-2.5 rounded-xl bg-slate-800/80 hover:bg-slate-700 text-slate-400 hover:text-slate-200 border border-slate-700 transition-colors"
+              className="p-2.5 rounded-xl bg-zinc-800/80 hover:bg-zinc-700 text-zinc-400 hover:text-zinc-200 border border-zinc-700 transition-colors"
             >
               <X className="w-4 h-4" />
             </button>
@@ -280,16 +280,16 @@ export const CurrentMissionHero: React.FC = () => {
 
     if (isArchived) {
       return (
-        <div className="bg-artemis-900 border border-amber-500/30 rounded-2xl p-6 shadow-xl flex items-center justify-between">
+        <div className="bg-artemis-900 border border-bronze-500/30 rounded-2xl p-6 shadow-xl flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-amber-500/10 border border-amber-500/20 text-amber-400 flex items-center justify-center shrink-0">
+            <div className="w-10 h-10 rounded-xl bg-bronze-500/10 border border-bronze-500/20 text-bronze-400 flex items-center justify-center shrink-0">
               <AlertTriangle className="w-5 h-5" />
             </div>
             <div>
-              <div className="text-xs font-mono font-bold uppercase tracking-wider text-amber-400">
+              <div className="text-xs font-mono font-bold uppercase tracking-wider text-bronze-400">
                 Current Mission · Document
               </div>
-              <h2 className="text-sm font-bold text-slate-200 mt-0.5">
+              <h2 className="text-sm font-bold text-zinc-200 mt-0.5">
                 Referenced Document is archived or deleted
               </h2>
             </div>
@@ -297,7 +297,7 @@ export const CurrentMissionHero: React.FC = () => {
           <button
             type="button"
             onClick={() => clearCurrentMission()}
-            className="px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-xs font-bold text-slate-300 border border-slate-700 transition-colors flex items-center gap-1.5"
+            className="px-3 py-1.5 rounded-lg bg-zinc-800 hover:bg-zinc-700 text-xs font-bold text-zinc-300 border border-zinc-700 transition-colors flex items-center gap-1.5"
           >
             <X className="w-3.5 h-3.5" />
             Clear Mission
@@ -307,28 +307,28 @@ export const CurrentMissionHero: React.FC = () => {
     }
 
     return (
-      <div className="bg-gradient-to-br from-artemis-900 via-artemis-900 to-artemis-950 border border-amber-500/30 rounded-2xl p-6 shadow-xl relative overflow-hidden group">
-        <div className="absolute top-0 right-0 w-96 h-96 bg-amber-500/5 rounded-full blur-3xl pointer-events-none" />
+      <div className="bg-gradient-to-br from-artemis-900 via-artemis-900 to-artemis-950 border border-bronze-500/30 rounded-2xl p-6 shadow-xl relative overflow-hidden group">
+        <div className="absolute top-0 right-0 w-96 h-96 bg-bronze-500/5 rounded-full blur-3xl pointer-events-none" />
 
         <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-6">
           <div className="min-w-0 flex-1">
             <div className="flex items-center gap-2 mb-2">
-              <span className="text-[11px] font-mono font-bold uppercase tracking-wider text-amber-400 flex items-center gap-1.5">
+              <span className="text-[11px] font-mono font-bold uppercase tracking-wider text-bronze-400 flex items-center gap-1.5">
                 <Target className="w-3.5 h-3.5" />
                 Current Mission
               </span>
-              <span className="text-[11px] font-mono text-slate-500">•</span>
-              <span className="text-[10px] font-bold uppercase px-2 py-0.5 rounded bg-indigo-500/10 text-indigo-400 border border-indigo-500/30">
+              <span className="text-[11px] font-mono text-zinc-500">•</span>
+              <span className="text-[10px] font-bold uppercase px-2 py-0.5 rounded bg-silver-500/10 text-silver-400 border border-silver-500/30">
                 Artemis Document
               </span>
             </div>
 
-            <h2 className="text-xl font-extrabold text-slate-100 tracking-tight truncate flex items-center gap-2">
-              <FileText className="w-5 h-5 text-indigo-400 shrink-0" />
+            <h2 className="text-xl font-extrabold text-zinc-100 tracking-tight truncate flex items-center gap-2">
+              <FileText className="w-5 h-5 text-silver-400 shrink-0" />
               <span>{doc.name}</span>
             </h2>
 
-            <div className="mt-2 flex items-center gap-4 text-xs font-mono text-slate-400">
+            <div className="mt-2 flex items-center gap-4 text-xs font-mono text-zinc-400">
               <span>Updated: {new Date(doc.updatedAt).toLocaleString()}</span>
             </div>
           </div>
@@ -337,7 +337,7 @@ export const CurrentMissionHero: React.FC = () => {
             <button
               type="button"
               onClick={() => openDocumentTab(doc.id, doc.name)}
-              className="px-4 py-2.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold text-xs flex items-center gap-2 shadow-lg shadow-amber-500/20 transition-all cursor-pointer"
+              className="px-4 py-2.5 rounded-xl bg-bronze-500 hover:bg-bronze-400 text-zinc-950 font-bold text-xs flex items-center gap-2 shadow-lg shadow-bronze-500/20 transition-all cursor-pointer"
             >
               <span>Open Document</span>
               <ArrowRight className="w-4 h-4" />
@@ -346,7 +346,7 @@ export const CurrentMissionHero: React.FC = () => {
               type="button"
               onClick={() => clearCurrentMission()}
               title="Clear Current Mission"
-              className="p-2.5 rounded-xl bg-slate-800/80 hover:bg-slate-700 text-slate-400 hover:text-slate-200 border border-slate-700 transition-colors"
+              className="p-2.5 rounded-xl bg-zinc-800/80 hover:bg-zinc-700 text-zinc-400 hover:text-zinc-200 border border-zinc-700 transition-colors"
             >
               <X className="w-4 h-4" />
             </button>

@@ -40,14 +40,14 @@ export const ItemActionMenu: React.FC<ItemActionMenuProps> = ({
           e.stopPropagation();
           setIsOpen((prev) => !prev);
         }}
-        className="p-1 rounded-md text-slate-400 hover:text-slate-100 hover:bg-slate-800/80 transition-colors"
+        className="p-1 rounded-md text-zinc-400 hover:text-zinc-100 hover:bg-zinc-800/80 transition-colors"
         title="More actions"
       >
         <MoreVertical className="w-3.5 h-3.5" />
       </button>
 
       {isOpen && (
-        <div className="absolute right-0 mt-1 w-36 rounded-xl bg-artemis-900 border border-slate-700/80 shadow-2xl py-1 z-30 animate-fadeIn">
+        <div className="absolute right-0 mt-1 w-36 rounded-xl bg-artemis-900 border border-zinc-700/80 shadow-2xl py-1 z-30 animate-fadeIn">
           {item.type === 'folder' && onOpen && (
             <button
               type="button"
@@ -56,9 +56,9 @@ export const ItemActionMenu: React.FC<ItemActionMenuProps> = ({
                 setIsOpen(false);
                 onOpen(item);
               }}
-              className="w-full flex items-center gap-2 px-3 py-1.5 text-xs text-slate-200 hover:text-slate-100 hover:bg-slate-800 transition-colors text-left"
+              className="w-full flex items-center gap-2 px-3 py-1.5 text-xs text-zinc-200 hover:text-zinc-100 hover:bg-zinc-800 transition-colors text-left"
             >
-              <FolderOpen className="w-3.5 h-3.5 text-amber-400" />
+              <FolderOpen className="w-3.5 h-3.5 text-bronze-400" />
               <span>Open</span>
             </button>
           )}
@@ -71,9 +71,9 @@ export const ItemActionMenu: React.FC<ItemActionMenuProps> = ({
                 setIsOpen(false);
                 onOpenDocument(item);
               }}
-              className="w-full flex items-center gap-2 px-3 py-1.5 text-xs text-slate-200 hover:text-slate-100 hover:bg-slate-800 transition-colors text-left"
+              className="w-full flex items-center gap-2 px-3 py-1.5 text-xs text-zinc-200 hover:text-zinc-100 hover:bg-zinc-800 transition-colors text-left"
             >
-              <FileText className="w-3.5 h-3.5 text-indigo-400" />
+              <FileText className="w-3.5 h-3.5 text-silver-400" />
               <span>Open in Docs</span>
             </button>
           )}
@@ -85,9 +85,9 @@ export const ItemActionMenu: React.FC<ItemActionMenuProps> = ({
               setIsOpen(false);
               onRename(item);
             }}
-            className="w-full flex items-center gap-2 px-3 py-1.5 text-xs text-slate-200 hover:text-slate-100 hover:bg-slate-800 transition-colors text-left"
+            className="w-full flex items-center gap-2 px-3 py-1.5 text-xs text-zinc-200 hover:text-zinc-100 hover:bg-zinc-800 transition-colors text-left"
           >
-            <Edit2 className="w-3.5 h-3.5 text-cyan-400" />
+            <Edit2 className="w-3.5 h-3.5 text-silver-400" />
             <span>Rename</span>
           </button>
 

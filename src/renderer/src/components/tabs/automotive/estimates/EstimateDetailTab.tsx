@@ -397,15 +397,15 @@ export const EstimateDetailTab: React.FC<EstimateDetailTabProps> = ({ estimateId
 
   if (!estimate) {
     return (
-      <div className="flex flex-col items-center justify-center h-full p-8 text-center bg-slate-950">
-        <AlertTriangle className="w-12 h-12 text-amber-400 mb-3" />
+      <div className="flex flex-col items-center justify-center h-full p-8 text-center bg-zinc-950">
+        <AlertTriangle className="w-12 h-12 text-bronze-400 mb-3" />
         <h2 className="text-xl font-bold text-white mb-2">Estimate Not Found</h2>
-        <p className="text-slate-400 text-sm mb-4">
+        <p className="text-zinc-400 text-sm mb-4">
           This estimate may have been deleted or archived.
         </p>
         <button
           onClick={() => closeTab(activeTabId)}
-          className="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-white rounded-lg text-sm transition-colors"
+          className="px-4 py-2 bg-zinc-800 hover:bg-zinc-700 text-white rounded-lg text-sm transition-colors"
         >
           Close Tab
         </button>
@@ -417,22 +417,22 @@ export const EstimateDetailTab: React.FC<EstimateDetailTabProps> = ({ estimateId
     switch (status) {
       case 'draft':
         return (
-          <span className="px-2.5 py-1 rounded-full text-xs font-semibold bg-slate-800 text-slate-300 border border-slate-700 flex items-center space-x-1.5">
+          <span className="px-2.5 py-1 rounded-full text-xs font-semibold bg-zinc-800 text-zinc-300 border border-zinc-700 flex items-center space-x-1.5">
             <Clock className="w-3.5 h-3.5" />
             <span>Draft</span>
           </span>
         );
       case 'ready':
         return (
-          <span className="px-2.5 py-1 rounded-full text-xs font-semibold bg-blue-900/40 text-blue-300 border border-blue-700/50 flex items-center space-x-1.5">
+          <span className="px-2.5 py-1 rounded-full text-xs font-semibold bg-silver-900/40 text-silver-300 border border-silver-700/50 flex items-center space-x-1.5">
             <CheckCircle2 className="w-3.5 h-3.5" />
             <span>Ready for Review</span>
           </span>
         );
       case 'approved':
         return (
-          <span className="px-2.5 py-1 rounded-full text-xs font-bold bg-emerald-900/40 text-emerald-300 border border-emerald-700/50 flex items-center space-x-1.5">
-            <Lock className="w-3.5 h-3.5 text-emerald-400" />
+          <span className="px-2.5 py-1 rounded-full text-xs font-bold bg-bronze-900/40 text-bronze-300 border border-bronze-700/50 flex items-center space-x-1.5">
+            <Lock className="w-3.5 h-3.5 text-bronze-400" />
             <span>Approved</span>
           </span>
         );
@@ -445,7 +445,7 @@ export const EstimateDetailTab: React.FC<EstimateDetailTabProps> = ({ estimateId
         );
       case 'expired':
         return (
-          <span className="px-2.5 py-1 rounded-full text-xs font-semibold bg-amber-900/40 text-amber-300 border border-amber-700/50">
+          <span className="px-2.5 py-1 rounded-full text-xs font-semibold bg-bronze-900/40 text-bronze-300 border border-bronze-700/50">
             Expired
           </span>
         );
@@ -459,11 +459,11 @@ export const EstimateDetailTab: React.FC<EstimateDetailTabProps> = ({ estimateId
   };
 
   return (
-    <div className="h-full flex flex-col bg-slate-950 overflow-y-auto print:bg-white print:text-black">
+    <div className="h-full flex flex-col bg-zinc-950 overflow-y-auto print:bg-white print:text-black">
       {/* Header Bar */}
-      <div className="bg-slate-900 border-b border-slate-800 px-8 py-4 shrink-0 flex items-center justify-between print:hidden">
+      <div className="bg-zinc-900 border-b border-zinc-800 px-8 py-4 shrink-0 flex items-center justify-between print:hidden">
         <div className="flex items-center space-x-4">
-          <div className="p-2.5 bg-teal-500/10 rounded-xl text-teal-400 border border-teal-500/20">
+          <div className="p-2.5 bg-bronze-500/10 rounded-xl text-bronze-400 border border-bronze-500/20">
             <Calculator className="w-6 h-6" />
           </div>
           <div>
@@ -473,12 +473,12 @@ export const EstimateDetailTab: React.FC<EstimateDetailTabProps> = ({ estimateId
               </h1>
               {getStatusBadge(estimate.status)}
             </div>
-            <div className="flex items-center space-x-4 mt-1 text-xs text-slate-400">
+            <div className="flex items-center space-x-4 mt-1 text-xs text-zinc-400">
               <button
                 onClick={() =>
                   openWorkOrderTab(estimate.workOrderId, estimate.workOrderNumberSnapshot)
                 }
-                className="flex items-center space-x-1 hover:text-teal-300 transition-colors"
+                className="flex items-center space-x-1 hover:text-bronze-300 transition-colors"
               >
                 <ClipboardList className="w-3.5 h-3.5" />
                 <span className="font-semibold">{estimate.workOrderNumberSnapshot}</span>
@@ -488,7 +488,7 @@ export const EstimateDetailTab: React.FC<EstimateDetailTabProps> = ({ estimateId
                 onClick={() =>
                   openVehicleTab(estimate.vehicleId, estimate.vehicleDescriptionSnapshot)
                 }
-                className="flex items-center space-x-1 hover:text-teal-300 transition-colors"
+                className="flex items-center space-x-1 hover:text-bronze-300 transition-colors"
               >
                 <Car className="w-3.5 h-3.5" />
                 <span>{estimate.vehicleDescriptionSnapshot}</span>
@@ -503,7 +503,7 @@ export const EstimateDetailTab: React.FC<EstimateDetailTabProps> = ({ estimateId
                         estimate.customerNameSnapshot || 'Customer'
                       )
                     }
-                    className="flex items-center space-x-1 hover:text-teal-300 transition-colors"
+                    className="flex items-center space-x-1 hover:text-bronze-300 transition-colors"
                   >
                     <User className="w-3.5 h-3.5" />
                     <span>{estimate.customerNameSnapshot || 'Customer'}</span>
@@ -518,20 +518,20 @@ export const EstimateDetailTab: React.FC<EstimateDetailTabProps> = ({ estimateId
         <div className="flex items-center space-x-3">
           <button
             onClick={handleExportPDF}
-            className="flex items-center space-x-1.5 px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-lg text-xs font-semibold transition-colors border border-slate-700"
+            className="flex items-center space-x-1.5 px-3 py-1.5 bg-zinc-800 hover:bg-zinc-700 text-zinc-200 rounded-lg text-xs font-semibold transition-colors border border-zinc-700"
           >
             <FileDown className="w-4 h-4" />
             <span>Export PDF</span>
           </button>
           <button
             onClick={() => window.print()}
-            className="p-2 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-lg text-xs transition-colors border border-slate-700"
+            className="p-2 bg-zinc-800 hover:bg-zinc-700 text-zinc-200 rounded-lg text-xs transition-colors border border-zinc-700"
             title="Print"
           >
             <Printer className="w-4 h-4" />
           </button>
 
-          <div className="h-6 w-px bg-slate-800 mx-1" />
+          <div className="h-6 w-px bg-zinc-800 mx-1" />
 
           {/* Status Controls */}
           {estimate.status === 'draft' && (
@@ -539,14 +539,14 @@ export const EstimateDetailTab: React.FC<EstimateDetailTabProps> = ({ estimateId
               <button
                 onClick={() => handleStatusTransition('ready')}
                 disabled={isSaving}
-                className="px-3.5 py-1.5 bg-blue-600 hover:bg-blue-500 text-white rounded-lg text-xs font-semibold transition-colors"
+                className="px-3.5 py-1.5 bg-silver-600 hover:bg-silver-500 text-white rounded-lg text-xs font-semibold transition-colors"
               >
                 Mark Ready
               </button>
               <button
                 onClick={() => handleStatusTransition('approved')}
                 disabled={isSaving}
-                className="px-3.5 py-1.5 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg text-xs font-semibold transition-colors shadow-lg shadow-emerald-950/40"
+                className="px-3.5 py-1.5 bg-bronze-600 hover:bg-bronze-500 text-white rounded-lg text-xs font-semibold transition-colors shadow-lg shadow-bronze-950/40"
               >
                 Approve
               </button>
@@ -558,7 +558,7 @@ export const EstimateDetailTab: React.FC<EstimateDetailTabProps> = ({ estimateId
               <button
                 onClick={() => handleStatusTransition('draft')}
                 disabled={isSaving}
-                className="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-lg text-xs font-semibold transition-colors"
+                className="px-3 py-1.5 bg-zinc-800 hover:bg-zinc-700 text-zinc-300 rounded-lg text-xs font-semibold transition-colors"
               >
                 Back to Draft
               </button>
@@ -572,7 +572,7 @@ export const EstimateDetailTab: React.FC<EstimateDetailTabProps> = ({ estimateId
               <button
                 onClick={() => handleStatusTransition('approved')}
                 disabled={isSaving}
-                className="px-3.5 py-1.5 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg text-xs font-semibold transition-colors shadow-lg shadow-emerald-950/40"
+                className="px-3.5 py-1.5 bg-bronze-600 hover:bg-bronze-500 text-white rounded-lg text-xs font-semibold transition-colors shadow-lg shadow-bronze-950/40"
               >
                 Approve
               </button>
@@ -590,7 +590,7 @@ export const EstimateDetailTab: React.FC<EstimateDetailTabProps> = ({ estimateId
                       `${activeInvoice.invoiceNumber} — ${activeInvoice.customerNameSnapshot || activeInvoice.vehicleDescriptionSnapshot}`
                     )
                   }
-                  className="flex items-center space-x-1.5 px-3.5 py-1.5 bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 border border-amber-500/40 rounded-lg text-xs font-bold transition-colors"
+                  className="flex items-center space-x-1.5 px-3.5 py-1.5 bg-bronze-500/20 hover:bg-bronze-500/30 text-bronze-300 border border-bronze-500/40 rounded-lg text-xs font-bold transition-colors"
                 >
                   <Receipt className="w-3.5 h-3.5" />
                   <span>Open Invoice ({activeInvoice.invoiceNumber})</span>
@@ -599,7 +599,7 @@ export const EstimateDetailTab: React.FC<EstimateDetailTabProps> = ({ estimateId
                 <button
                   type="button"
                   onClick={handleCreateInvoiceClick}
-                  className="flex items-center space-x-1.5 px-3.5 py-1.5 bg-amber-600 hover:bg-amber-500 text-white rounded-lg text-xs font-bold transition-colors shadow-lg shadow-amber-950/40"
+                  className="flex items-center space-x-1.5 px-3.5 py-1.5 bg-bronze-600 hover:bg-bronze-500 text-white rounded-lg text-xs font-bold transition-colors shadow-lg shadow-bronze-950/40"
                 >
                   <Receipt className="w-3.5 h-3.5" />
                   <span>Create Invoice</span>
@@ -607,7 +607,7 @@ export const EstimateDetailTab: React.FC<EstimateDetailTabProps> = ({ estimateId
               )}
               <button
                 onClick={() => setShowReopenModal(true)}
-                className="flex items-center space-x-1.5 px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700 rounded-lg text-xs font-semibold transition-colors"
+                className="flex items-center space-x-1.5 px-3 py-1.5 bg-zinc-800 hover:bg-zinc-700 text-zinc-300 border border-zinc-700 rounded-lg text-xs font-semibold transition-colors"
               >
                 <Unlock className="w-3.5 h-3.5" />
                 <span>Reopen Estimate</span>
@@ -618,7 +618,7 @@ export const EstimateDetailTab: React.FC<EstimateDetailTabProps> = ({ estimateId
           {estimate.status === 'declined' && (
             <button
               onClick={() => setShowReopenModal(true)}
-              className="flex items-center space-x-1.5 px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-lg text-xs font-semibold transition-colors"
+              className="flex items-center space-x-1.5 px-3 py-1.5 bg-zinc-800 hover:bg-zinc-700 text-zinc-200 rounded-lg text-xs font-semibold transition-colors"
             >
               <Unlock className="w-3.5 h-3.5" />
               <span>Reopen Proposal</span>
@@ -629,7 +629,7 @@ export const EstimateDetailTab: React.FC<EstimateDetailTabProps> = ({ estimateId
             <button
               onClick={() => handleSave()}
               disabled={isSaving}
-              className="flex items-center space-x-1.5 px-4 py-1.5 bg-teal-600 hover:bg-teal-500 text-white rounded-lg text-xs font-bold transition-all shadow-md shadow-teal-950/30 disabled:opacity-50"
+              className="flex items-center space-x-1.5 px-4 py-1.5 bg-bronze-600 hover:bg-bronze-500 text-white rounded-lg text-xs font-bold transition-all shadow-md shadow-bronze-950/30 disabled:opacity-50"
             >
               <Save className="w-4 h-4" />
               <span>{isSaving ? 'Saving...' : 'Save'}</span>
@@ -640,9 +640,9 @@ export const EstimateDetailTab: React.FC<EstimateDetailTabProps> = ({ estimateId
 
       {/* Lock Banner if Approved */}
       {isApproved && (
-        <div className="bg-emerald-950/40 border-b border-emerald-800/40 px-8 py-2.5 flex items-center justify-between print:hidden">
-          <div className="flex items-center space-x-2 text-xs text-emerald-300">
-            <Lock className="w-4 h-4 text-emerald-400 shrink-0" />
+        <div className="bg-bronze-950/40 border-b border-bronze-800/40 px-8 py-2.5 flex items-center justify-between print:hidden">
+          <div className="flex items-center space-x-2 text-xs text-bronze-300">
+            <Lock className="w-4 h-4 text-bronze-400 shrink-0" />
             <span>
               <strong>Estimate Approved</strong> · Commercial proposal terms and pricing are locked
               for customer audit integrity.
@@ -652,7 +652,7 @@ export const EstimateDetailTab: React.FC<EstimateDetailTabProps> = ({ estimateId
           </div>
           <button
             onClick={() => setShowReopenModal(true)}
-            className="text-xs font-semibold text-emerald-400 hover:text-emerald-300 underline"
+            className="text-xs font-semibold text-bronze-400 hover:text-bronze-300 underline"
           >
             Reopen to modify
           </button>
@@ -667,8 +667,8 @@ export const EstimateDetailTab: React.FC<EstimateDetailTabProps> = ({ estimateId
         </div>
       )}
       {saveSuccess && (
-        <div className="mx-8 mt-4 p-3 bg-emerald-950/50 border border-emerald-800 rounded-lg flex items-center space-x-2 text-sm text-emerald-300 print:hidden">
-          <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
+        <div className="mx-8 mt-4 p-3 bg-bronze-950/50 border border-bronze-800 rounded-lg flex items-center space-x-2 text-sm text-bronze-300 print:hidden">
+          <CheckCircle2 className="w-4 h-4 text-bronze-400 shrink-0" />
           <span>Estimate updated and totals verified authoritatively by Main process.</span>
         </div>
       )}
@@ -676,33 +676,33 @@ export const EstimateDetailTab: React.FC<EstimateDetailTabProps> = ({ estimateId
       {/* Customer Printable Document View (shown on screen and print) */}
       <div className="max-w-5xl w-full mx-auto p-8 space-y-6 flex-1">
         {/* Printable Letterhead / Header */}
-        <div className="border-b border-slate-800 pb-6 print:border-black">
+        <div className="border-b border-zinc-800 pb-6 print:border-black">
           <div className="flex justify-between items-start">
             <div>
               <div className="text-2xl font-black text-white tracking-tight uppercase print:text-black">
                 Estimate / Commercial Proposal
               </div>
-              <div className="text-sm font-semibold text-teal-400 mt-0.5 print:text-gray-700">
+              <div className="text-sm font-semibold text-bronze-400 mt-0.5 print:text-gray-700">
                 {estimate.estimateNumber}
               </div>
             </div>
-            <div className="text-right text-xs text-slate-400 print:text-gray-600 space-y-1">
+            <div className="text-right text-xs text-zinc-400 print:text-gray-600 space-y-1">
               <div>
-                <span className="font-semibold text-slate-300 print:text-black">Date: </span>
+                <span className="font-semibold text-zinc-300 print:text-black">Date: </span>
                 {new Date(estimate.createdAt).toLocaleDateString()}
               </div>
               {estimate.validUntil && (
                 <div>
-                  <span className="font-semibold text-slate-300 print:text-black">Valid Until: </span>
+                  <span className="font-semibold text-zinc-300 print:text-black">Valid Until: </span>
                   {new Date(estimate.validUntil).toLocaleDateString()}
                 </div>
               )}
             </div>
           </div>
 
-          <div className="grid grid-cols-2 gap-6 mt-6 p-4 bg-slate-900/60 rounded-xl border border-slate-800/80 print:bg-gray-50 print:border-gray-300">
+          <div className="grid grid-cols-2 gap-6 mt-6 p-4 bg-zinc-900/60 rounded-xl border border-zinc-800/80 print:bg-gray-50 print:border-gray-300">
             <div>
-              <span className="text-[11px] font-bold tracking-wider text-slate-400 uppercase block mb-1 print:text-gray-500">
+              <span className="text-[11px] font-bold tracking-wider text-zinc-400 uppercase block mb-1 print:text-gray-500">
                 Customer
               </span>
               <div className="text-sm font-bold text-white print:text-black">
@@ -710,13 +710,13 @@ export const EstimateDetailTab: React.FC<EstimateDetailTabProps> = ({ estimateId
               </div>
             </div>
             <div>
-              <span className="text-[11px] font-bold tracking-wider text-slate-400 uppercase block mb-1 print:text-gray-500">
+              <span className="text-[11px] font-bold tracking-wider text-zinc-400 uppercase block mb-1 print:text-gray-500">
                 Vehicle & Work Order
               </span>
               <div className="text-sm font-bold text-white print:text-black">
                 {estimate.vehicleDescriptionSnapshot}
               </div>
-              <div className="text-xs text-slate-400 mt-0.5 print:text-gray-600">
+              <div className="text-xs text-zinc-400 mt-0.5 print:text-gray-600">
                 Work Order: {estimate.workOrderNumberSnapshot}
               </div>
             </div>
@@ -725,14 +725,14 @@ export const EstimateDetailTab: React.FC<EstimateDetailTabProps> = ({ estimateId
 
         {/* Customer Message */}
         {customerMessage && (
-          <div className="p-4 bg-slate-900/40 border border-slate-800 rounded-lg text-sm text-slate-300 italic print:bg-white print:border-gray-200 print:text-gray-800">
+          <div className="p-4 bg-zinc-900/40 border border-zinc-800 rounded-lg text-sm text-zinc-300 italic print:bg-white print:border-gray-200 print:text-gray-800">
             "{customerMessage}"
           </div>
         )}
 
         {/* Line Items Table */}
-        <div className="bg-slate-900/70 border border-slate-800 rounded-xl overflow-hidden print:border-gray-300 print:bg-white">
-          <div className="px-6 py-3.5 border-b border-slate-800 flex items-center justify-between print:border-gray-300">
+        <div className="bg-zinc-900/70 border border-zinc-800 rounded-xl overflow-hidden print:border-gray-300 print:bg-white">
+          <div className="px-6 py-3.5 border-b border-zinc-800 flex items-center justify-between print:border-gray-300">
             <h3 className="text-sm font-bold text-white uppercase tracking-wider print:text-black">
               Proposed Operations & Materials
             </h3>
@@ -740,7 +740,7 @@ export const EstimateDetailTab: React.FC<EstimateDetailTabProps> = ({ estimateId
               <button
                 type="button"
                 onClick={handleAddLine}
-                className="flex items-center space-x-1 px-3 py-1 bg-teal-600/20 hover:bg-teal-600/30 text-teal-300 border border-teal-500/30 rounded text-xs font-semibold transition-colors print:hidden"
+                className="flex items-center space-x-1 px-3 py-1 bg-bronze-600/20 hover:bg-bronze-600/30 text-bronze-300 border border-bronze-500/30 rounded text-xs font-semibold transition-colors print:hidden"
               >
                 <Plus className="w-3.5 h-3.5" />
                 <span>Add Item</span>
@@ -749,8 +749,8 @@ export const EstimateDetailTab: React.FC<EstimateDetailTabProps> = ({ estimateId
           </div>
 
           <div className="overflow-x-auto">
-            <table className="w-full text-left text-xs text-slate-300">
-              <thead className="bg-slate-950/60 text-slate-400 uppercase tracking-wider font-semibold border-b border-slate-800 print:bg-gray-100 print:text-gray-700 print:border-gray-300">
+            <table className="w-full text-left text-xs text-zinc-300">
+              <thead className="bg-zinc-950/60 text-zinc-400 uppercase tracking-wider font-semibold border-b border-zinc-800 print:bg-gray-100 print:text-gray-700 print:border-gray-300">
                 <tr>
                   <th className="px-4 py-2.5 w-24">Type</th>
                   <th className="px-4 py-2.5">Description</th>
@@ -761,12 +761,12 @@ export const EstimateDetailTab: React.FC<EstimateDetailTabProps> = ({ estimateId
                   {!isApproved && <th className="px-3 py-2.5 w-12 print:hidden"></th>}
                 </tr>
               </thead>
-              <tbody className="divide-y divide-slate-800/60 print:divide-gray-200">
+              <tbody className="divide-y divide-zinc-800/60 print:divide-gray-200">
                 {localLines.length === 0 ? (
                   <tr>
                     <td
                       colSpan={isApproved ? 6 : 7}
-                      className="px-6 py-8 text-center text-slate-500 italic"
+                      className="px-6 py-8 text-center text-zinc-500 italic"
                     >
                       No line items on this estimate yet. Click "+ Add Item" to begin pricing.
                     </td>
@@ -786,11 +786,11 @@ export const EstimateDetailTab: React.FC<EstimateDetailTabProps> = ({ estimateId
                     return (
                       <tr
                         key={line.id}
-                        className="hover:bg-slate-800/30 transition-colors print:hover:bg-transparent"
+                        className="hover:bg-zinc-800/30 transition-colors print:hover:bg-transparent"
                       >
                         <td className="px-4 py-2.5 align-top">
                           {isApproved ? (
-                            <span className="capitalize font-semibold text-slate-300 print:text-black">
+                            <span className="capitalize font-semibold text-zinc-300 print:text-black">
                               {line.type}
                             </span>
                           ) : (
@@ -799,7 +799,7 @@ export const EstimateDetailTab: React.FC<EstimateDetailTabProps> = ({ estimateId
                               onChange={(e) =>
                                 handleUpdateLine(line.id, 'type', e.target.value as EstimateLineType)
                               }
-                              className="bg-slate-800 border border-slate-700 rounded px-2 py-1 text-xs text-white focus:outline-none focus:border-teal-500"
+                              className="bg-zinc-800 border border-zinc-700 rounded px-2 py-1 text-xs text-white focus:outline-none focus:border-bronze-500"
                             >
                               <option value="labor">Labor</option>
                               <option value="part">Part</option>
@@ -816,7 +816,7 @@ export const EstimateDetailTab: React.FC<EstimateDetailTabProps> = ({ estimateId
                                 {line.description}
                               </div>
                               {line.notes && (
-                                <div className="text-[11px] text-slate-400 print:text-gray-600">
+                                <div className="text-[11px] text-zinc-400 print:text-gray-600">
                                   {line.notes}
                                 </div>
                               )}
@@ -830,14 +830,14 @@ export const EstimateDetailTab: React.FC<EstimateDetailTabProps> = ({ estimateId
                                   handleUpdateLine(line.id, 'description', e.target.value)
                                 }
                                 placeholder="Description..."
-                                className="w-full bg-slate-800/80 border border-slate-700 rounded px-2.5 py-1 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-teal-500"
+                                className="w-full bg-zinc-800/80 border border-zinc-700 rounded px-2.5 py-1 text-xs text-white placeholder-zinc-500 focus:outline-none focus:border-bronze-500"
                               />
                               <input
                                 type="text"
                                 value={line.notes || ''}
                                 onChange={(e) => handleUpdateLine(line.id, 'notes', e.target.value)}
                                 placeholder="Optional line notes / part #..."
-                                className="w-full bg-slate-900 border border-slate-800 rounded px-2 py-0.5 text-[11px] text-slate-400 placeholder-slate-600 focus:outline-none focus:border-slate-600"
+                                className="w-full bg-zinc-900 border border-zinc-800 rounded px-2 py-0.5 text-[11px] text-zinc-400 placeholder-zinc-600 focus:outline-none focus:border-zinc-600"
                               />
                             </div>
                           )}
@@ -854,7 +854,7 @@ export const EstimateDetailTab: React.FC<EstimateDetailTabProps> = ({ estimateId
                               onChange={(e) =>
                                 handleUpdateLine(line.id, 'quantityStr', e.target.value)
                               }
-                              className="w-16 bg-slate-800/80 border border-slate-700 rounded px-2 py-1 text-xs text-white text-right font-mono focus:outline-none focus:border-teal-500"
+                              className="w-16 bg-zinc-800/80 border border-zinc-700 rounded px-2 py-1 text-xs text-white text-right font-mono focus:outline-none focus:border-bronze-500"
                             />
                           )}
                         </td>
@@ -865,7 +865,7 @@ export const EstimateDetailTab: React.FC<EstimateDetailTabProps> = ({ estimateId
                             </span>
                           ) : (
                             <div className="relative inline-block">
-                              <span className="absolute left-1.5 top-1 text-slate-500 text-xs">
+                              <span className="absolute left-1.5 top-1 text-zinc-500 text-xs">
                                 $
                               </span>
                               <input
@@ -874,14 +874,14 @@ export const EstimateDetailTab: React.FC<EstimateDetailTabProps> = ({ estimateId
                                 onChange={(e) =>
                                   handleUpdateLine(line.id, 'unitPriceStr', e.target.value)
                                 }
-                                className="w-20 bg-slate-800/80 border border-slate-700 rounded pl-4 pr-1.5 py-1 text-xs text-white text-right font-mono focus:outline-none focus:border-teal-500"
+                                className="w-20 bg-zinc-800/80 border border-zinc-700 rounded pl-4 pr-1.5 py-1 text-xs text-white text-right font-mono focus:outline-none focus:border-bronze-500"
                               />
                             </div>
                           )}
                         </td>
                         <td className="px-4 py-2.5 align-top text-center">
                           {isApproved ? (
-                            <span className="text-slate-400 font-mono">
+                            <span className="text-zinc-400 font-mono">
                               {line.taxable ? '✓' : '—'}
                             </span>
                           ) : (
@@ -891,7 +891,7 @@ export const EstimateDetailTab: React.FC<EstimateDetailTabProps> = ({ estimateId
                               onChange={(e) =>
                                 handleUpdateLine(line.id, 'taxable', e.target.checked)
                               }
-                              className="rounded bg-slate-900 border-slate-700 text-teal-600 focus:ring-teal-500 w-3.5 h-3.5 mt-1"
+                              className="rounded bg-zinc-900 border-zinc-700 text-bronze-600 focus:ring-bronze-500 w-3.5 h-3.5 mt-1"
                             />
                           )}
                         </td>
@@ -903,7 +903,7 @@ export const EstimateDetailTab: React.FC<EstimateDetailTabProps> = ({ estimateId
                             <button
                               type="button"
                               onClick={() => handleRemoveLine(line.id)}
-                              className="text-slate-500 hover:text-red-400 p-1 rounded transition-colors"
+                              className="text-zinc-500 hover:text-red-400 p-1 rounded transition-colors"
                             >
                               <Trash2 className="w-3.5 h-3.5" />
                             </button>
@@ -923,20 +923,20 @@ export const EstimateDetailTab: React.FC<EstimateDetailTabProps> = ({ estimateId
           {/* Controls column (Discount, Tax, Validity) */}
           <div className="space-y-4 print:hidden">
             {!isApproved ? (
-              <div className="bg-slate-900/60 border border-slate-800 rounded-xl p-4 space-y-4">
-                <h4 className="text-xs font-bold text-slate-300 uppercase tracking-wider">
+              <div className="bg-zinc-900/60 border border-zinc-800 rounded-xl p-4 space-y-4">
+                <h4 className="text-xs font-bold text-zinc-300 uppercase tracking-wider">
                   Discount & Tax Controls
                 </h4>
 
                 <div className="grid grid-cols-2 gap-3">
                   <div>
-                    <label className="block text-[11px] font-semibold text-slate-400 mb-1">
+                    <label className="block text-[11px] font-semibold text-zinc-400 mb-1">
                       Discount Type
                     </label>
                     <select
                       value={discountType}
                       onChange={(e) => setDiscountType(e.target.value as any)}
-                      className="w-full bg-slate-800 border border-slate-700 rounded-lg px-2.5 py-1.5 text-xs text-white focus:outline-none focus:border-teal-500"
+                      className="w-full bg-zinc-800 border border-zinc-700 rounded-lg px-2.5 py-1.5 text-xs text-white focus:outline-none focus:border-bronze-500"
                     >
                       <option value="none">No Discount</option>
                       <option value="percent">Percentage (%)</option>
@@ -946,7 +946,7 @@ export const EstimateDetailTab: React.FC<EstimateDetailTabProps> = ({ estimateId
 
                   {discountType !== 'none' && (
                     <div>
-                      <label className="block text-[11px] font-semibold text-slate-400 mb-1">
+                      <label className="block text-[11px] font-semibold text-zinc-400 mb-1">
                         Discount Value {discountType === 'percent' ? '(%)' : '($)'}
                       </label>
                       <input
@@ -954,7 +954,7 @@ export const EstimateDetailTab: React.FC<EstimateDetailTabProps> = ({ estimateId
                         value={discountValueStr}
                         onChange={(e) => setDiscountValueStr(e.target.value)}
                         placeholder="0.00"
-                        className="w-full bg-slate-800 border border-slate-700 rounded-lg px-2.5 py-1.5 text-xs text-white font-mono focus:outline-none focus:border-teal-500"
+                        className="w-full bg-zinc-800 border border-zinc-700 rounded-lg px-2.5 py-1.5 text-xs text-white font-mono focus:outline-none focus:border-bronze-500"
                       />
                     </div>
                   )}
@@ -962,7 +962,7 @@ export const EstimateDetailTab: React.FC<EstimateDetailTabProps> = ({ estimateId
 
                 <div className="grid grid-cols-2 gap-3">
                   <div>
-                    <label className="block text-[11px] font-semibold text-slate-400 mb-1">
+                    <label className="block text-[11px] font-semibold text-zinc-400 mb-1">
                       Tax Rate (%)
                     </label>
                     <input
@@ -970,25 +970,25 @@ export const EstimateDetailTab: React.FC<EstimateDetailTabProps> = ({ estimateId
                       value={taxRateStr}
                       onChange={(e) => setTaxRateStr(e.target.value)}
                       placeholder="0.00"
-                      className="w-full bg-slate-800 border border-slate-700 rounded-lg px-2.5 py-1.5 text-xs text-white font-mono focus:outline-none focus:border-teal-500"
+                      className="w-full bg-zinc-800 border border-zinc-700 rounded-lg px-2.5 py-1.5 text-xs text-white font-mono focus:outline-none focus:border-bronze-500"
                     />
                   </div>
 
                   <div>
-                    <label className="block text-[11px] font-semibold text-slate-400 mb-1">
+                    <label className="block text-[11px] font-semibold text-zinc-400 mb-1">
                       Valid Until Date
                     </label>
                     <input
                       type="date"
                       value={validUntilStr}
                       onChange={(e) => setValidUntilStr(e.target.value)}
-                      className="w-full bg-slate-800 border border-slate-700 rounded-lg px-2.5 py-1.5 text-xs text-white focus:outline-none focus:border-teal-500"
+                      className="w-full bg-zinc-800 border border-zinc-700 rounded-lg px-2.5 py-1.5 text-xs text-white focus:outline-none focus:border-bronze-500"
                     />
                   </div>
                 </div>
 
                 <div>
-                  <label className="block text-[11px] font-semibold text-slate-400 mb-1">
+                  <label className="block text-[11px] font-semibold text-zinc-400 mb-1">
                     Customer Message
                   </label>
                   <textarea
@@ -996,13 +996,13 @@ export const EstimateDetailTab: React.FC<EstimateDetailTabProps> = ({ estimateId
                     value={customerMessage}
                     onChange={(e) => setCustomerMessage(e.target.value)}
                     placeholder="Proposal message for customer..."
-                    className="w-full bg-slate-800 border border-slate-700 rounded-lg px-2.5 py-1.5 text-xs text-white focus:outline-none focus:border-teal-500"
+                    className="w-full bg-zinc-800 border border-zinc-700 rounded-lg px-2.5 py-1.5 text-xs text-white focus:outline-none focus:border-bronze-500"
                   />
                 </div>
               </div>
             ) : (
-              <div className="bg-slate-900/40 border border-slate-800 rounded-xl p-4 text-xs text-slate-400 space-y-2">
-                <div className="font-semibold text-slate-300">Commercial Proposal Terms</div>
+              <div className="bg-zinc-900/40 border border-zinc-800 rounded-xl p-4 text-xs text-zinc-400 space-y-2">
+                <div className="font-semibold text-zinc-300">Commercial Proposal Terms</div>
                 <div>Tax Rate: {formatBpsToPercent(estimate.taxRateBps)}</div>
                 {estimate.discountType && (
                   <div>
@@ -1020,10 +1020,10 @@ export const EstimateDetailTab: React.FC<EstimateDetailTabProps> = ({ estimateId
 
             {/* Associated Invoices Card (V0.0.9) */}
             {associatedInvoices.length > 0 && (
-              <div className="bg-slate-900/60 border border-slate-800 rounded-xl p-4 space-y-3 print:hidden">
+              <div className="bg-zinc-900/60 border border-zinc-800 rounded-xl p-4 space-y-3 print:hidden">
                 <div className="flex items-center justify-between">
-                  <h4 className="text-xs font-bold text-slate-300 uppercase tracking-wider flex items-center space-x-2">
-                    <Receipt className="w-4 h-4 text-amber-400" />
+                  <h4 className="text-xs font-bold text-zinc-300 uppercase tracking-wider flex items-center space-x-2">
+                    <Receipt className="w-4 h-4 text-bronze-400" />
                     <span>Invoices ({associatedInvoices.length})</span>
                   </h4>
                 </div>
@@ -1031,7 +1031,7 @@ export const EstimateDetailTab: React.FC<EstimateDetailTabProps> = ({ estimateId
                   {associatedInvoices.map((inv) => (
                     <div
                       key={inv.id}
-                      className="flex items-center justify-between p-2.5 rounded-lg bg-slate-950/80 border border-slate-800 hover:border-slate-700 transition-colors"
+                      className="flex items-center justify-between p-2.5 rounded-lg bg-zinc-950/80 border border-zinc-800 hover:border-zinc-700 transition-colors"
                     >
                       <div className="flex items-center space-x-2.5">
                         <button
@@ -1042,29 +1042,29 @@ export const EstimateDetailTab: React.FC<EstimateDetailTabProps> = ({ estimateId
                               `${inv.invoiceNumber} — ${inv.customerNameSnapshot || inv.vehicleDescriptionSnapshot}`
                             )
                           }
-                          className="font-mono font-bold text-xs text-amber-400 hover:underline"
+                          className="font-mono font-bold text-xs text-bronze-400 hover:underline"
                         >
                           {inv.invoiceNumber}
                         </button>
                         <span
                           className={`px-2 py-0.5 rounded-full text-[10px] font-bold uppercase ${
                             inv.status === 'issued'
-                              ? 'bg-emerald-950/60 text-emerald-300 border border-emerald-800/60'
+                              ? 'bg-bronze-950/60 text-bronze-300 border border-bronze-800/60'
                               : inv.status === 'void'
                               ? 'bg-rose-950/60 text-rose-300 border border-rose-800/60'
-                              : 'bg-slate-800 text-slate-300 border border-slate-700'
+                              : 'bg-zinc-800 text-zinc-300 border border-zinc-700'
                           }`}
                         >
                           {inv.status}
                         </span>
                         {inv.issuedAt && (
-                          <span className="text-[11px] text-slate-400">
+                          <span className="text-[11px] text-zinc-400">
                             Issued {new Date(inv.issuedAt).toLocaleDateString()}
                           </span>
                         )}
                       </div>
                       <div className="flex items-center space-x-3">
-                        <span className="font-mono font-bold text-xs text-slate-200">
+                        <span className="font-mono font-bold text-xs text-zinc-200">
                           {formatCents(inv.totalCents)}
                         </span>
                         <button
@@ -1075,7 +1075,7 @@ export const EstimateDetailTab: React.FC<EstimateDetailTabProps> = ({ estimateId
                               `${inv.invoiceNumber} — ${inv.customerNameSnapshot || inv.vehicleDescriptionSnapshot}`
                             )
                           }
-                          className="px-2 py-1 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded text-xs transition-colors"
+                          className="px-2 py-1 bg-zinc-800 hover:bg-zinc-700 text-zinc-300 rounded text-xs transition-colors"
                         >
                           Open
                         </button>
@@ -1087,12 +1087,12 @@ export const EstimateDetailTab: React.FC<EstimateDetailTabProps> = ({ estimateId
             )}
 
             {/* Internal notes */}
-            <div className="bg-slate-900/60 border border-slate-800 rounded-xl p-4 space-y-2">
-              <h4 className="text-xs font-bold text-slate-300 uppercase tracking-wider">
+            <div className="bg-zinc-900/60 border border-zinc-800 rounded-xl p-4 space-y-2">
+              <h4 className="text-xs font-bold text-zinc-300 uppercase tracking-wider">
                 Internal Shop Notes (Not Printed)
               </h4>
               {isApproved ? (
-                <div className="text-xs text-slate-400 italic">
+                <div className="text-xs text-zinc-400 italic">
                   {notes || 'No internal notes.'}
                 </div>
               ) : (
@@ -1101,20 +1101,20 @@ export const EstimateDetailTab: React.FC<EstimateDetailTabProps> = ({ estimateId
                   value={notes}
                   onChange={(e) => setNotes(e.target.value)}
                   placeholder="Internal notes, margin targets, vendor details..."
-                  className="w-full bg-slate-800 border border-slate-700 rounded-lg px-2.5 py-1.5 text-xs text-white focus:outline-none focus:border-teal-500"
+                  className="w-full bg-zinc-800 border border-zinc-700 rounded-lg px-2.5 py-1.5 text-xs text-white focus:outline-none focus:border-bronze-500"
                 />
               )}
             </div>
           </div>
 
           {/* Totals Summary Column */}
-          <div className="bg-slate-900/90 border border-slate-800 rounded-xl p-6 space-y-4 print:bg-white print:border-gray-300">
-            <h4 className="text-xs font-bold text-slate-400 uppercase tracking-wider print:text-gray-700">
+          <div className="bg-zinc-900/90 border border-zinc-800 rounded-xl p-6 space-y-4 print:bg-white print:border-gray-300">
+            <h4 className="text-xs font-bold text-zinc-400 uppercase tracking-wider print:text-gray-700">
               Financial Summary
             </h4>
 
             <div className="space-y-2.5 text-sm">
-              <div className="flex justify-between items-center text-slate-300 print:text-black">
+              <div className="flex justify-between items-center text-zinc-300 print:text-black">
                 <span>Subtotal</span>
                 <span className="font-mono font-semibold">
                   {formatCents(previewTotals.subtotalCents)}
@@ -1122,7 +1122,7 @@ export const EstimateDetailTab: React.FC<EstimateDetailTabProps> = ({ estimateId
               </div>
 
               {previewTotals.discountTotalCents > 0 && (
-                <div className="flex justify-between items-center text-emerald-400 print:text-emerald-700">
+                <div className="flex justify-between items-center text-bronze-400 print:text-bronze-700">
                   <span>
                     Discount{' '}
                     {discountType === 'percent' && `(${formatBpsToPercent(parsePercentToBps(discountValueStr))})`}
@@ -1133,12 +1133,12 @@ export const EstimateDetailTab: React.FC<EstimateDetailTabProps> = ({ estimateId
                 </div>
               )}
 
-              <div className="flex justify-between items-center text-xs text-slate-400 print:text-gray-600 pt-1 border-t border-slate-800/60 print:border-gray-200">
+              <div className="flex justify-between items-center text-xs text-zinc-400 print:text-gray-600 pt-1 border-t border-zinc-800/60 print:border-gray-200">
                 <span>Taxable Subtotal</span>
                 <span className="font-mono">{formatCents(previewTotals.taxableSubtotalCents)}</span>
               </div>
 
-              <div className="flex justify-between items-center text-slate-300 print:text-black">
+              <div className="flex justify-between items-center text-zinc-300 print:text-black">
                 <span>
                   Sales Tax ({taxRateStr}%)
                 </span>
@@ -1147,24 +1147,24 @@ export const EstimateDetailTab: React.FC<EstimateDetailTabProps> = ({ estimateId
                 </span>
               </div>
 
-              <div className="pt-3 border-t-2 border-slate-700 print:border-black flex justify-between items-center">
+              <div className="pt-3 border-t-2 border-zinc-700 print:border-black flex justify-between items-center">
                 <span className="text-base font-black text-white uppercase print:text-black">
                   Total Proposal
                 </span>
-                <span className="text-2xl font-black text-teal-400 font-mono print:text-black">
+                <span className="text-2xl font-black text-bronze-400 font-mono print:text-black">
                   {formatCents(previewTotals.totalCents)}
                 </span>
               </div>
             </div>
 
-            <div className="text-[11px] text-slate-500 print:hidden pt-2 border-t border-slate-800">
+            <div className="text-[11px] text-zinc-500 print:hidden pt-2 border-t border-zinc-800">
               ⚡ Calculated with 100% integer cent & basis-point precision.
             </div>
           </div>
         </div>
 
         {/* Footer Actions (Delete) */}
-        <div className="pt-6 border-t border-slate-800 flex justify-between items-center print:hidden">
+        <div className="pt-6 border-t border-zinc-800 flex justify-between items-center print:hidden">
           <button
             type="button"
             onClick={() => setShowDeleteModal(true)}
@@ -1181,7 +1181,7 @@ export const EstimateDetailTab: React.FC<EstimateDetailTabProps> = ({ estimateId
               type="button"
               onClick={() => handleSave()}
               disabled={isSaving}
-              className="flex items-center space-x-1.5 px-5 py-2 bg-teal-600 hover:bg-teal-500 text-white rounded-lg text-sm font-bold shadow-lg shadow-teal-950/40 transition-all disabled:opacity-50"
+              className="flex items-center space-x-1.5 px-5 py-2 bg-bronze-600 hover:bg-bronze-500 text-white rounded-lg text-sm font-bold shadow-lg shadow-bronze-950/40 transition-all disabled:opacity-50"
             >
               <Save className="w-4 h-4" />
               <span>{isSaving ? 'Saving...' : 'Save Estimate'}</span>
@@ -1193,8 +1193,8 @@ export const EstimateDetailTab: React.FC<EstimateDetailTabProps> = ({ estimateId
       {/* Reopen Modal */}
       {showReopenModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-4">
-          <div className="bg-slate-900 border border-slate-700 rounded-xl p-6 max-w-md w-full shadow-2xl space-y-4">
-            <div className="flex items-center space-x-3 text-amber-400">
+          <div className="bg-zinc-900 border border-zinc-700 rounded-xl p-6 max-w-md w-full shadow-2xl space-y-4">
+            <div className="flex items-center space-x-3 text-bronze-400">
               <AlertTriangle className="w-6 h-6 shrink-0" />
               <h3 className="text-lg font-bold text-white">Reopen Estimate?</h3>
             </div>
@@ -1211,7 +1211,7 @@ export const EstimateDetailTab: React.FC<EstimateDetailTabProps> = ({ estimateId
                 </p>
               </div>
             ) : (
-              <p className="text-sm text-slate-300">
+              <p className="text-sm text-zinc-300">
                 This estimate has already been approved. Reopening will transition its status back to{' '}
                 <strong>Draft</strong> and allow its commercial terms and pricing to be modified.
               </p>
@@ -1220,7 +1220,7 @@ export const EstimateDetailTab: React.FC<EstimateDetailTabProps> = ({ estimateId
               <button
                 type="button"
                 onClick={() => setShowReopenModal(false)}
-                className="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 text-sm font-medium rounded-lg transition-colors"
+                className="px-4 py-2 bg-zinc-800 hover:bg-zinc-700 text-zinc-300 text-sm font-medium rounded-lg transition-colors"
               >
                 Cancel
               </button>
@@ -1228,7 +1228,7 @@ export const EstimateDetailTab: React.FC<EstimateDetailTabProps> = ({ estimateId
                 <button
                   type="button"
                   onClick={handleReopen}
-                  className="px-4 py-2 bg-amber-600 hover:bg-amber-500 text-white text-sm font-bold rounded-lg shadow-lg shadow-amber-950/40 transition-colors"
+                  className="px-4 py-2 bg-bronze-600 hover:bg-bronze-500 text-white text-sm font-bold rounded-lg shadow-lg shadow-bronze-950/40 transition-colors"
                 >
                   Reopen Proposal
                 </button>
@@ -1241,12 +1241,12 @@ export const EstimateDetailTab: React.FC<EstimateDetailTabProps> = ({ estimateId
       {/* Delete Modal */}
       {showDeleteModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-4">
-          <div className="bg-slate-900 border border-slate-700 rounded-xl p-6 max-w-md w-full shadow-2xl space-y-4">
+          <div className="bg-zinc-900 border border-zinc-700 rounded-xl p-6 max-w-md w-full shadow-2xl space-y-4">
             <div className="flex items-center space-x-3 text-red-400">
               <AlertTriangle className="w-6 h-6 shrink-0" />
               <h3 className="text-lg font-bold text-white">Delete Estimate?</h3>
             </div>
-            <p className="text-sm text-slate-300">
+            <p className="text-sm text-zinc-300">
               Are you sure you want to delete <strong>{estimate.estimateNumber}</strong>? This
               record will be archived.
             </p>
@@ -1254,7 +1254,7 @@ export const EstimateDetailTab: React.FC<EstimateDetailTabProps> = ({ estimateId
               <button
                 type="button"
                 onClick={() => setShowDeleteModal(false)}
-                className="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 text-sm font-medium rounded-lg transition-colors"
+                className="px-4 py-2 bg-zinc-800 hover:bg-zinc-700 text-zinc-300 text-sm font-medium rounded-lg transition-colors"
               >
                 Cancel
               </button>

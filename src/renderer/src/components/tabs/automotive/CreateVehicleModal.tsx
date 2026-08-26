@@ -103,16 +103,16 @@ export const CreateVehicleModal: React.FC<CreateVehicleModalProps> = ({
 
   return (
     <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4 animate-fadeIn">
-      <div className="w-full max-w-lg bg-artemis-900 border border-slate-700 rounded-2xl shadow-2xl overflow-hidden p-5 max-h-[90vh] overflow-y-auto">
-        <div className="flex items-center justify-between pb-3 border-b border-slate-800">
-          <div className="flex items-center gap-2 text-sm font-bold text-slate-100">
+      <div className="w-full max-w-lg bg-artemis-900 border border-zinc-700 rounded-2xl shadow-2xl overflow-hidden p-5 max-h-[90vh] overflow-y-auto">
+        <div className="flex items-center justify-between pb-3 border-b border-zinc-800">
+          <div className="flex items-center gap-2 text-sm font-bold text-zinc-100">
             <Car className="w-4 h-4 text-artemis-accent" />
             Add New Vehicle
           </div>
           <button
             type="button"
             onClick={onClose}
-            className="p-1 rounded-lg text-slate-400 hover:text-slate-100 hover:bg-slate-800"
+            className="p-1 rounded-lg text-zinc-400 hover:text-zinc-100 hover:bg-zinc-800"
           >
             <X className="w-4 h-4" />
           </button>
@@ -127,13 +127,13 @@ export const CreateVehicleModal: React.FC<CreateVehicleModalProps> = ({
         <form onSubmit={handleSubmit} className="mt-4 space-y-3.5 text-xs">
           {/* Owner Selector */}
           <div>
-            <label className="block font-semibold text-slate-300 mb-1">
+            <label className="block font-semibold text-zinc-300 mb-1">
               Vehicle Owner (Customer)
             </label>
             <select
               value={customerId}
               onChange={(e) => setCustomerId(e.target.value)}
-              className="w-full bg-artemis-950 border border-slate-700 rounded-xl px-3 py-2 text-slate-100 focus:outline-none focus:border-artemis-accent"
+              className="w-full bg-artemis-950 border border-zinc-700 rounded-xl px-3 py-2 text-zinc-100 focus:outline-none focus:border-artemis-accent"
             >
               <option value="">— Unassigned / Shop / Project Vehicle —</option>
               {customers.map((c) => (
@@ -147,7 +147,7 @@ export const CreateVehicleModal: React.FC<CreateVehicleModalProps> = ({
           {/* Year / Make / Model / Trim */}
           <div className="grid grid-cols-4 gap-2.5">
             <div>
-              <label className="block font-semibold text-slate-300 mb-1">
+              <label className="block font-semibold text-zinc-300 mb-1">
                 Year
               </label>
               <input
@@ -155,11 +155,11 @@ export const CreateVehicleModal: React.FC<CreateVehicleModalProps> = ({
                 placeholder="2006"
                 value={year}
                 onChange={(e) => setYear(e.target.value)}
-                className="w-full bg-artemis-950 border border-slate-700 rounded-xl px-2.5 py-2 text-slate-100 focus:outline-none focus:border-artemis-accent"
+                className="w-full bg-artemis-950 border border-zinc-700 rounded-xl px-2.5 py-2 text-zinc-100 focus:outline-none focus:border-artemis-accent"
               />
             </div>
             <div>
-              <label className="block font-semibold text-slate-300 mb-1">
+              <label className="block font-semibold text-zinc-300 mb-1">
                 Make <span className="text-red-400">*</span>
               </label>
               <input
@@ -167,11 +167,11 @@ export const CreateVehicleModal: React.FC<CreateVehicleModalProps> = ({
                 placeholder="Mercedes"
                 value={make}
                 onChange={(e) => setMake(e.target.value)}
-                className="w-full bg-artemis-950 border border-slate-700 rounded-xl px-2.5 py-2 text-slate-100 focus:outline-none focus:border-artemis-accent"
+                className="w-full bg-artemis-950 border border-zinc-700 rounded-xl px-2.5 py-2 text-zinc-100 focus:outline-none focus:border-artemis-accent"
               />
             </div>
             <div>
-              <label className="block font-semibold text-slate-300 mb-1">
+              <label className="block font-semibold text-zinc-300 mb-1">
                 Model <span className="text-red-400">*</span>
               </label>
               <input
@@ -179,11 +179,11 @@ export const CreateVehicleModal: React.FC<CreateVehicleModalProps> = ({
                 placeholder="SL500"
                 value={model}
                 onChange={(e) => setModel(e.target.value)}
-                className="w-full bg-artemis-950 border border-slate-700 rounded-xl px-2.5 py-2 text-slate-100 focus:outline-none focus:border-artemis-accent"
+                className="w-full bg-artemis-950 border border-zinc-700 rounded-xl px-2.5 py-2 text-zinc-100 focus:outline-none focus:border-artemis-accent"
               />
             </div>
             <div>
-              <label className="block font-semibold text-slate-300 mb-1">
+              <label className="block font-semibold text-zinc-300 mb-1">
                 Trim
               </label>
               <input
@@ -191,19 +191,19 @@ export const CreateVehicleModal: React.FC<CreateVehicleModalProps> = ({
                 placeholder="AMG / Base"
                 value={trim}
                 onChange={(e) => setTrim(e.target.value)}
-                className="w-full bg-artemis-950 border border-slate-700 rounded-xl px-2.5 py-2 text-slate-100 focus:outline-none focus:border-artemis-accent"
+                className="w-full bg-artemis-950 border border-zinc-700 rounded-xl px-2.5 py-2 text-zinc-100 focus:outline-none focus:border-artemis-accent"
               />
             </div>
           </div>
 
           {/* Powertrain: Engine / Transmission / Drivetrain */}
-          <div className="p-3 bg-artemis-950/80 rounded-xl border border-slate-800 space-y-2.5">
-            <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 block">
+          <div className="p-3 bg-artemis-950/80 rounded-xl border border-zinc-800 space-y-2.5">
+            <span className="text-[10px] font-bold uppercase tracking-wider text-zinc-400 block">
               Powertrain Specifications
             </span>
             <div className="grid grid-cols-3 gap-2.5">
               <div>
-                <label className="block text-[10px] font-medium text-slate-400 mb-1">
+                <label className="block text-[10px] font-medium text-zinc-400 mb-1">
                   Engine
                 </label>
                 <input
@@ -211,11 +211,11 @@ export const CreateVehicleModal: React.FC<CreateVehicleModalProps> = ({
                   placeholder="5.0L V8 M113"
                   value={engine}
                   onChange={(e) => setEngine(e.target.value)}
-                  className="w-full bg-artemis-900 border border-slate-700 rounded-lg px-2.5 py-1.5 text-slate-100 placeholder-slate-600 focus:outline-none focus:border-artemis-accent text-[11px]"
+                  className="w-full bg-artemis-900 border border-zinc-700 rounded-lg px-2.5 py-1.5 text-zinc-100 placeholder-zinc-600 focus:outline-none focus:border-artemis-accent text-[11px]"
                 />
               </div>
               <div>
-                <label className="block text-[10px] font-medium text-slate-400 mb-1">
+                <label className="block text-[10px] font-medium text-zinc-400 mb-1">
                   Transmission
                 </label>
                 <input
@@ -223,17 +223,17 @@ export const CreateVehicleModal: React.FC<CreateVehicleModalProps> = ({
                   placeholder="722.9 7-Speed"
                   value={transmission}
                   onChange={(e) => setTransmission(e.target.value)}
-                  className="w-full bg-artemis-900 border border-slate-700 rounded-lg px-2.5 py-1.5 text-slate-100 placeholder-slate-600 focus:outline-none focus:border-artemis-accent text-[11px]"
+                  className="w-full bg-artemis-900 border border-zinc-700 rounded-lg px-2.5 py-1.5 text-zinc-100 placeholder-zinc-600 focus:outline-none focus:border-artemis-accent text-[11px]"
                 />
               </div>
               <div>
-                <label className="block text-[10px] font-medium text-slate-400 mb-1">
+                <label className="block text-[10px] font-medium text-zinc-400 mb-1">
                   Drivetrain
                 </label>
                 <select
                   value={drivetrain}
                   onChange={(e) => setDrivetrain(e.target.value)}
-                  className="w-full bg-artemis-900 border border-slate-700 rounded-lg px-2.5 py-1.5 text-slate-100 focus:outline-none focus:border-artemis-accent text-[11px]"
+                  className="w-full bg-artemis-900 border border-zinc-700 rounded-lg px-2.5 py-1.5 text-zinc-100 focus:outline-none focus:border-artemis-accent text-[11px]"
                 >
                   <option value="RWD">RWD</option>
                   <option value="AWD">AWD</option>
@@ -248,7 +248,7 @@ export const CreateVehicleModal: React.FC<CreateVehicleModalProps> = ({
           {/* VIN / Plate / Mileage / Color */}
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="block font-semibold text-slate-300 mb-1">
+              <label className="block font-semibold text-zinc-300 mb-1">
                 VIN (Globally Unique)
               </label>
               <input
@@ -256,11 +256,11 @@ export const CreateVehicleModal: React.FC<CreateVehicleModalProps> = ({
                 placeholder="WDBSK75F76F..."
                 value={vin}
                 onChange={(e) => setVin(e.target.value.toUpperCase())}
-                className="w-full bg-artemis-950 border border-slate-700 rounded-xl px-3 py-2 text-slate-100 font-mono text-[11px] placeholder-slate-500 focus:outline-none focus:border-artemis-accent"
+                className="w-full bg-artemis-950 border border-zinc-700 rounded-xl px-3 py-2 text-zinc-100 font-mono text-[11px] placeholder-zinc-500 focus:outline-none focus:border-artemis-accent"
               />
             </div>
             <div>
-              <label className="block font-semibold text-slate-300 mb-1">
+              <label className="block font-semibold text-zinc-300 mb-1">
                 License Plate
               </label>
               <input
@@ -268,14 +268,14 @@ export const CreateVehicleModal: React.FC<CreateVehicleModalProps> = ({
                 placeholder="7XYZ123"
                 value={licensePlate}
                 onChange={(e) => setLicensePlate(e.target.value.toUpperCase())}
-                className="w-full bg-artemis-950 border border-slate-700 rounded-xl px-3 py-2 text-slate-100 font-mono text-[11px] placeholder-slate-500 focus:outline-none focus:border-artemis-accent"
+                className="w-full bg-artemis-950 border border-zinc-700 rounded-xl px-3 py-2 text-zinc-100 font-mono text-[11px] placeholder-zinc-500 focus:outline-none focus:border-artemis-accent"
               />
             </div>
           </div>
 
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="block font-semibold text-slate-300 mb-1">
+              <label className="block font-semibold text-zinc-300 mb-1">
                 Odometer Mileage
               </label>
               <input
@@ -283,11 +283,11 @@ export const CreateVehicleModal: React.FC<CreateVehicleModalProps> = ({
                 placeholder="64250"
                 value={mileage}
                 onChange={(e) => setMileage(e.target.value)}
-                className="w-full bg-artemis-950 border border-slate-700 rounded-xl px-3 py-2 text-slate-100 placeholder-slate-500 focus:outline-none focus:border-artemis-accent"
+                className="w-full bg-artemis-950 border border-zinc-700 rounded-xl px-3 py-2 text-zinc-100 placeholder-zinc-500 focus:outline-none focus:border-artemis-accent"
               />
             </div>
             <div>
-              <label className="block font-semibold text-slate-300 mb-1">
+              <label className="block font-semibold text-zinc-300 mb-1">
                 Color
               </label>
               <input
@@ -295,13 +295,13 @@ export const CreateVehicleModal: React.FC<CreateVehicleModalProps> = ({
                 placeholder="Obsidian Black"
                 value={color}
                 onChange={(e) => setColor(e.target.value)}
-                className="w-full bg-artemis-950 border border-slate-700 rounded-xl px-3 py-2 text-slate-100 placeholder-slate-500 focus:outline-none focus:border-artemis-accent"
+                className="w-full bg-artemis-950 border border-zinc-700 rounded-xl px-3 py-2 text-zinc-100 placeholder-zinc-500 focus:outline-none focus:border-artemis-accent"
               />
             </div>
           </div>
 
           <div>
-            <label className="block font-semibold text-slate-300 mb-1">
+            <label className="block font-semibold text-zinc-300 mb-1">
               General Vehicle Notes
             </label>
             <textarea
@@ -309,22 +309,22 @@ export const CreateVehicleModal: React.FC<CreateVehicleModalProps> = ({
               rows={2}
               value={notes}
               onChange={(e) => setNotes(e.target.value)}
-              className="w-full bg-artemis-950 border border-slate-700 rounded-xl px-3 py-2 text-slate-100 placeholder-slate-500 focus:outline-none focus:border-artemis-accent resize-none"
+              className="w-full bg-artemis-950 border border-zinc-700 rounded-xl px-3 py-2 text-zinc-100 placeholder-zinc-500 focus:outline-none focus:border-artemis-accent resize-none"
             />
           </div>
 
-          <div className="flex items-center justify-end gap-2 pt-2 border-t border-slate-800">
+          <div className="flex items-center justify-end gap-2 pt-2 border-t border-zinc-800">
             <button
               type="button"
               onClick={onClose}
-              className="px-3.5 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-medium"
+              className="px-3.5 py-1.5 rounded-lg bg-zinc-800 hover:bg-zinc-700 text-zinc-300 text-xs font-medium"
             >
               Cancel
             </button>
             <button
               type="submit"
               disabled={isSubmitting || !make.trim() || !model.trim()}
-              className="px-4 py-1.5 rounded-lg bg-artemis-accent hover:bg-sky-400 disabled:opacity-40 text-slate-950 text-xs font-bold flex items-center gap-1.5"
+              className="px-4 py-1.5 rounded-lg bg-artemis-accent hover:bg-silver-400 disabled:opacity-40 text-zinc-950 text-xs font-bold flex items-center gap-1.5"
             >
               <Check className="w-3.5 h-3.5" />
               {isSubmitting ? 'Registering…' : 'Register Vehicle'}

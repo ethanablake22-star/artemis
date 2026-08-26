@@ -41,7 +41,7 @@ const TreeNode: React.FC<TreeNodeProps> = ({
           'group flex items-center justify-between py-1.5 px-2 rounded-lg text-xs cursor-pointer transition-colors',
           isSelected
             ? 'bg-artemis-accent/15 text-artemis-accent font-semibold border border-artemis-accent/30'
-            : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/60'
+            : 'text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800/60'
         )}
         style={{ paddingLeft: `${Math.max(8, level * 14 + 6)}px` }}
         onClick={() => onSelect(folder.id)}
@@ -54,7 +54,7 @@ const TreeNode: React.FC<TreeNodeProps> = ({
                 e.stopPropagation();
                 setIsExpanded((prev) => !prev);
               }}
-              className="p-0.5 rounded hover:bg-slate-700/50 text-slate-500 hover:text-slate-300"
+              className="p-0.5 rounded hover:bg-zinc-700/50 text-zinc-500 hover:text-zinc-300"
             >
               {isExpanded ? (
                 <ChevronDown className="w-3.5 h-3.5" />
@@ -67,9 +67,9 @@ const TreeNode: React.FC<TreeNodeProps> = ({
           )}
 
           {isSelected ? (
-            <FolderOpen className="w-4 h-4 text-amber-400 shrink-0" />
+            <FolderOpen className="w-4 h-4 text-bronze-400 shrink-0" />
           ) : (
-            <Folder className="w-4 h-4 text-amber-400/80 shrink-0" />
+            <Folder className="w-4 h-4 text-bronze-400/80 shrink-0" />
           )}
 
           <span className="truncate">{folder.name}</span>
@@ -78,7 +78,7 @@ const TreeNode: React.FC<TreeNodeProps> = ({
         <span
           className={clsx(
             'text-[10px] px-1.5 py-0.2 rounded font-mono ml-1 shrink-0',
-            isSelected ? 'bg-artemis-accent/20 text-artemis-accent' : 'text-slate-500'
+            isSelected ? 'bg-artemis-accent/20 text-artemis-accent' : 'text-zinc-500'
           )}
         >
           {itemCount}
@@ -122,7 +122,7 @@ export const FolderTreeView: React.FC = () => {
           'flex items-center justify-between px-3 py-2 rounded-lg text-xs font-medium transition-colors mb-2 text-left',
           currentFolderId === null
             ? 'bg-artemis-accent/15 text-artemis-accent font-semibold border border-artemis-accent/30'
-            : 'text-slate-300 hover:text-slate-100 hover:bg-slate-800/60'
+            : 'text-zinc-300 hover:text-zinc-100 hover:bg-zinc-800/60'
         )}
       >
         <div className="flex items-center gap-2">
@@ -134,7 +134,7 @@ export const FolderTreeView: React.FC = () => {
             'text-[10px] px-1.5 py-0.5 rounded font-mono',
             currentFolderId === null
               ? 'bg-artemis-accent/20 text-artemis-accent'
-              : 'bg-slate-800 text-slate-400'
+              : 'bg-zinc-800 text-zinc-400'
           )}
         >
           {totalActiveItems}
@@ -142,7 +142,7 @@ export const FolderTreeView: React.FC = () => {
       </button>
 
       {/* Directory Hierarchy Header */}
-      <div className="px-2 py-1 text-[10px] font-semibold uppercase tracking-wider text-slate-500">
+      <div className="px-2 py-1 text-[10px] font-semibold uppercase tracking-wider text-zinc-500">
         Folder Directory
       </div>
 
@@ -160,7 +160,7 @@ export const FolderTreeView: React.FC = () => {
         ))}
 
         {rootFolders.length === 0 && (
-          <div className="px-3 py-4 text-[11px] text-slate-500 text-center">
+          <div className="px-3 py-4 text-[11px] text-zinc-500 text-center">
             No folders created yet.
           </div>
         )}

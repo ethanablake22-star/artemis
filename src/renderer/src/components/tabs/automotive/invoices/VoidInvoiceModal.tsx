@@ -43,15 +43,15 @@ export const VoidInvoiceModal: React.FC<VoidInvoiceModalProps> = ({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/75 backdrop-blur-sm p-4">
-      <div className="bg-slate-900 border border-slate-700 rounded-xl max-w-md w-full shadow-2xl overflow-hidden animate-in fade-in zoom-in-95 duration-150">
-        <div className="flex items-center justify-between px-6 py-4 border-b border-slate-800 bg-slate-950/50">
+      <div className="bg-zinc-900 border border-zinc-700 rounded-xl max-w-md w-full shadow-2xl overflow-hidden animate-in fade-in zoom-in-95 duration-150">
+        <div className="flex items-center justify-between px-6 py-4 border-b border-zinc-800 bg-zinc-950/50">
           <div className="flex items-center space-x-2 text-rose-400">
             <Ban className="w-5 h-5" />
             <h3 className="font-bold text-white text-base">Void Invoice {invoiceNumber}</h3>
           </div>
           <button
             onClick={onClose}
-            className="text-slate-400 hover:text-white p-1 rounded-lg hover:bg-slate-800 transition-colors"
+            className="text-zinc-400 hover:text-white p-1 rounded-lg hover:bg-zinc-800 transition-colors"
           >
             <X className="w-4 h-4" />
           </button>
@@ -71,7 +71,7 @@ export const VoidInvoiceModal: React.FC<VoidInvoiceModalProps> = ({
           </div>
 
           <div>
-            <label className="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-1.5">
+            <label className="block text-xs font-semibold text-zinc-300 uppercase tracking-wider mb-1.5">
               Reason for Voiding <span className="text-rose-400">*</span>
             </label>
             <textarea
@@ -82,7 +82,7 @@ export const VoidInvoiceModal: React.FC<VoidInvoiceModalProps> = ({
               }}
               rows={3}
               placeholder="e.g., Billing error on parts pricing, customer negotiated revised discount, superseded by revised estimate..."
-              className="w-full bg-slate-950 border border-slate-700 rounded-lg p-3 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-rose-500 transition-colors"
+              className="w-full bg-zinc-950 border border-zinc-700 rounded-lg p-3 text-sm text-white placeholder-zinc-500 focus:outline-none focus:border-rose-500 transition-colors"
               required
               autoFocus
             />
@@ -99,7 +99,7 @@ export const VoidInvoiceModal: React.FC<VoidInvoiceModalProps> = ({
               type="button"
               onClick={onClose}
               disabled={isSubmitting}
-              className="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 text-sm font-medium rounded-lg transition-colors"
+              className="px-4 py-2 bg-zinc-800 hover:bg-zinc-700 text-zinc-300 text-sm font-medium rounded-lg transition-colors"
             >
               Cancel
             </button>

@@ -38,30 +38,30 @@ export const ImageModal: React.FC<ImageModalProps> = ({ isOpen, onClose, onSubmi
 
   return (
     <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4 animate-fadeIn">
-      <div className="w-full max-w-md bg-artemis-900 border border-slate-700 rounded-2xl shadow-2xl overflow-hidden p-5">
-        <div className="flex items-center justify-between pb-3 border-b border-slate-800">
-          <div className="flex items-center gap-2 text-sm font-bold text-slate-100">
+      <div className="w-full max-w-md bg-artemis-900 border border-zinc-700 rounded-2xl shadow-2xl overflow-hidden p-5">
+        <div className="flex items-center justify-between pb-3 border-b border-zinc-800">
+          <div className="flex items-center gap-2 text-sm font-bold text-zinc-100">
             <ImageIcon className="w-4 h-4 text-artemis-accent" />
             Insert Image
           </div>
           <button
             type="button"
             onClick={onClose}
-            className="p-1 rounded-lg text-slate-400 hover:text-slate-100 hover:bg-slate-800"
+            className="p-1 rounded-lg text-zinc-400 hover:text-zinc-100 hover:bg-zinc-800"
           >
             <X className="w-4 h-4" />
           </button>
         </div>
 
         {/* Tab Toggle: Local Upload vs Web URL */}
-        <div className="flex gap-2 mt-4 p-1 bg-artemis-950 rounded-xl border border-slate-800">
+        <div className="flex gap-2 mt-4 p-1 bg-artemis-950 rounded-xl border border-zinc-800">
           <button
             type="button"
             onClick={() => setActiveTab('upload')}
             className={`flex-1 py-1.5 rounded-lg text-xs font-semibold flex items-center justify-center gap-2 transition-colors ${
               activeTab === 'upload'
                 ? 'bg-artemis-accent/20 text-artemis-accent border border-artemis-accent/30'
-                : 'text-slate-400 hover:text-slate-200'
+                : 'text-zinc-400 hover:text-zinc-200'
             }`}
           >
             <Upload className="w-3.5 h-3.5" />
@@ -73,7 +73,7 @@ export const ImageModal: React.FC<ImageModalProps> = ({ isOpen, onClose, onSubmi
             className={`flex-1 py-1.5 rounded-lg text-xs font-semibold flex items-center justify-center gap-2 transition-colors ${
               activeTab === 'url'
                 ? 'bg-artemis-accent/20 text-artemis-accent border border-artemis-accent/30'
-                : 'text-slate-400 hover:text-slate-200'
+                : 'text-zinc-400 hover:text-zinc-200'
             }`}
           >
             <Globe className="w-3.5 h-3.5" />
@@ -93,7 +93,7 @@ export const ImageModal: React.FC<ImageModalProps> = ({ isOpen, onClose, onSubmi
               />
               <div
                 onClick={() => fileInputRef.current?.click()}
-                className="border-2 border-dashed border-slate-700 hover:border-artemis-accent/60 rounded-xl p-6 flex flex-col items-center justify-center cursor-pointer transition-colors text-center bg-artemis-950/50"
+                className="border-2 border-dashed border-zinc-700 hover:border-artemis-accent/60 rounded-xl p-6 flex flex-col items-center justify-center cursor-pointer transition-colors text-center bg-artemis-950/50"
               >
                 {preview ? (
                   <img
@@ -103,11 +103,11 @@ export const ImageModal: React.FC<ImageModalProps> = ({ isOpen, onClose, onSubmi
                   />
                 ) : (
                   <>
-                    <Upload className="w-7 h-7 text-slate-500 mb-2" />
-                    <span className="text-xs font-semibold text-slate-300">
+                    <Upload className="w-7 h-7 text-zinc-500 mb-2" />
+                    <span className="text-xs font-semibold text-zinc-300">
                       Click to choose image file
                     </span>
-                    <span className="text-[11px] text-slate-500 mt-0.5">
+                    <span className="text-[11px] text-zinc-500 mt-0.5">
                       PNG, JPG, SVG, WebP up to 5MB
                     </span>
                   </>
@@ -116,7 +116,7 @@ export const ImageModal: React.FC<ImageModalProps> = ({ isOpen, onClose, onSubmi
             </div>
           ) : (
             <div>
-              <label className="block text-xs font-semibold text-slate-300 mb-1.5">
+              <label className="block text-xs font-semibold text-zinc-300 mb-1.5">
                 Image Web Address (URL)
               </label>
               <input
@@ -125,7 +125,7 @@ export const ImageModal: React.FC<ImageModalProps> = ({ isOpen, onClose, onSubmi
                 value={url}
                 onChange={(e) => setUrl(e.target.value)}
                 autoFocus
-                className="w-full bg-artemis-950 border border-slate-700 rounded-xl px-3 py-2 text-xs text-slate-100 placeholder-slate-500 focus:outline-none focus:border-artemis-accent"
+                className="w-full bg-artemis-950 border border-zinc-700 rounded-xl px-3 py-2 text-xs text-zinc-100 placeholder-zinc-500 focus:outline-none focus:border-artemis-accent"
               />
             </div>
           )}
@@ -134,14 +134,14 @@ export const ImageModal: React.FC<ImageModalProps> = ({ isOpen, onClose, onSubmi
             <button
               type="button"
               onClick={onClose}
-              className="px-3.5 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-medium"
+              className="px-3.5 py-1.5 rounded-lg bg-zinc-800 hover:bg-zinc-700 text-zinc-300 text-xs font-medium"
             >
               Cancel
             </button>
             <button
               type="submit"
               disabled={activeTab === 'upload' ? !preview : !url.trim()}
-              className="px-4 py-1.5 rounded-lg bg-artemis-accent hover:bg-sky-400 disabled:opacity-40 disabled:hover:bg-artemis-accent text-slate-950 text-xs font-bold flex items-center gap-1.5"
+              className="px-4 py-1.5 rounded-lg bg-artemis-accent hover:bg-silver-400 disabled:opacity-40 disabled:hover:bg-artemis-accent text-zinc-950 text-xs font-bold flex items-center gap-1.5"
             >
               <Check className="w-3.5 h-3.5" />
               Insert Image

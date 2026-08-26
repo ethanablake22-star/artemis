@@ -14,7 +14,7 @@ export const BreadcrumbNav: React.FC = () => {
           type="button"
           onClick={navigateUp}
           title="Go to parent folder"
-          className="p-1 rounded-md text-slate-400 hover:text-slate-100 hover:bg-slate-800 transition-colors mr-1 shrink-0"
+          className="p-1 rounded-md text-zinc-400 hover:text-zinc-100 hover:bg-zinc-800 transition-colors mr-1 shrink-0"
         >
           <ArrowLeft className="w-4 h-4" />
         </button>
@@ -28,7 +28,7 @@ export const BreadcrumbNav: React.FC = () => {
         return (
           <React.Fragment key={crumb.id || 'root'}>
             {index > 0 && (
-              <ChevronRight className="w-3.5 h-3.5 text-slate-600 shrink-0" />
+              <ChevronRight className="w-3.5 h-3.5 text-zinc-600 shrink-0" />
             )}
 
             <button
@@ -38,7 +38,7 @@ export const BreadcrumbNav: React.FC = () => {
                 'flex items-center gap-1.5 px-2 py-1 rounded-md text-xs font-medium transition-colors shrink-0 max-w-[180px]',
                 isLast
                   ? 'bg-artemis-accent/15 text-artemis-accent font-semibold border border-artemis-accent/30'
-                  : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/60'
+                  : 'text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800/60'
               )}
             >
               {isRoot && <Folder className="w-3.5 h-3.5 shrink-0" />}

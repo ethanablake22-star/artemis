@@ -75,23 +75,23 @@ export const CreateCustomerModal: React.FC<CreateCustomerModalProps> = ({
 
   return (
     <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4 animate-fadeIn">
-      <div className="w-full max-w-md bg-artemis-900 border border-slate-700 rounded-2xl shadow-2xl overflow-hidden p-5">
-        <div className="flex items-center justify-between pb-3 border-b border-slate-800">
-          <div className="flex items-center gap-2 text-sm font-bold text-slate-100">
+      <div className="w-full max-w-md bg-artemis-900 border border-zinc-700 rounded-2xl shadow-2xl overflow-hidden p-5">
+        <div className="flex items-center justify-between pb-3 border-b border-zinc-800">
+          <div className="flex items-center gap-2 text-sm font-bold text-zinc-100">
             <UserPlus className="w-4 h-4 text-artemis-accent" />
             Add New Customer
           </div>
           <button
             type="button"
             onClick={onClose}
-            className="p-1 rounded-lg text-slate-400 hover:text-slate-100 hover:bg-slate-800"
+            className="p-1 rounded-lg text-zinc-400 hover:text-zinc-100 hover:bg-zinc-800"
           >
             <X className="w-4 h-4" />
           </button>
         </div>
 
         {/* Customer Type Toggle: Individual vs Business */}
-        <div className="flex gap-2 mt-4 p-1 bg-artemis-950 rounded-xl border border-slate-800">
+        <div className="flex gap-2 mt-4 p-1 bg-artemis-950 rounded-xl border border-zinc-800">
           <button
             type="button"
             onClick={() => setType('individual')}
@@ -99,7 +99,7 @@ export const CreateCustomerModal: React.FC<CreateCustomerModalProps> = ({
               'flex-1 py-1.5 rounded-lg text-xs font-semibold flex items-center justify-center gap-1.5 transition-colors',
               type === 'individual'
                 ? 'bg-artemis-accent/20 text-artemis-accent border border-artemis-accent/30'
-                : 'text-slate-400 hover:text-slate-200'
+                : 'text-zinc-400 hover:text-zinc-200'
             )}
           >
             <User className="w-3.5 h-3.5" />
@@ -112,7 +112,7 @@ export const CreateCustomerModal: React.FC<CreateCustomerModalProps> = ({
               'flex-1 py-1.5 rounded-lg text-xs font-semibold flex items-center justify-center gap-1.5 transition-colors',
               type === 'business'
                 ? 'bg-artemis-accent/20 text-artemis-accent border border-artemis-accent/30'
-                : 'text-slate-400 hover:text-slate-200'
+                : 'text-zinc-400 hover:text-zinc-200'
             )}
           >
             <Building2 className="w-3.5 h-3.5" />
@@ -130,7 +130,7 @@ export const CreateCustomerModal: React.FC<CreateCustomerModalProps> = ({
           {type === 'individual' ? (
             <div className="grid grid-cols-2 gap-3">
               <div>
-                <label className="block font-semibold text-slate-300 mb-1">
+                <label className="block font-semibold text-zinc-300 mb-1">
                   First Name <span className="text-red-400">*</span>
                 </label>
                 <input
@@ -139,11 +139,11 @@ export const CreateCustomerModal: React.FC<CreateCustomerModalProps> = ({
                   value={firstName}
                   onChange={(e) => setFirstName(e.target.value)}
                   autoFocus
-                  className="w-full bg-artemis-950 border border-slate-700 rounded-xl px-3 py-2 text-slate-100 placeholder-slate-500 focus:outline-none focus:border-artemis-accent"
+                  className="w-full bg-artemis-950 border border-zinc-700 rounded-xl px-3 py-2 text-zinc-100 placeholder-zinc-500 focus:outline-none focus:border-artemis-accent"
                 />
               </div>
               <div>
-                <label className="block font-semibold text-slate-300 mb-1">
+                <label className="block font-semibold text-zinc-300 mb-1">
                   Last Name
                 </label>
                 <input
@@ -151,14 +151,14 @@ export const CreateCustomerModal: React.FC<CreateCustomerModalProps> = ({
                   placeholder="e.g. Blake"
                   value={lastName}
                   onChange={(e) => setLastName(e.target.value)}
-                  className="w-full bg-artemis-950 border border-slate-700 rounded-xl px-3 py-2 text-slate-100 placeholder-slate-500 focus:outline-none focus:border-artemis-accent"
+                  className="w-full bg-artemis-950 border border-zinc-700 rounded-xl px-3 py-2 text-zinc-100 placeholder-zinc-500 focus:outline-none focus:border-artemis-accent"
                 />
               </div>
             </div>
           ) : (
             <div className="space-y-3">
               <div>
-                <label className="block font-semibold text-slate-300 mb-1">
+                <label className="block font-semibold text-zinc-300 mb-1">
                   Business Name / Company <span className="text-red-400">*</span>
                 </label>
                 <input
@@ -167,11 +167,11 @@ export const CreateCustomerModal: React.FC<CreateCustomerModalProps> = ({
                   value={businessName}
                   onChange={(e) => setBusinessName(e.target.value)}
                   autoFocus
-                  className="w-full bg-artemis-950 border border-slate-700 rounded-xl px-3 py-2 text-slate-100 placeholder-slate-500 focus:outline-none focus:border-artemis-accent"
+                  className="w-full bg-artemis-950 border border-zinc-700 rounded-xl px-3 py-2 text-zinc-100 placeholder-zinc-500 focus:outline-none focus:border-artemis-accent"
                 />
               </div>
               <div>
-                <label className="block font-semibold text-slate-300 mb-1">
+                <label className="block font-semibold text-zinc-300 mb-1">
                   Point of Contact / Manager
                 </label>
                 <input
@@ -179,7 +179,7 @@ export const CreateCustomerModal: React.FC<CreateCustomerModalProps> = ({
                   placeholder="e.g. Sarah Connor (Fleet Manager)"
                   value={contactPerson}
                   onChange={(e) => setContactPerson(e.target.value)}
-                  className="w-full bg-artemis-950 border border-slate-700 rounded-xl px-3 py-2 text-slate-100 placeholder-slate-500 focus:outline-none focus:border-artemis-accent"
+                  className="w-full bg-artemis-950 border border-zinc-700 rounded-xl px-3 py-2 text-zinc-100 placeholder-zinc-500 focus:outline-none focus:border-artemis-accent"
                 />
               </div>
             </div>
@@ -187,7 +187,7 @@ export const CreateCustomerModal: React.FC<CreateCustomerModalProps> = ({
 
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="block font-semibold text-slate-300 mb-1">
+              <label className="block font-semibold text-zinc-300 mb-1">
                 Phone Number
               </label>
               <input
@@ -195,11 +195,11 @@ export const CreateCustomerModal: React.FC<CreateCustomerModalProps> = ({
                 placeholder="(555) 019-2834"
                 value={phone}
                 onChange={(e) => setPhone(e.target.value)}
-                className="w-full bg-artemis-950 border border-slate-700 rounded-xl px-3 py-2 text-slate-100 placeholder-slate-500 focus:outline-none focus:border-artemis-accent"
+                className="w-full bg-artemis-950 border border-zinc-700 rounded-xl px-3 py-2 text-zinc-100 placeholder-zinc-500 focus:outline-none focus:border-artemis-accent"
               />
             </div>
             <div>
-              <label className="block font-semibold text-slate-300 mb-1">
+              <label className="block font-semibold text-zinc-300 mb-1">
                 Email Address
               </label>
               <input
@@ -207,13 +207,13 @@ export const CreateCustomerModal: React.FC<CreateCustomerModalProps> = ({
                 placeholder="customer@example.com"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                className="w-full bg-artemis-950 border border-slate-700 rounded-xl px-3 py-2 text-slate-100 placeholder-slate-500 focus:outline-none focus:border-artemis-accent"
+                className="w-full bg-artemis-950 border border-zinc-700 rounded-xl px-3 py-2 text-zinc-100 placeholder-zinc-500 focus:outline-none focus:border-artemis-accent"
               />
             </div>
           </div>
 
           <div>
-            <label className="block font-semibold text-slate-300 mb-1">
+            <label className="block font-semibold text-zinc-300 mb-1">
               Address
             </label>
             <input
@@ -221,12 +221,12 @@ export const CreateCustomerModal: React.FC<CreateCustomerModalProps> = ({
               placeholder="123 Industrial Way, Suite 4"
               value={address}
               onChange={(e) => setAddress(e.target.value)}
-              className="w-full bg-artemis-950 border border-slate-700 rounded-xl px-3 py-2 text-slate-100 placeholder-slate-500 focus:outline-none focus:border-artemis-accent"
+              className="w-full bg-artemis-950 border border-zinc-700 rounded-xl px-3 py-2 text-zinc-100 placeholder-zinc-500 focus:outline-none focus:border-artemis-accent"
             />
           </div>
 
           <div>
-            <label className="block font-semibold text-slate-300 mb-1">
+            <label className="block font-semibold text-zinc-300 mb-1">
               Notes & Preferences
             </label>
             <textarea
@@ -234,22 +234,22 @@ export const CreateCustomerModal: React.FC<CreateCustomerModalProps> = ({
               rows={2}
               value={notes}
               onChange={(e) => setNotes(e.target.value)}
-              className="w-full bg-artemis-950 border border-slate-700 rounded-xl px-3 py-2 text-slate-100 placeholder-slate-500 focus:outline-none focus:border-artemis-accent resize-none"
+              className="w-full bg-artemis-950 border border-zinc-700 rounded-xl px-3 py-2 text-zinc-100 placeholder-zinc-500 focus:outline-none focus:border-artemis-accent resize-none"
             />
           </div>
 
-          <div className="flex items-center justify-end gap-2 pt-2 border-t border-slate-800">
+          <div className="flex items-center justify-end gap-2 pt-2 border-t border-zinc-800">
             <button
               type="button"
               onClick={onClose}
-              className="px-3.5 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-medium"
+              className="px-3.5 py-1.5 rounded-lg bg-zinc-800 hover:bg-zinc-700 text-zinc-300 text-xs font-medium"
             >
               Cancel
             </button>
             <button
               type="submit"
               disabled={isSubmitting}
-              className="px-4 py-1.5 rounded-lg bg-artemis-accent hover:bg-sky-400 disabled:opacity-40 text-slate-950 text-xs font-bold flex items-center gap-1.5"
+              className="px-4 py-1.5 rounded-lg bg-artemis-accent hover:bg-silver-400 disabled:opacity-40 text-zinc-950 text-xs font-bold flex items-center gap-1.5"
             >
               <Check className="w-3.5 h-3.5" />
               {isSubmitting ? 'Creating…' : 'Save Customer'}

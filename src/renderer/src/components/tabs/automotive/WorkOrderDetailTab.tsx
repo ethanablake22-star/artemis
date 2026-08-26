@@ -44,15 +44,15 @@ const STATUS_CONFIG: Record<
 > = {
   draft: {
     label: 'Draft',
-    bg: 'bg-slate-800/80',
-    text: 'text-slate-400',
-    border: 'border-slate-700',
+    bg: 'bg-zinc-800/80',
+    text: 'text-zinc-400',
+    border: 'border-zinc-700',
   },
   open: {
     label: 'Open',
-    bg: 'bg-blue-500/10',
-    text: 'text-blue-400',
-    border: 'border-blue-500/30',
+    bg: 'bg-silver-500/10',
+    text: 'text-silver-400',
+    border: 'border-silver-500/30',
   },
   diagnosing: {
     label: 'Diagnosing',
@@ -62,9 +62,9 @@ const STATUS_CONFIG: Record<
   },
   awaiting_approval: {
     label: 'Awaiting Approval',
-    bg: 'bg-amber-500/10',
-    text: 'text-amber-400',
-    border: 'border-amber-500/30',
+    bg: 'bg-bronze-500/10',
+    text: 'text-bronze-400',
+    border: 'border-bronze-500/30',
   },
   waiting_parts: {
     label: 'Waiting on Parts',
@@ -74,15 +74,15 @@ const STATUS_CONFIG: Record<
   },
   in_progress: {
     label: 'In Progress',
-    bg: 'bg-cyan-500/10',
-    text: 'text-cyan-400',
-    border: 'border-cyan-500/30',
+    bg: 'bg-silver-500/10',
+    text: 'text-silver-400',
+    border: 'border-silver-500/30',
   },
   completed: {
     label: 'Completed',
-    bg: 'bg-emerald-500/10',
-    text: 'text-emerald-400',
-    border: 'border-emerald-500/30',
+    bg: 'bg-bronze-500/10',
+    text: 'text-bronze-400',
+    border: 'border-bronze-500/30',
   },
   cancelled: {
     label: 'Cancelled',
@@ -101,6 +101,7 @@ export const WorkOrderDetailTab: React.FC<WorkOrderDetailTabProps> = ({ workOrde
     deleteWorkOrder,
     getWorkOrderEstimates,
     getWorkOrderInvoices,
+    getInvoicePaymentSummary,
     createEstimate,
   } = useAutomotive();
 
@@ -159,10 +160,10 @@ export const WorkOrderDetailTab: React.FC<WorkOrderDetailTabProps> = ({ workOrde
 
   if (!workOrder) {
     return (
-      <div className="h-full w-full flex flex-col items-center justify-center bg-artemis-950 text-slate-400 text-xs p-6 text-center">
-        <ClipboardList className="w-8 h-8 text-slate-600 mb-2" />
-        <h4 className="text-sm font-bold text-slate-200">Work Order Not Found</h4>
-        <p className="text-slate-500 mt-1 max-w-sm">
+      <div className="h-full w-full flex flex-col items-center justify-center bg-artemis-950 text-zinc-400 text-xs p-6 text-center">
+        <ClipboardList className="w-8 h-8 text-zinc-600 mb-2" />
+        <h4 className="text-sm font-bold text-zinc-200">Work Order Not Found</h4>
+        <p className="text-zinc-500 mt-1 max-w-sm">
           This work order may have been removed or does not exist.
         </p>
       </div>
@@ -331,28 +332,28 @@ export const WorkOrderDetailTab: React.FC<WorkOrderDetailTabProps> = ({ workOrde
   const statusStyle = STATUS_CONFIG[workOrder.status] || STATUS_CONFIG.open;
 
   return (
-    <div className="h-full w-full bg-artemis-950 flex flex-col overflow-hidden text-slate-100 select-none">
+    <div className="h-full w-full bg-artemis-950 flex flex-col overflow-hidden text-zinc-100 select-none">
       {/* Top Header Bar */}
-      <div className="h-14 bg-artemis-950 border-b border-slate-800 px-6 flex items-center justify-between shrink-0">
+      <div className="h-14 bg-artemis-950 border-b border-zinc-800 px-6 flex items-center justify-between shrink-0">
         <div className="flex items-center gap-3 min-w-0">
-          <div className="w-9 h-9 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 flex items-center justify-center shrink-0">
+          <div className="w-9 h-9 rounded-xl bg-bronze-500/10 border border-bronze-500/20 text-bronze-400 flex items-center justify-center shrink-0">
             <ClipboardList className="w-5 h-5" />
           </div>
           <div className="min-w-0">
             <div className="flex items-center gap-2">
-              <h2 className="text-sm font-bold font-mono text-slate-100">
+              <h2 className="text-sm font-bold font-mono text-zinc-100">
                 {workOrder.workOrderNumber}
               </h2>
-              <span className="text-xs text-slate-400 font-semibold truncate">
+              <span className="text-xs text-zinc-400 font-semibold truncate">
                 — {workOrder.vehicleDescriptionSnapshot}
               </span>
             </div>
-            <div className="text-[11px] text-slate-500 flex items-center gap-3 mt-0.5 font-mono">
+            <div className="text-[11px] text-zinc-500 flex items-center gap-3 mt-0.5 font-mono">
               <span>Opened: {formatDate(workOrder.openedAt)}</span>
               {workOrder.completedAt && (
                 <>
                   <span>•</span>
-                  <span className="text-emerald-400">Completed: {formatDate(workOrder.completedAt)}</span>
+                  <span className="text-bronze-400">Completed: {formatDate(workOrder.completedAt)}</span>
                 </>
               )}
             </div>
@@ -375,11 +376,11 @@ export const WorkOrderDetailTab: React.FC<WorkOrderDetailTabProps> = ({ workOrde
               className={clsx(
                 'px-3 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1.5 transition-all',
                 isCurrentMission('work-order', workOrder.id)
-                  ? 'bg-amber-500/20 text-amber-300 border border-amber-500/40 shadow-sm shadow-amber-500/10'
-                  : 'bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700'
+                  ? 'bg-bronze-500/20 text-bronze-300 border border-bronze-500/40 shadow-sm shadow-bronze-500/10'
+                  : 'bg-zinc-800 hover:bg-zinc-700 text-zinc-300 border border-zinc-700'
               )}
             >
-              <Target className={clsx('w-3.5 h-3.5', isCurrentMission('work-order', workOrder.id) && 'text-amber-400 fill-amber-400/20')} />
+              <Target className={clsx('w-3.5 h-3.5', isCurrentMission('work-order', workOrder.id) && 'text-bronze-400 fill-bronze-400/20')} />
               {isCurrentMission('work-order', workOrder.id) ? '★ Current Mission' : 'Set as Current Mission'}
             </button>
           )}
@@ -396,7 +397,7 @@ export const WorkOrderDetailTab: React.FC<WorkOrderDetailTabProps> = ({ workOrde
 
           {/* Status Dropdown */}
           <div className="flex items-center gap-1.5">
-            <span className="text-[11px] text-slate-400 font-medium">Status:</span>
+            <span className="text-[11px] text-zinc-400 font-medium">Status:</span>
             <select
               value={workOrder.status}
               onChange={(e) => handleStatusChange(e.target.value as WorkOrderStatus)}
@@ -443,43 +444,43 @@ export const WorkOrderDetailTab: React.FC<WorkOrderDetailTabProps> = ({ workOrde
         {/* Three Context Cards: Customer, Vehicle, Odometer */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           {/* Customer Card */}
-          <div className="p-4 rounded-xl bg-artemis-900/90 border border-slate-800 space-y-2">
-            <span className="text-[10px] uppercase font-bold tracking-wider text-slate-400 flex items-center gap-1.5">
+          <div className="p-4 rounded-xl bg-artemis-900/90 border border-zinc-800 space-y-2">
+            <span className="text-[10px] uppercase font-bold tracking-wider text-zinc-400 flex items-center gap-1.5">
               <User className="w-3.5 h-3.5 text-artemis-accent" />
               Customer at Intake
             </span>
             {liveCustomer ? (
               <div
                 onClick={() => openCustomerTab(liveCustomer.id, liveCustomer.name)}
-                className="p-2.5 rounded-lg bg-artemis-950/80 border border-slate-800 hover:border-artemis-accent/40 cursor-pointer group transition-all"
+                className="p-2.5 rounded-lg bg-artemis-950/80 border border-zinc-800 hover:border-artemis-accent/40 cursor-pointer group transition-all"
               >
                 <div className="flex items-center justify-between">
-                  <span className="font-bold text-xs text-slate-100 group-hover:text-artemis-accent transition-colors">
+                  <span className="font-bold text-xs text-zinc-100 group-hover:text-artemis-accent transition-colors">
                     {liveCustomer.name}
                   </span>
-                  <ExternalLink className="w-3 h-3 text-slate-600 group-hover:text-artemis-accent transition-colors" />
+                  <ExternalLink className="w-3 h-3 text-zinc-600 group-hover:text-artemis-accent transition-colors" />
                 </div>
-                <div className="text-[11px] text-slate-400 mt-0.5 font-mono">
+                <div className="text-[11px] text-zinc-400 mt-0.5 font-mono">
                   {liveCustomer.customerNumber} • {liveCustomer.phone || 'No phone'}
                 </div>
               </div>
             ) : workOrder.customerNameSnapshot ? (
-              <div className="p-2.5 rounded-lg bg-artemis-950/60 border border-slate-800/80">
-                <span className="font-bold text-xs text-slate-200 block">
+              <div className="p-2.5 rounded-lg bg-artemis-950/60 border border-zinc-800/80">
+                <span className="font-bold text-xs text-zinc-200 block">
                   {workOrder.customerNameSnapshot}
                 </span>
-                <span className="text-[10px] text-amber-400/80 italic font-mono">
+                <span className="text-[10px] text-bronze-400/80 italic font-mono">
                   (Historical Snapshot)
                 </span>
               </div>
             ) : (
-              <div className="text-xs text-slate-500 italic p-2">Unassigned Walk-in</div>
+              <div className="text-xs text-zinc-500 italic p-2">Unassigned Walk-in</div>
             )}
           </div>
 
           {/* Vehicle Card */}
-          <div className="p-4 rounded-xl bg-artemis-900/90 border border-slate-800 space-y-2">
-            <span className="text-[10px] uppercase font-bold tracking-wider text-slate-400 flex items-center gap-1.5">
+          <div className="p-4 rounded-xl bg-artemis-900/90 border border-zinc-800 space-y-2">
+            <span className="text-[10px] uppercase font-bold tracking-wider text-zinc-400 flex items-center gap-1.5">
               <Car className="w-3.5 h-3.5 text-artemis-accent" />
               Vehicle
             </span>
@@ -491,25 +492,25 @@ export const WorkOrderDetailTab: React.FC<WorkOrderDetailTabProps> = ({ workOrde
                     `${liveVehicle.year ? `${liveVehicle.year} ` : ''}${liveVehicle.make} ${liveVehicle.model}`
                   )
                 }
-                className="p-2.5 rounded-lg bg-artemis-950/80 border border-slate-800 hover:border-artemis-accent/40 cursor-pointer group transition-all"
+                className="p-2.5 rounded-lg bg-artemis-950/80 border border-zinc-800 hover:border-artemis-accent/40 cursor-pointer group transition-all"
               >
                 <div className="flex items-center justify-between">
-                  <span className="font-bold text-xs text-slate-100 group-hover:text-artemis-accent transition-colors">
+                  <span className="font-bold text-xs text-zinc-100 group-hover:text-artemis-accent transition-colors">
                     {workOrder.vehicleDescriptionSnapshot}
                   </span>
-                  <ExternalLink className="w-3 h-3 text-slate-600 group-hover:text-artemis-accent transition-colors" />
+                  <ExternalLink className="w-3 h-3 text-zinc-600 group-hover:text-artemis-accent transition-colors" />
                 </div>
-                <div className="text-[11px] text-slate-400 mt-0.5 font-mono">
+                <div className="text-[11px] text-zinc-400 mt-0.5 font-mono">
                   {liveVehicle.vehicleNumber} {liveVehicle.vin ? `• VIN: ${liveVehicle.vin}` : ''}
                 </div>
               </div>
             ) : (
-              <div className="p-2.5 rounded-lg bg-artemis-950/60 border border-slate-800/80">
-                <span className="font-bold text-xs text-slate-200 block">
+              <div className="p-2.5 rounded-lg bg-artemis-950/60 border border-zinc-800/80">
+                <span className="font-bold text-xs text-zinc-200 block">
                   {workOrder.vehicleDescriptionSnapshot}
                 </span>
                 {workOrder.vinSnapshot && (
-                  <span className="text-[10px] text-slate-400 font-mono block">
+                  <span className="text-[10px] text-zinc-400 font-mono block">
                     VIN: {workOrder.vinSnapshot}
                   </span>
                 )}
@@ -518,9 +519,9 @@ export const WorkOrderDetailTab: React.FC<WorkOrderDetailTabProps> = ({ workOrde
           </div>
 
           {/* Odometer Card */}
-          <div className="p-4 rounded-xl bg-artemis-900/90 border border-slate-800 space-y-2">
+          <div className="p-4 rounded-xl bg-artemis-900/90 border border-zinc-800 space-y-2">
             <div className="flex items-center justify-between">
-              <span className="text-[10px] uppercase font-bold tracking-wider text-slate-400 flex items-center gap-1.5">
+              <span className="text-[10px] uppercase font-bold tracking-wider text-zinc-400 flex items-center gap-1.5">
                 <Gauge className="w-3.5 h-3.5 text-artemis-accent" />
                 Odometer Tracking
               </span>
@@ -532,7 +533,7 @@ export const WorkOrderDetailTab: React.FC<WorkOrderDetailTabProps> = ({ workOrde
                     setOdometerOut(workOrder.odometerOut?.toString() || '');
                     setIsEditingOdometer(true);
                   }}
-                  className="text-[10px] text-cyan-400 hover:underline flex items-center gap-1"
+                  className="text-[10px] text-silver-400 hover:underline flex items-center gap-1"
                 >
                   <Edit2 className="w-2.5 h-2.5" />
                   Edit
@@ -541,7 +542,7 @@ export const WorkOrderDetailTab: React.FC<WorkOrderDetailTabProps> = ({ workOrde
                 <button
                   type="button"
                   onClick={handleSaveOdometer}
-                  className="text-[10px] text-emerald-400 hover:underline font-bold flex items-center gap-1"
+                  className="text-[10px] text-bronze-400 hover:underline font-bold flex items-center gap-1"
                 >
                   <Check className="w-2.5 h-2.5" />
                   Save
@@ -552,37 +553,37 @@ export const WorkOrderDetailTab: React.FC<WorkOrderDetailTabProps> = ({ workOrde
             {isEditingOdometer ? (
               <div className="grid grid-cols-2 gap-2 text-xs">
                 <div>
-                  <label className="text-[10px] text-slate-500">In (mi)</label>
+                  <label className="text-[10px] text-zinc-500">In (mi)</label>
                   <input
                     type="number"
                     value={odometerIn}
                     onChange={(e) => setOdometerIn(e.target.value)}
-                    className="w-full bg-artemis-950 border border-slate-700 rounded px-2 py-1 text-slate-200 font-mono text-xs"
+                    className="w-full bg-artemis-950 border border-zinc-700 rounded px-2 py-1 text-zinc-200 font-mono text-xs"
                   />
                 </div>
                 <div>
-                  <label className="text-[10px] text-slate-500">Out (mi)</label>
+                  <label className="text-[10px] text-zinc-500">Out (mi)</label>
                   <input
                     type="number"
                     value={odometerOut}
                     onChange={(e) => setOdometerOut(e.target.value)}
-                    className="w-full bg-artemis-950 border border-slate-700 rounded px-2 py-1 text-slate-200 font-mono text-xs"
+                    className="w-full bg-artemis-950 border border-zinc-700 rounded px-2 py-1 text-zinc-200 font-mono text-xs"
                   />
                 </div>
               </div>
             ) : (
               <div className="grid grid-cols-2 gap-2 text-xs font-mono">
-                <div className="p-2 rounded bg-artemis-950/60 border border-slate-800">
-                  <span className="text-[9px] uppercase text-slate-500 block">In</span>
-                  <span className="font-bold text-slate-200">
+                <div className="p-2 rounded bg-artemis-950/60 border border-zinc-800">
+                  <span className="text-[9px] uppercase text-zinc-500 block">In</span>
+                  <span className="font-bold text-zinc-200">
                     {workOrder.odometerIn !== undefined
                       ? `${workOrder.odometerIn.toLocaleString()} mi`
                       : '—'}
                   </span>
                 </div>
-                <div className="p-2 rounded bg-artemis-950/60 border border-slate-800">
-                  <span className="text-[9px] uppercase text-slate-500 block">Out</span>
-                  <span className="font-bold text-cyan-400">
+                <div className="p-2 rounded bg-artemis-950/60 border border-zinc-800">
+                  <span className="text-[9px] uppercase text-zinc-500 block">Out</span>
+                  <span className="font-bold text-silver-400">
                     {workOrder.odometerOut !== undefined
                       ? `${workOrder.odometerOut.toLocaleString()} mi`
                       : '—'}
@@ -594,9 +595,9 @@ export const WorkOrderDetailTab: React.FC<WorkOrderDetailTabProps> = ({ workOrde
         </div>
 
         {/* Customer Concern */}
-        <div className="p-5 rounded-xl bg-artemis-900/90 border border-slate-800 space-y-3">
+        <div className="p-5 rounded-xl bg-artemis-900/90 border border-zinc-800 space-y-3">
           <div className="flex items-center justify-between">
-            <h3 className="text-xs font-bold uppercase tracking-wider text-slate-300 flex items-center gap-1.5">
+            <h3 className="text-xs font-bold uppercase tracking-wider text-zinc-300 flex items-center gap-1.5">
               <FileText className="w-3.5 h-3.5 text-artemis-accent" />
               Customer Concern / Stated Reason for Service
             </h3>
@@ -607,7 +608,7 @@ export const WorkOrderDetailTab: React.FC<WorkOrderDetailTabProps> = ({ workOrde
                   setCustomerConcern(workOrder.customerConcern);
                   setIsEditingConcern(true);
                 }}
-                className="text-xs text-slate-400 hover:text-slate-200 flex items-center gap-1"
+                className="text-xs text-zinc-400 hover:text-zinc-200 flex items-center gap-1"
               >
                 <Edit2 className="w-3 h-3" />
                 Edit
@@ -617,7 +618,7 @@ export const WorkOrderDetailTab: React.FC<WorkOrderDetailTabProps> = ({ workOrde
                 <button
                   type="button"
                   onClick={handleSaveConcern}
-                  className="px-2.5 py-1 rounded bg-emerald-500 hover:bg-emerald-400 text-slate-950 text-xs font-bold flex items-center gap-1"
+                  className="px-2.5 py-1 rounded bg-bronze-500 hover:bg-bronze-400 text-zinc-950 text-xs font-bold flex items-center gap-1"
                 >
                   <Check className="w-3 h-3" />
                   Save
@@ -625,7 +626,7 @@ export const WorkOrderDetailTab: React.FC<WorkOrderDetailTabProps> = ({ workOrde
                 <button
                   type="button"
                   onClick={() => setIsEditingConcern(false)}
-                  className="px-2.5 py-1 rounded bg-slate-800 text-slate-400 text-xs"
+                  className="px-2.5 py-1 rounded bg-zinc-800 text-zinc-400 text-xs"
                 >
                   Cancel
                 </button>
@@ -638,19 +639,19 @@ export const WorkOrderDetailTab: React.FC<WorkOrderDetailTabProps> = ({ workOrde
               rows={3}
               value={customerConcern}
               onChange={(e) => setCustomerConcern(e.target.value)}
-              className="w-full bg-artemis-950 border border-slate-700 rounded-lg p-2.5 text-xs text-slate-200 resize-none"
+              className="w-full bg-artemis-950 border border-zinc-700 rounded-lg p-2.5 text-xs text-zinc-200 resize-none"
             />
           ) : (
-            <p className="text-xs text-slate-200 leading-relaxed font-medium bg-artemis-950/40 p-3 rounded-lg border border-slate-800/80">
+            <p className="text-xs text-zinc-200 leading-relaxed font-medium bg-artemis-950/40 p-3 rounded-lg border border-zinc-800/80">
               {workOrder.customerConcern}
             </p>
           )}
         </div>
 
         {/* Inspection & Diagnosis */}
-        <div className="p-5 rounded-xl bg-artemis-900/90 border border-slate-800 space-y-3">
+        <div className="p-5 rounded-xl bg-artemis-900/90 border border-zinc-800 space-y-3">
           <div className="flex items-center justify-between">
-            <h3 className="text-xs font-bold uppercase tracking-wider text-slate-300 flex items-center gap-1.5">
+            <h3 className="text-xs font-bold uppercase tracking-wider text-zinc-300 flex items-center gap-1.5">
               <CheckCircle2 className="w-3.5 h-3.5 text-purple-400" />
               Inspection & Diagnostic Findings
             </h3>
@@ -662,7 +663,7 @@ export const WorkOrderDetailTab: React.FC<WorkOrderDetailTabProps> = ({ workOrde
                   setDiagnosis(workOrder.diagnosis || '');
                   setIsEditingDiagnosis(true);
                 }}
-                className="text-xs text-slate-400 hover:text-slate-200 flex items-center gap-1"
+                className="text-xs text-zinc-400 hover:text-zinc-200 flex items-center gap-1"
               >
                 <Edit2 className="w-3 h-3" />
                 Edit
@@ -672,7 +673,7 @@ export const WorkOrderDetailTab: React.FC<WorkOrderDetailTabProps> = ({ workOrde
                 <button
                   type="button"
                   onClick={handleSaveDiagnosis}
-                  className="px-2.5 py-1 rounded bg-emerald-500 hover:bg-emerald-400 text-slate-950 text-xs font-bold flex items-center gap-1"
+                  className="px-2.5 py-1 rounded bg-bronze-500 hover:bg-bronze-400 text-zinc-950 text-xs font-bold flex items-center gap-1"
                 >
                   <Check className="w-3 h-3" />
                   Save
@@ -680,7 +681,7 @@ export const WorkOrderDetailTab: React.FC<WorkOrderDetailTabProps> = ({ workOrde
                 <button
                   type="button"
                   onClick={() => setIsEditingDiagnosis(false)}
-                  className="px-2.5 py-1 rounded bg-slate-800 text-slate-400 text-xs"
+                  className="px-2.5 py-1 rounded bg-zinc-800 text-zinc-400 text-xs"
                 >
                   Cancel
                 </button>
@@ -691,39 +692,39 @@ export const WorkOrderDetailTab: React.FC<WorkOrderDetailTabProps> = ({ workOrde
           {isEditingDiagnosis ? (
             <div className="space-y-3 text-xs">
               <div>
-                <label className="block text-[10px] text-slate-500 mb-1">Inspection Notes</label>
+                <label className="block text-[10px] text-zinc-500 mb-1">Inspection Notes</label>
                 <textarea
                   rows={2}
                   value={inspectionNotes}
                   onChange={(e) => setInspectionNotes(e.target.value)}
-                  className="w-full bg-artemis-950 border border-slate-700 rounded-lg p-2 text-slate-200 resize-none"
+                  className="w-full bg-artemis-950 border border-zinc-700 rounded-lg p-2 text-zinc-200 resize-none"
                 />
               </div>
               <div>
-                <label className="block text-[10px] text-slate-500 mb-1">Diagnostic Root Cause</label>
+                <label className="block text-[10px] text-zinc-500 mb-1">Diagnostic Root Cause</label>
                 <textarea
                   rows={2}
                   value={diagnosis}
                   onChange={(e) => setDiagnosis(e.target.value)}
-                  className="w-full bg-artemis-950 border border-slate-700 rounded-lg p-2 text-slate-200 resize-none"
+                  className="w-full bg-artemis-950 border border-zinc-700 rounded-lg p-2 text-zinc-200 resize-none"
                 />
               </div>
             </div>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-xs">
-              <div className="p-3 rounded-lg bg-artemis-950/60 border border-slate-800/80">
-                <span className="text-[10px] uppercase font-bold text-slate-500 block mb-1">
+              <div className="p-3 rounded-lg bg-artemis-950/60 border border-zinc-800/80">
+                <span className="text-[10px] uppercase font-bold text-zinc-500 block mb-1">
                   Inspection Notes
                 </span>
-                <p className="text-slate-300 leading-relaxed">
+                <p className="text-zinc-300 leading-relaxed">
                   {workOrder.inspectionNotes || 'No inspection notes entered.'}
                 </p>
               </div>
-              <div className="p-3 rounded-lg bg-artemis-950/60 border border-slate-800/80">
+              <div className="p-3 rounded-lg bg-artemis-950/60 border border-zinc-800/80">
                 <span className="text-[10px] uppercase font-bold text-purple-400 block mb-1">
                   Diagnosis
                 </span>
-                <p className="text-slate-300 leading-relaxed">
+                <p className="text-zinc-300 leading-relaxed">
                   {workOrder.diagnosis || 'No diagnostic findings entered.'}
                 </p>
               </div>
@@ -732,21 +733,21 @@ export const WorkOrderDetailTab: React.FC<WorkOrderDetailTabProps> = ({ workOrde
         </div>
 
         {/* Labor Lines */}
-        <div className="p-5 rounded-xl bg-artemis-900/90 border border-slate-800 space-y-3">
+        <div className="p-5 rounded-xl bg-artemis-900/90 border border-zinc-800 space-y-3">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
-              <Wrench className="w-3.5 h-3.5 text-cyan-400" />
-              <h3 className="text-xs font-bold uppercase tracking-wider text-slate-300">
+              <Wrench className="w-3.5 h-3.5 text-silver-400" />
+              <h3 className="text-xs font-bold uppercase tracking-wider text-zinc-300">
                 Labor Operations ({workOrder.laborLines.length})
               </h3>
-              <span className="text-[11px] font-mono font-bold text-cyan-400 px-2 py-0.5 rounded bg-cyan-950 border border-cyan-800">
+              <span className="text-[11px] font-mono font-bold text-silver-400 px-2 py-0.5 rounded bg-silver-950 border border-silver-800">
                 {totalLaborHours.toFixed(1)} hrs total
               </span>
             </div>
             <button
               type="button"
               onClick={() => setIsAddingLabor(true)}
-              className="px-2.5 py-1 rounded-lg bg-cyan-500/15 hover:bg-cyan-500/25 text-cyan-400 border border-cyan-500/30 text-xs font-semibold flex items-center gap-1"
+              className="px-2.5 py-1 rounded-lg bg-silver-500/15 hover:bg-silver-500/25 text-silver-400 border border-silver-500/30 text-xs font-semibold flex items-center gap-1"
             >
               <Plus className="w-3 h-3" />
               Add Labor
@@ -756,7 +757,7 @@ export const WorkOrderDetailTab: React.FC<WorkOrderDetailTabProps> = ({ workOrde
           {isAddingLabor && (
             <form
               onSubmit={handleAddLaborLine}
-              className="p-3 bg-artemis-950 rounded-xl border border-cyan-500/30 space-y-2 text-xs"
+              className="p-3 bg-artemis-950 rounded-xl border border-silver-500/30 space-y-2 text-xs"
             >
               <div className="grid grid-cols-4 gap-2">
                 <div className="col-span-3">
@@ -766,7 +767,7 @@ export const WorkOrderDetailTab: React.FC<WorkOrderDetailTabProps> = ({ workOrde
                     value={newLaborDesc}
                     onChange={(e) => setNewLaborDesc(e.target.value)}
                     autoFocus
-                    className="w-full bg-artemis-900 border border-slate-700 rounded px-2.5 py-1.5 text-slate-100 placeholder-slate-500"
+                    className="w-full bg-artemis-900 border border-zinc-700 rounded px-2.5 py-1.5 text-zinc-100 placeholder-zinc-500"
                   />
                 </div>
                 <div>
@@ -776,7 +777,7 @@ export const WorkOrderDetailTab: React.FC<WorkOrderDetailTabProps> = ({ workOrde
                     placeholder="Hours (e.g. 1.5)"
                     value={newLaborHours}
                     onChange={(e) => setNewLaborHours(e.target.value)}
-                    className="w-full bg-artemis-900 border border-slate-700 rounded px-2.5 py-1.5 text-slate-100 font-mono"
+                    className="w-full bg-artemis-900 border border-zinc-700 rounded px-2.5 py-1.5 text-zinc-100 font-mono"
                   />
                 </div>
               </div>
@@ -785,20 +786,20 @@ export const WorkOrderDetailTab: React.FC<WorkOrderDetailTabProps> = ({ workOrde
                 placeholder="Optional labor notes / instructions..."
                 value={newLaborNotes}
                 onChange={(e) => setNewLaborNotes(e.target.value)}
-                className="w-full bg-artemis-900 border border-slate-700 rounded px-2.5 py-1 text-slate-200 placeholder-slate-600 text-[11px]"
+                className="w-full bg-artemis-900 border border-zinc-700 rounded px-2.5 py-1 text-zinc-200 placeholder-zinc-600 text-[11px]"
               />
               <div className="flex justify-end gap-2 pt-1">
                 <button
                   type="button"
                   onClick={() => setIsAddingLabor(false)}
-                  className="px-2.5 py-1 rounded bg-slate-800 text-slate-400 text-xs"
+                  className="px-2.5 py-1 rounded bg-zinc-800 text-zinc-400 text-xs"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
                   disabled={!newLaborDesc.trim()}
-                  className="px-3 py-1 rounded bg-cyan-500 text-slate-950 text-xs font-bold"
+                  className="px-3 py-1 rounded bg-silver-500 text-zinc-950 text-xs font-bold"
                 >
                   Add Operation
                 </button>
@@ -807,14 +808,14 @@ export const WorkOrderDetailTab: React.FC<WorkOrderDetailTabProps> = ({ workOrde
           )}
 
           {workOrder.laborLines.length === 0 && !isAddingLabor ? (
-            <div className="p-4 text-center text-slate-500 text-xs italic bg-artemis-950/40 rounded-lg border border-slate-800/60">
+            <div className="p-4 text-center text-zinc-500 text-xs italic bg-artemis-950/40 rounded-lg border border-zinc-800/60">
               No labor operations recorded yet.
             </div>
           ) : (
-            <div className="border border-slate-800 rounded-lg overflow-hidden bg-artemis-950/60">
+            <div className="border border-zinc-800 rounded-lg overflow-hidden bg-artemis-950/60">
               <table className="w-full text-left text-xs border-collapse">
                 <thead>
-                  <tr className="border-b border-slate-800 bg-artemis-950 text-slate-500">
+                  <tr className="border-b border-zinc-800 bg-artemis-950 text-zinc-500">
                     <th className="py-2 px-3">Description</th>
                     <th className="py-2 px-3 text-right">Hours</th>
                     <th className="py-2 px-3 text-right">Action</th>
@@ -822,21 +823,21 @@ export const WorkOrderDetailTab: React.FC<WorkOrderDetailTabProps> = ({ workOrde
                 </thead>
                 <tbody>
                   {workOrder.laborLines.map((line) => (
-                    <tr key={line.id} className="border-b border-slate-800/60">
+                    <tr key={line.id} className="border-b border-zinc-800/60">
                       <td className="py-2 px-3">
-                        <span className="font-semibold text-slate-200 block">{line.description}</span>
+                        <span className="font-semibold text-zinc-200 block">{line.description}</span>
                         {line.notes && (
-                          <span className="text-[10px] text-slate-500">{line.notes}</span>
+                          <span className="text-[10px] text-zinc-500">{line.notes}</span>
                         )}
                       </td>
-                      <td className="py-2 px-3 text-right font-mono text-cyan-400 font-bold">
+                      <td className="py-2 px-3 text-right font-mono text-silver-400 font-bold">
                         {line.hours !== undefined ? `${line.hours.toFixed(1)} hrs` : '—'}
                       </td>
                       <td className="py-2 px-3 text-right">
                         <button
                           type="button"
                           onClick={() => handleDeleteLaborLine(line.id)}
-                          className="p-1 text-slate-500 hover:text-red-400"
+                          className="p-1 text-zinc-500 hover:text-red-400"
                         >
                           <Trash2 className="w-3 h-3" />
                         </button>
@@ -850,21 +851,21 @@ export const WorkOrderDetailTab: React.FC<WorkOrderDetailTabProps> = ({ workOrde
         </div>
 
         {/* Parts Lines */}
-        <div className="p-5 rounded-xl bg-artemis-900/90 border border-slate-800 space-y-3">
+        <div className="p-5 rounded-xl bg-artemis-900/90 border border-zinc-800 space-y-3">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
-              <Package className="w-3.5 h-3.5 text-amber-400" />
-              <h3 className="text-xs font-bold uppercase tracking-wider text-slate-300">
+              <Package className="w-3.5 h-3.5 text-bronze-400" />
+              <h3 className="text-xs font-bold uppercase tracking-wider text-zinc-300">
                 Parts & Materials ({workOrder.partLines.length})
               </h3>
-              <span className="text-[11px] font-mono font-bold text-amber-400 px-2 py-0.5 rounded bg-amber-950 border border-amber-800">
+              <span className="text-[11px] font-mono font-bold text-bronze-400 px-2 py-0.5 rounded bg-bronze-950 border border-bronze-800">
                 {totalPartQuantity} {totalPartQuantity === 1 ? 'item' : 'items'}
               </span>
             </div>
             <button
               type="button"
               onClick={() => setIsAddingPart(true)}
-              className="px-2.5 py-1 rounded-lg bg-amber-500/15 hover:bg-amber-500/25 text-amber-400 border border-amber-500/30 text-xs font-semibold flex items-center gap-1"
+              className="px-2.5 py-1 rounded-lg bg-bronze-500/15 hover:bg-bronze-500/25 text-bronze-400 border border-bronze-500/30 text-xs font-semibold flex items-center gap-1"
             >
               <Plus className="w-3 h-3" />
               Add Part
@@ -874,7 +875,7 @@ export const WorkOrderDetailTab: React.FC<WorkOrderDetailTabProps> = ({ workOrde
           {isAddingPart && (
             <form
               onSubmit={handleAddPartLine}
-              className="p-3 bg-artemis-950 rounded-xl border border-amber-500/30 space-y-2 text-xs"
+              className="p-3 bg-artemis-950 rounded-xl border border-bronze-500/30 space-y-2 text-xs"
             >
               <div className="grid grid-cols-4 gap-2">
                 <div className="col-span-2">
@@ -884,7 +885,7 @@ export const WorkOrderDetailTab: React.FC<WorkOrderDetailTabProps> = ({ workOrde
                     value={newPartDesc}
                     onChange={(e) => setNewPartDesc(e.target.value)}
                     autoFocus
-                    className="w-full bg-artemis-900 border border-slate-700 rounded px-2.5 py-1.5 text-slate-100 placeholder-slate-500"
+                    className="w-full bg-artemis-900 border border-zinc-700 rounded px-2.5 py-1.5 text-zinc-100 placeholder-zinc-500"
                   />
                 </div>
                 <div>
@@ -893,7 +894,7 @@ export const WorkOrderDetailTab: React.FC<WorkOrderDetailTabProps> = ({ workOrde
                     placeholder="Part # (e.g. 004-420-91-20)"
                     value={newPartNumber}
                     onChange={(e) => setNewPartNumber(e.target.value)}
-                    className="w-full bg-artemis-900 border border-slate-700 rounded px-2.5 py-1.5 text-slate-100 font-mono text-[11px]"
+                    className="w-full bg-artemis-900 border border-zinc-700 rounded px-2.5 py-1.5 text-zinc-100 font-mono text-[11px]"
                   />
                 </div>
                 <div>
@@ -903,7 +904,7 @@ export const WorkOrderDetailTab: React.FC<WorkOrderDetailTabProps> = ({ workOrde
                     placeholder="Qty"
                     value={newPartQty}
                     onChange={(e) => setNewPartQty(e.target.value)}
-                    className="w-full bg-artemis-900 border border-slate-700 rounded px-2.5 py-1.5 text-slate-100 font-mono"
+                    className="w-full bg-artemis-900 border border-zinc-700 rounded px-2.5 py-1.5 text-zinc-100 font-mono"
                   />
                 </div>
               </div>
@@ -912,20 +913,20 @@ export const WorkOrderDetailTab: React.FC<WorkOrderDetailTabProps> = ({ workOrde
                 placeholder="Optional part notes / supplier / bin..."
                 value={newPartNotes}
                 onChange={(e) => setNewPartNotes(e.target.value)}
-                className="w-full bg-artemis-900 border border-slate-700 rounded px-2.5 py-1 text-slate-200 placeholder-slate-600 text-[11px]"
+                className="w-full bg-artemis-900 border border-zinc-700 rounded px-2.5 py-1 text-zinc-200 placeholder-zinc-600 text-[11px]"
               />
               <div className="flex justify-end gap-2 pt-1">
                 <button
                   type="button"
                   onClick={() => setIsAddingPart(false)}
-                  className="px-2.5 py-1 rounded bg-slate-800 text-slate-400 text-xs"
+                  className="px-2.5 py-1 rounded bg-zinc-800 text-zinc-400 text-xs"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
                   disabled={!newPartDesc.trim()}
-                  className="px-3 py-1 rounded bg-amber-500 text-slate-950 text-xs font-bold"
+                  className="px-3 py-1 rounded bg-bronze-500 text-zinc-950 text-xs font-bold"
                 >
                   Add Part Item
                 </button>
@@ -934,14 +935,14 @@ export const WorkOrderDetailTab: React.FC<WorkOrderDetailTabProps> = ({ workOrde
           )}
 
           {workOrder.partLines.length === 0 && !isAddingPart ? (
-            <div className="p-4 text-center text-slate-500 text-xs italic bg-artemis-950/40 rounded-lg border border-slate-800/60">
+            <div className="p-4 text-center text-zinc-500 text-xs italic bg-artemis-950/40 rounded-lg border border-zinc-800/60">
               No parts recorded for this repair.
             </div>
           ) : (
-            <div className="border border-slate-800 rounded-lg overflow-hidden bg-artemis-950/60">
+            <div className="border border-zinc-800 rounded-lg overflow-hidden bg-artemis-950/60">
               <table className="w-full text-left text-xs border-collapse">
                 <thead>
-                  <tr className="border-b border-slate-800 bg-artemis-950 text-slate-500">
+                  <tr className="border-b border-zinc-800 bg-artemis-950 text-zinc-500">
                     <th className="py-2 px-3">Description</th>
                     <th className="py-2 px-3">Part #</th>
                     <th className="py-2 px-3 text-right">Qty</th>
@@ -950,24 +951,24 @@ export const WorkOrderDetailTab: React.FC<WorkOrderDetailTabProps> = ({ workOrde
                 </thead>
                 <tbody>
                   {workOrder.partLines.map((part) => (
-                    <tr key={part.id} className="border-b border-slate-800/60">
+                    <tr key={part.id} className="border-b border-zinc-800/60">
                       <td className="py-2 px-3">
-                        <span className="font-semibold text-slate-200 block">{part.description}</span>
+                        <span className="font-semibold text-zinc-200 block">{part.description}</span>
                         {part.notes && (
-                          <span className="text-[10px] text-slate-500">{part.notes}</span>
+                          <span className="text-[10px] text-zinc-500">{part.notes}</span>
                         )}
                       </td>
-                      <td className="py-2 px-3 font-mono text-[11px] text-slate-400">
+                      <td className="py-2 px-3 font-mono text-[11px] text-zinc-400">
                         {part.partNumber || '—'}
                       </td>
-                      <td className="py-2 px-3 text-right font-mono text-amber-400 font-bold">
+                      <td className="py-2 px-3 text-right font-mono text-bronze-400 font-bold">
                         {part.quantity}
                       </td>
                       <td className="py-2 px-3 text-right">
                         <button
                           type="button"
                           onClick={() => handleDeletePartLine(part.id)}
-                          className="p-1 text-slate-500 hover:text-red-400"
+                          className="p-1 text-zinc-500 hover:text-red-400"
                         >
                           <Trash2 className="w-3 h-3" />
                         </button>
@@ -981,10 +982,10 @@ export const WorkOrderDetailTab: React.FC<WorkOrderDetailTabProps> = ({ workOrde
         </div>
 
         {/* Work Performed & Technician Notes */}
-        <div className="p-5 rounded-xl bg-artemis-900/90 border border-slate-800 space-y-3">
+        <div className="p-5 rounded-xl bg-artemis-900/90 border border-zinc-800 space-y-3">
           <div className="flex items-center justify-between">
-            <h3 className="text-xs font-bold uppercase tracking-wider text-slate-300 flex items-center gap-1.5">
-              <Clock className="w-3.5 h-3.5 text-emerald-400" />
+            <h3 className="text-xs font-bold uppercase tracking-wider text-zinc-300 flex items-center gap-1.5">
+              <Clock className="w-3.5 h-3.5 text-bronze-400" />
               Work Performed & Technician Notes
             </h3>
             {!isEditingWorkNotes ? (
@@ -995,7 +996,7 @@ export const WorkOrderDetailTab: React.FC<WorkOrderDetailTabProps> = ({ workOrde
                   setTechnicianNotes(workOrder.technicianNotes || '');
                   setIsEditingWorkNotes(true);
                 }}
-                className="text-xs text-slate-400 hover:text-slate-200 flex items-center gap-1"
+                className="text-xs text-zinc-400 hover:text-zinc-200 flex items-center gap-1"
               >
                 <Edit2 className="w-3 h-3" />
                 Edit
@@ -1005,7 +1006,7 @@ export const WorkOrderDetailTab: React.FC<WorkOrderDetailTabProps> = ({ workOrde
                 <button
                   type="button"
                   onClick={handleSaveWorkNotes}
-                  className="px-2.5 py-1 rounded bg-emerald-500 hover:bg-emerald-400 text-slate-950 text-xs font-bold flex items-center gap-1"
+                  className="px-2.5 py-1 rounded bg-bronze-500 hover:bg-bronze-400 text-zinc-950 text-xs font-bold flex items-center gap-1"
                 >
                   <Check className="w-3 h-3" />
                   Save
@@ -1013,7 +1014,7 @@ export const WorkOrderDetailTab: React.FC<WorkOrderDetailTabProps> = ({ workOrde
                 <button
                   type="button"
                   onClick={() => setIsEditingWorkNotes(false)}
-                  className="px-2.5 py-1 rounded bg-slate-800 text-slate-400 text-xs"
+                  className="px-2.5 py-1 rounded bg-zinc-800 text-zinc-400 text-xs"
                 >
                   Cancel
                 </button>
@@ -1024,39 +1025,39 @@ export const WorkOrderDetailTab: React.FC<WorkOrderDetailTabProps> = ({ workOrde
           {isEditingWorkNotes ? (
             <div className="space-y-3 text-xs">
               <div>
-                <label className="block text-[10px] text-slate-500 mb-1">Work Performed Summary</label>
+                <label className="block text-[10px] text-zinc-500 mb-1">Work Performed Summary</label>
                 <textarea
                   rows={3}
                   value={workPerformed}
                   onChange={(e) => setWorkPerformed(e.target.value)}
-                  className="w-full bg-artemis-950 border border-slate-700 rounded-lg p-2 text-slate-200 resize-none"
+                  className="w-full bg-artemis-950 border border-zinc-700 rounded-lg p-2 text-zinc-200 resize-none"
                 />
               </div>
               <div>
-                <label className="block text-[10px] text-slate-500 mb-1">Internal Technician Notes</label>
+                <label className="block text-[10px] text-zinc-500 mb-1">Internal Technician Notes</label>
                 <textarea
                   rows={2}
                   value={technicianNotes}
                   onChange={(e) => setTechnicianNotes(e.target.value)}
-                  className="w-full bg-artemis-950 border border-slate-700 rounded-lg p-2 text-slate-200 resize-none"
+                  className="w-full bg-artemis-950 border border-zinc-700 rounded-lg p-2 text-zinc-200 resize-none"
                 />
               </div>
             </div>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-xs">
-              <div className="p-3 rounded-lg bg-artemis-950/60 border border-slate-800/80">
-                <span className="text-[10px] uppercase font-bold text-emerald-400 block mb-1">
+              <div className="p-3 rounded-lg bg-artemis-950/60 border border-zinc-800/80">
+                <span className="text-[10px] uppercase font-bold text-bronze-400 block mb-1">
                   Work Performed
                 </span>
-                <p className="text-slate-300 leading-relaxed">
+                <p className="text-zinc-300 leading-relaxed">
                   {workOrder.workPerformed || 'No work performed summary entered.'}
                 </p>
               </div>
-              <div className="p-3 rounded-lg bg-artemis-950/60 border border-slate-800/80">
-                <span className="text-[10px] uppercase font-bold text-slate-500 block mb-1">
+              <div className="p-3 rounded-lg bg-artemis-950/60 border border-zinc-800/80">
+                <span className="text-[10px] uppercase font-bold text-zinc-500 block mb-1">
                   Technician Notes & Recommendations
                 </span>
-                <p className="text-slate-300 leading-relaxed">
+                <p className="text-zinc-300 leading-relaxed">
                   {workOrder.technicianNotes || 'No technician notes entered.'}
                 </p>
               </div>
@@ -1065,16 +1066,16 @@ export const WorkOrderDetailTab: React.FC<WorkOrderDetailTabProps> = ({ workOrde
         </div>
 
         {/* Linked Estimates */}
-        <div className="p-5 rounded-xl bg-artemis-900/90 border border-slate-800 space-y-3">
+        <div className="p-5 rounded-xl bg-artemis-900/90 border border-zinc-800 space-y-3">
           <div className="flex items-center justify-between">
-            <h3 className="text-xs font-bold uppercase tracking-wider text-slate-300 flex items-center gap-1.5">
-              <Calculator className="w-3.5 h-3.5 text-teal-400" />
+            <h3 className="text-xs font-bold uppercase tracking-wider text-zinc-300 flex items-center gap-1.5">
+              <Calculator className="w-3.5 h-3.5 text-bronze-400" />
               Commercial Estimates ({woEstimates.length})
             </h3>
             <button
               type="button"
               onClick={() => setIsEstimateModalOpen(true)}
-              className="text-xs text-teal-400 hover:text-teal-300 flex items-center gap-1 font-bold"
+              className="text-xs text-bronze-400 hover:text-bronze-300 flex items-center gap-1 font-bold"
             >
               <Plus className="w-3 h-3" />
               Create Estimate
@@ -1082,7 +1083,7 @@ export const WorkOrderDetailTab: React.FC<WorkOrderDetailTabProps> = ({ workOrde
           </div>
 
           {woEstimates.length === 0 ? (
-            <p className="text-xs text-slate-500 italic bg-artemis-950/40 p-3 rounded-lg">
+            <p className="text-xs text-zinc-500 italic bg-artemis-950/40 p-3 rounded-lg">
               No estimates generated for this Work Order yet.
             </p>
           ) : (
@@ -1096,22 +1097,22 @@ export const WorkOrderDetailTab: React.FC<WorkOrderDetailTabProps> = ({ workOrde
                       `${est.estimateNumber} — ${est.vehicleDescriptionSnapshot}`
                     )
                   }
-                  className="p-3 rounded-lg bg-artemis-950/80 border border-slate-800 hover:border-teal-500/40 cursor-pointer group transition-all"
+                  className="p-3 rounded-lg bg-artemis-950/80 border border-zinc-800 hover:border-bronze-500/40 cursor-pointer group transition-all"
                 >
                   <div className="flex items-center justify-between">
-                    <span className="font-bold text-xs text-teal-400 font-mono">
+                    <span className="font-bold text-xs text-bronze-400 font-mono">
                       {est.estimateNumber}
                     </span>
                     <span
                       className={clsx(
                         'text-[10px] uppercase font-bold px-1.5 py-0.5 rounded border',
                         est.status === 'approved'
-                          ? 'bg-emerald-950/60 text-emerald-400 border-emerald-800/80'
+                          ? 'bg-bronze-950/60 text-bronze-400 border-bronze-800/80'
                           : est.status === 'declined'
                             ? 'bg-red-950/60 text-red-400 border-red-800/80'
                             : est.status === 'ready'
-                              ? 'bg-blue-950/60 text-blue-400 border-blue-800/80'
-                              : 'bg-slate-800 text-slate-400 border-slate-700'
+                              ? 'bg-silver-950/60 text-silver-400 border-silver-800/80'
+                              : 'bg-zinc-800 text-zinc-400 border-zinc-700'
                       )}
                     >
                       {est.status}
@@ -1121,7 +1122,7 @@ export const WorkOrderDetailTab: React.FC<WorkOrderDetailTabProps> = ({ workOrde
                     <div className="text-sm font-black text-white font-mono">
                       {formatCents(est.totalCents)}
                     </div>
-                    <div className="text-[11px] text-slate-400">
+                    <div className="text-[11px] text-zinc-400">
                       {est.lineItems.length} line(s) ·{' '}
                       {new Date(est.createdAt).toLocaleDateString(undefined, {
                         month: 'short',
@@ -1136,74 +1137,102 @@ export const WorkOrderDetailTab: React.FC<WorkOrderDetailTabProps> = ({ workOrde
         </div>
 
         {/* Linked Invoices (V0.0.9) */}
-        <div className="p-5 rounded-xl bg-artemis-900/90 border border-slate-800 space-y-3">
+        <div className="p-5 rounded-xl bg-artemis-900/90 border border-zinc-800 space-y-3">
           <div className="flex items-center justify-between">
-            <h3 className="text-xs font-bold uppercase tracking-wider text-slate-300 flex items-center gap-1.5">
-              <Receipt className="w-3.5 h-3.5 text-amber-400" />
+            <h3 className="text-xs font-bold uppercase tracking-wider text-zinc-300 flex items-center gap-1.5">
+              <Receipt className="w-3.5 h-3.5 text-bronze-400" />
               Invoices ({woInvoices.length})
             </h3>
           </div>
 
           {woInvoices.length === 0 ? (
-            <p className="text-xs text-slate-500 italic bg-artemis-950/40 p-3 rounded-lg">
+            <p className="text-xs text-zinc-500 italic bg-artemis-950/40 p-3 rounded-lg">
               No invoices generated for this Work Order yet. Approve an estimate to generate an invoice.
             </p>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-              {woInvoices.map((inv) => (
-                <div
-                  key={inv.id}
-                  onClick={() =>
-                    openInvoiceTab(
-                      inv.id,
-                      `${inv.invoiceNumber} — ${inv.customerNameSnapshot || inv.vehicleDescriptionSnapshot}`
-                    )
-                  }
-                  className="p-3 rounded-lg bg-artemis-950/80 border border-slate-800 hover:border-amber-500/40 cursor-pointer group transition-all"
-                >
-                  <div className="flex items-center justify-between">
-                    <span className="font-bold text-xs text-amber-400 font-mono">
-                      {inv.invoiceNumber}
-                    </span>
-                    <span
-                      className={clsx(
-                        'text-[10px] uppercase font-bold px-1.5 py-0.5 rounded border',
-                        inv.status === 'issued'
-                          ? 'bg-emerald-950/60 text-emerald-400 border-emerald-800/80'
-                          : inv.status === 'void'
-                            ? 'bg-rose-950/60 text-rose-400 border-rose-800/80'
-                            : 'bg-slate-800 text-slate-400 border-slate-700'
-                      )}
-                    >
-                      {inv.status}
-                    </span>
-                  </div>
-                  <div className="flex items-center justify-between mt-2">
-                    <div className="text-sm font-black text-white font-mono">
-                      {formatCents(inv.totalCents)}
+              {woInvoices.map((inv) => {
+                const summary = getInvoicePaymentSummary(inv.id);
+                return (
+                  <div
+                    key={inv.id}
+                    onClick={() =>
+                      openInvoiceTab(
+                        inv.id,
+                        `${inv.invoiceNumber} — ${inv.customerNameSnapshot || inv.vehicleDescriptionSnapshot}`
+                      )
+                    }
+                    className="p-3 rounded-lg bg-artemis-950/80 border border-zinc-800 hover:border-bronze-500/40 cursor-pointer group transition-all"
+                  >
+                    <div className="flex items-center justify-between">
+                      <span className="font-bold text-xs text-bronze-400 font-mono">
+                        {inv.invoiceNumber}
+                      </span>
+                      <div className="flex items-center space-x-1.5">
+                        <span
+                          className={clsx(
+                            'text-[10px] uppercase font-bold px-1.5 py-0.5 rounded border',
+                            inv.status === 'issued'
+                              ? 'bg-bronze-950/60 text-bronze-400 border-bronze-800/80'
+                              : inv.status === 'void'
+                                ? 'bg-rose-950/60 text-rose-400 border-rose-800/80'
+                                : 'bg-zinc-800 text-zinc-400 border-zinc-700'
+                          )}
+                        >
+                          {inv.status}
+                        </span>
+                        {inv.status === 'issued' && summary && (
+                          <span
+                            className={clsx(
+                              'text-[10px] uppercase font-bold px-1.5 py-0.5 rounded border',
+                              summary.paymentStatus === 'paid'
+                                ? 'bg-bronze-950/60 text-bronze-400 border-bronze-800/80'
+                                : summary.paymentStatus === 'partially_paid'
+                                ? 'bg-silver-950/60 text-silver-400 border-silver-800/80'
+                                : 'bg-bronze-950/60 text-bronze-400 border-bronze-800/80'
+                            )}
+                          >
+                            {summary.paymentStatus === 'paid' ? 'Paid' : summary.paymentStatus === 'partially_paid' ? 'Partial' : 'Unpaid'}
+                          </span>
+                        )}
+                      </div>
                     </div>
-                    <div className="text-[11px] text-slate-400">
-                      {inv.issuedAt
-                        ? `Issued ${new Date(inv.issuedAt).toLocaleDateString(undefined, {
-                            month: 'short',
-                            day: 'numeric',
-                          })}`
-                        : `Created ${new Date(inv.createdAt).toLocaleDateString(undefined, {
-                            month: 'short',
-                            day: 'numeric',
-                          })}`}
+                    <div className="flex items-center justify-between mt-2">
+                      <div>
+                        <div className="text-sm font-black text-white font-mono">
+                          {formatCents(inv.totalCents)}
+                        </div>
+                        {inv.status === 'issued' && summary && summary.balanceDueCents > 0 && (
+                          <div className="text-[10px] text-bronze-400 font-mono font-semibold">
+                            Bal: {formatCents(summary.balanceDueCents)}
+                          </div>
+                        )}
+                      </div>
+                      <div className="text-[11px] text-zinc-400 text-right">
+                        <div>
+                          {inv.issuedAt
+                            ? `Issued ${new Date(inv.issuedAt).toLocaleDateString(undefined, {
+                                month: 'short',
+                                day: 'numeric',
+                              })}`
+                            : `Created ${new Date(inv.createdAt).toLocaleDateString(undefined, {
+                                month: 'short',
+                                day: 'numeric',
+                              })}`}
+                        </div>
+                      </div>
                     </div>
                   </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           )}
         </div>
 
         {/* Linked Appointments */}
-        <div className="p-5 rounded-xl bg-artemis-900/90 border border-slate-800 space-y-3">
+        <div className="p-5 rounded-xl bg-artemis-900/90 border border-zinc-800 space-y-3">
           <div className="flex items-center justify-between">
-            <h3 className="text-xs font-bold uppercase tracking-wider text-slate-300 flex items-center gap-1.5">
+            <h3 className="text-xs font-bold uppercase tracking-wider text-zinc-300 flex items-center gap-1.5">
               <Calendar className="w-3.5 h-3.5 text-rose-400" />
               Scheduled Appointments ({woEvents.length})
             </h3>
@@ -1218,7 +1247,7 @@ export const WorkOrderDetailTab: React.FC<WorkOrderDetailTabProps> = ({ workOrde
           </div>
 
           {woEvents.length === 0 ? (
-            <p className="text-xs text-slate-500 italic bg-artemis-950/40 p-3 rounded-lg">
+            <p className="text-xs text-zinc-500 italic bg-artemis-950/40 p-3 rounded-lg">
               No appointments linked to this Work Order.
             </p>
           ) : (
@@ -1227,21 +1256,21 @@ export const WorkOrderDetailTab: React.FC<WorkOrderDetailTabProps> = ({ workOrde
                 <div
                   key={ev.id}
                   onClick={() => openScheduleEventTab(ev.id, `${ev.eventNumber} — ${ev.title}`)}
-                  className="p-3 rounded-lg bg-artemis-950/80 border border-slate-800 hover:border-rose-500/40 cursor-pointer group transition-all"
+                  className="p-3 rounded-lg bg-artemis-950/80 border border-zinc-800 hover:border-rose-500/40 cursor-pointer group transition-all"
                 >
                   <div className="flex items-center justify-between">
                     <span className="font-bold text-xs text-rose-400 font-mono">
                       {ev.eventNumber}
                     </span>
-                    <span className="text-[10px] uppercase font-bold text-slate-400 border border-slate-700 px-1.5 py-0.5 rounded">
+                    <span className="text-[10px] uppercase font-bold text-zinc-400 border border-zinc-700 px-1.5 py-0.5 rounded">
                       {ev.status}
                     </span>
                   </div>
-                  <h5 className="text-xs font-bold text-slate-200 group-hover:text-rose-300 transition-colors mt-1">
+                  <h5 className="text-xs font-bold text-zinc-200 group-hover:text-rose-300 transition-colors mt-1">
                     {ev.title}
                   </h5>
-                  <div className="text-[11px] text-slate-400 mt-1 font-mono flex items-center gap-2">
-                    <Clock className="w-3 h-3 text-slate-500" />
+                  <div className="text-[11px] text-zinc-400 mt-1 font-mono flex items-center gap-2">
+                    <Clock className="w-3 h-3 text-zinc-500" />
                     <span>
                       {new Date(ev.startAt).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}{' '}
                       {ev.allDay

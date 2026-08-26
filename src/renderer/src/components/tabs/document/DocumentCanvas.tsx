@@ -8,7 +8,7 @@ interface DocumentCanvasProps {
 export const DocumentCanvas: React.FC<DocumentCanvasProps> = ({ editor }) => {
   if (!editor) {
     return (
-      <div className="flex-1 flex items-center justify-center bg-artemis-950 text-slate-500 text-xs">
+      <div className="flex-1 flex items-center justify-center bg-artemis-950 text-zinc-500 text-xs">
         Loading editor...
       </div>
     );
@@ -21,7 +21,7 @@ export const DocumentCanvas: React.FC<DocumentCanvasProps> = ({ editor }) => {
     >
       {/* Centered White Page Canvas */}
       <div
-        className="w-full max-w-4xl bg-white text-slate-900 rounded-sm shadow-2xl shadow-black/80 min-h-[950px] px-14 sm:px-20 py-16 transition-shadow print:shadow-none print:p-0 print:max-w-none print:min-h-0 print:rounded-none"
+        className="w-full max-w-4xl bg-white text-zinc-900 rounded-sm shadow-2xl shadow-black/80 min-h-[950px] px-14 sm:px-20 py-16 transition-shadow print:shadow-none print:p-0 print:max-w-none print:min-h-0 print:rounded-none"
         onClick={(e) => e.stopPropagation()}
       >
         <EditorContent

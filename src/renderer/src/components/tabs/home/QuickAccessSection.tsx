@@ -82,7 +82,7 @@ export const QuickAccessSection: React.FC = () => {
       title: 'New Work Order',
       description: 'Start repair or diagnostic',
       icon: ClipboardList,
-      color: 'from-emerald-500/20 to-teal-500/10 text-emerald-400 border-emerald-500/30 hover:border-emerald-500/50',
+      color: 'from-bronze-500/20 to-bronze-500/10 text-bronze-400 border-bronze-500/30 hover:border-bronze-500/50',
       action: () => setIsWorkOrderModalOpen(true),
     },
     {
@@ -98,7 +98,7 @@ export const QuickAccessSection: React.FC = () => {
       title: 'New Document',
       description: 'Contract or procedure',
       icon: FilePlus,
-      color: 'from-indigo-500/20 to-cyan-500/10 text-indigo-400 border-indigo-500/30 hover:border-indigo-500/50',
+      color: 'from-silver-500/20 to-silver-500/10 text-silver-400 border-silver-500/30 hover:border-silver-500/50',
       action: handleCreateDocument,
     },
     {
@@ -106,7 +106,7 @@ export const QuickAccessSection: React.FC = () => {
       title: 'New Customer',
       description: 'Individual or business',
       icon: UserPlus,
-      color: 'from-blue-500/20 to-indigo-500/10 text-blue-400 border-blue-500/30 hover:border-blue-500/50',
+      color: 'from-silver-500/20 to-silver-500/10 text-silver-400 border-silver-500/30 hover:border-silver-500/50',
       action: () => setIsCustomerModalOpen(true),
     },
     {
@@ -114,7 +114,7 @@ export const QuickAccessSection: React.FC = () => {
       title: 'New Vehicle',
       description: 'Add vehicle record',
       icon: Car,
-      color: 'from-amber-500/20 to-orange-500/10 text-amber-400 border-amber-500/30 hover:border-amber-500/50',
+      color: 'from-bronze-500/20 to-orange-500/10 text-bronze-400 border-bronze-500/30 hover:border-bronze-500/50',
       action: () => setIsVehicleModalOpen(true),
     },
     {
@@ -122,23 +122,23 @@ export const QuickAccessSection: React.FC = () => {
       title: 'Open Library',
       description: 'Explore file hierarchy',
       icon: FolderOpen,
-      color: 'from-slate-700/30 to-slate-800/20 text-slate-300 border-slate-700 hover:border-slate-600',
+      color: 'from-zinc-700/30 to-zinc-800/20 text-zinc-300 border-zinc-700 hover:border-zinc-600',
       action: handleOpenLibrary,
     },
   ];
 
   return (
-    <div className="bg-artemis-900 border border-slate-800 rounded-2xl p-5 shadow-lg">
+    <div className="bg-artemis-900 border border-zinc-800 rounded-2xl p-5 shadow-lg">
       {/* Header */}
-      <div className="flex items-center gap-2 pb-3.5 border-b border-slate-800 mb-4">
-        <div className="w-7 h-7 rounded-lg bg-cyan-500/10 border border-cyan-500/20 text-cyan-400 flex items-center justify-center">
+      <div className="flex items-center gap-2 pb-3.5 border-b border-zinc-800 mb-4">
+        <div className="w-7 h-7 rounded-lg bg-silver-500/10 border border-silver-500/20 text-silver-400 flex items-center justify-center">
           <Zap className="w-4 h-4" />
         </div>
         <div>
-          <h3 className="text-xs font-bold font-mono uppercase tracking-wider text-slate-200">
+          <h3 className="text-xs font-bold font-mono uppercase tracking-wider text-zinc-200">
             Quick Access
           </h3>
-          <span className="text-[11px] text-slate-500 font-mono">
+          <span className="text-[11px] text-zinc-500 font-mono">
             Fast Creation & Navigation
           </span>
         </div>
@@ -158,10 +158,10 @@ export const QuickAccessSection: React.FC = () => {
               <div className="p-2 rounded-lg bg-artemis-950/80 mb-2.5 group-hover:scale-110 transition-transform">
                 <Icon className="w-4 h-4" />
               </div>
-              <span className="text-xs font-bold text-slate-100 group-hover:text-white transition-colors">
+              <span className="text-xs font-bold text-zinc-100 group-hover:text-white transition-colors">
                 {act.title}
               </span>
-              <span className="text-[10px] text-slate-400 mt-0.5 line-clamp-1">
+              <span className="text-[10px] text-zinc-400 mt-0.5 line-clamp-1">
                 {act.description}
               </span>
             </button>

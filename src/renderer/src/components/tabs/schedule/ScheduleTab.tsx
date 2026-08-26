@@ -29,14 +29,14 @@ const TYPE_CONFIG: Record<
   ScheduleEventType,
   { label: string; bg: string; text: string; border: string }
 > = {
-  service: { label: 'Service', bg: 'bg-emerald-500/15', text: 'text-emerald-400', border: 'border-emerald-500/30' },
+  service: { label: 'Service', bg: 'bg-bronze-500/15', text: 'text-bronze-400', border: 'border-bronze-500/30' },
   diagnostic: { label: 'Diagnostic', bg: 'bg-purple-500/15', text: 'text-purple-400', border: 'border-purple-500/30' },
-  inspection: { label: 'Inspection', bg: 'bg-blue-500/15', text: 'text-blue-400', border: 'border-blue-500/30' },
-  dropoff: { label: 'Drop-off', bg: 'bg-amber-500/15', text: 'text-amber-400', border: 'border-amber-500/30' },
-  pickup: { label: 'Pick-up', bg: 'bg-cyan-500/15', text: 'text-cyan-400', border: 'border-cyan-500/30' },
+  inspection: { label: 'Inspection', bg: 'bg-silver-500/15', text: 'text-silver-400', border: 'border-silver-500/30' },
+  dropoff: { label: 'Drop-off', bg: 'bg-bronze-500/15', text: 'text-bronze-400', border: 'border-bronze-500/30' },
+  pickup: { label: 'Pick-up', bg: 'bg-silver-500/15', text: 'text-silver-400', border: 'border-silver-500/30' },
   parts: { label: 'Parts', bg: 'bg-orange-500/15', text: 'text-orange-400', border: 'border-orange-500/30' },
-  meeting: { label: 'Meeting', bg: 'bg-indigo-500/15', text: 'text-indigo-400', border: 'border-indigo-500/30' },
-  admin: { label: 'Admin', bg: 'bg-slate-800', text: 'text-slate-300', border: 'border-slate-700' },
+  meeting: { label: 'Meeting', bg: 'bg-silver-500/15', text: 'text-silver-400', border: 'border-silver-500/30' },
+  admin: { label: 'Admin', bg: 'bg-zinc-800', text: 'text-zinc-300', border: 'border-zinc-700' },
   other: { label: 'Other', bg: 'bg-rose-500/15', text: 'text-rose-400', border: 'border-rose-500/30' },
 };
 
@@ -44,12 +44,12 @@ const STATUS_BADGES: Record<
   ScheduleEventStatus,
   { label: string; bg: string; text: string; border: string }
 > = {
-  scheduled: { label: 'Scheduled', bg: 'bg-blue-500/10', text: 'text-blue-400', border: 'border-blue-500/20' },
-  confirmed: { label: 'Confirmed', bg: 'bg-cyan-500/10', text: 'text-cyan-400', border: 'border-cyan-500/20' },
+  scheduled: { label: 'Scheduled', bg: 'bg-silver-500/10', text: 'text-silver-400', border: 'border-silver-500/20' },
+  confirmed: { label: 'Confirmed', bg: 'bg-silver-500/10', text: 'text-silver-400', border: 'border-silver-500/20' },
   in_progress: { label: 'In Progress', bg: 'bg-purple-500/10', text: 'text-purple-400', border: 'border-purple-500/20' },
-  completed: { label: 'Completed', bg: 'bg-emerald-500/10', text: 'text-emerald-400', border: 'border-emerald-500/20' },
+  completed: { label: 'Completed', bg: 'bg-bronze-500/10', text: 'text-bronze-400', border: 'border-bronze-500/20' },
   cancelled: { label: 'Cancelled', bg: 'bg-red-500/10', text: 'text-red-400', border: 'border-red-500/20' },
-  no_show: { label: 'No Show', bg: 'bg-amber-500/10', text: 'text-amber-400', border: 'border-amber-500/20' },
+  no_show: { label: 'No Show', bg: 'bg-bronze-500/10', text: 'text-bronze-400', border: 'border-bronze-500/20' },
 };
 
 function formatTime(timestamp: number): string {
@@ -223,19 +223,19 @@ export const ScheduleTab: React.FC = () => {
   const todayEventsList = getEventsForDate(currentDateString);
 
   return (
-    <div className="h-full w-full bg-artemis-950 flex flex-col overflow-hidden text-slate-100 select-none">
+    <div className="h-full w-full bg-artemis-950 flex flex-col overflow-hidden text-zinc-100 select-none">
       {/* Top Header Bar */}
-      <div className="h-14 bg-artemis-950 border-b border-slate-800 px-6 flex items-center justify-between shrink-0">
+      <div className="h-14 bg-artemis-950 border-b border-zinc-800 px-6 flex items-center justify-between shrink-0">
         {/* Left: Subsystem branding */}
         <div className="flex items-center gap-3">
           <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-rose-500/20 to-orange-500/10 border border-rose-500/30 text-rose-400 flex items-center justify-center shadow-lg shadow-rose-500/10">
             <CalendarIcon className="w-5 h-5" />
           </div>
           <div>
-            <h1 className="text-sm font-bold text-slate-100 flex items-center gap-2">
+            <h1 className="text-sm font-bold text-zinc-100 flex items-center gap-2">
               Schedule & Dispatch
             </h1>
-            <p className="text-[11px] text-slate-500 font-mono">
+            <p className="text-[11px] text-zinc-500 font-mono">
               Business Timeline & Service Appointments
             </p>
           </div>
@@ -243,19 +243,19 @@ export const ScheduleTab: React.FC = () => {
 
         {/* Center: Date Navigation & Title */}
         <div className="flex items-center gap-2">
-          <div className="flex items-center bg-artemis-900 border border-slate-800 rounded-lg p-0.5">
+          <div className="flex items-center bg-artemis-900 border border-zinc-800 rounded-lg p-0.5">
             <button
               type="button"
               onClick={handlePrev}
               title="Previous"
-              className="p-1 rounded text-slate-400 hover:text-slate-100 hover:bg-slate-800 transition-colors"
+              className="p-1 rounded text-zinc-400 hover:text-zinc-100 hover:bg-zinc-800 transition-colors"
             >
               <ChevronLeft className="w-4 h-4" />
             </button>
             <button
               type="button"
               onClick={handleToday}
-              className="px-2.5 py-0.5 text-xs font-bold text-slate-300 hover:text-slate-100 transition-colors"
+              className="px-2.5 py-0.5 text-xs font-bold text-zinc-300 hover:text-zinc-100 transition-colors"
             >
               Today
             </button>
@@ -263,12 +263,12 @@ export const ScheduleTab: React.FC = () => {
               type="button"
               onClick={handleNext}
               title="Next"
-              className="p-1 rounded text-slate-400 hover:text-slate-100 hover:bg-slate-800 transition-colors"
+              className="p-1 rounded text-zinc-400 hover:text-zinc-100 hover:bg-zinc-800 transition-colors"
             >
               <ChevronRight className="w-4 h-4" />
             </button>
           </div>
-          <span className="text-xs font-bold text-slate-200 min-w-[180px] text-center font-mono">
+          <span className="text-xs font-bold text-zinc-200 min-w-[180px] text-center font-mono">
             {headerTitle}
           </span>
         </div>
@@ -276,7 +276,7 @@ export const ScheduleTab: React.FC = () => {
         {/* Right: View Toggles & New Event Button */}
         <div className="flex items-center gap-3">
           {/* View Mode Toggle */}
-          <div className="flex items-center p-1 bg-artemis-900 rounded-xl border border-slate-800">
+          <div className="flex items-center p-1 bg-artemis-900 rounded-xl border border-zinc-800">
             {(['today', 'week', 'month'] as CalendarViewMode[]).map((mode) => (
               <button
                 key={mode}
@@ -286,7 +286,7 @@ export const ScheduleTab: React.FC = () => {
                   'px-3 py-1 rounded-lg text-xs font-bold capitalize transition-colors',
                   viewMode === mode
                     ? 'bg-rose-500/20 text-rose-400 border border-rose-500/30'
-                    : 'text-slate-400 hover:text-slate-200'
+                    : 'text-zinc-400 hover:text-zinc-200'
                 )}
               >
                 {mode}
@@ -309,7 +309,7 @@ export const ScheduleTab: React.FC = () => {
       </div>
 
       {/* Filter Strip */}
-      <div className="px-6 py-2.5 bg-artemis-950 border-b border-slate-800/80 flex items-center justify-between gap-4 shrink-0">
+      <div className="px-6 py-2.5 bg-artemis-950 border-b border-zinc-800/80 flex items-center justify-between gap-4 shrink-0">
         {/* Type Filter Pills */}
         <div className="flex items-center gap-1.5 overflow-x-auto text-xs pb-0.5">
           <button
@@ -318,8 +318,8 @@ export const ScheduleTab: React.FC = () => {
             className={clsx(
               'px-2.5 py-1 rounded-lg text-[11px] font-semibold whitespace-nowrap transition-colors',
               typeFilter === 'all'
-                ? 'bg-slate-800 text-slate-100 border border-slate-700'
-                : 'text-slate-500 hover:text-slate-300'
+                ? 'bg-zinc-800 text-zinc-100 border border-zinc-700'
+                : 'text-zinc-500 hover:text-zinc-300'
             )}
           >
             All Types ({events.length})
@@ -340,8 +340,8 @@ export const ScheduleTab: React.FC = () => {
               className={clsx(
                 'px-2.5 py-1 rounded-lg text-[11px] font-semibold whitespace-nowrap transition-colors',
                 typeFilter === pill.key
-                  ? 'bg-slate-800 text-slate-100 border border-slate-700'
-                  : 'text-slate-500 hover:text-slate-300'
+                  ? 'bg-zinc-800 text-zinc-100 border border-zinc-700'
+                  : 'text-zinc-500 hover:text-zinc-300'
               )}
             >
               {pill.label}
@@ -351,13 +351,13 @@ export const ScheduleTab: React.FC = () => {
 
         {/* Search Input */}
         <div className="relative max-w-xs w-full">
-          <Search className="w-3.5 h-3.5 text-slate-500 absolute left-3 top-1/2 -translate-y-1/2" />
+          <Search className="w-3.5 h-3.5 text-zinc-500 absolute left-3 top-1/2 -tranzinc-y-1/2" />
           <input
             type="text"
             placeholder="Search appointments..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full bg-artemis-900 border border-slate-800 rounded-xl pl-8 pr-3 py-1 text-xs text-slate-100 placeholder-slate-500 focus:outline-none focus:border-rose-500/50"
+            className="w-full bg-artemis-900 border border-zinc-800 rounded-xl pl-8 pr-3 py-1 text-xs text-zinc-100 placeholder-zinc-500 focus:outline-none focus:border-rose-500/50"
           />
         </div>
       </div>
@@ -367,18 +367,18 @@ export const ScheduleTab: React.FC = () => {
         {/* VIEW 1: TODAY VIEW */}
         {viewMode === 'today' && (
           <div className="max-w-4xl mx-auto space-y-4">
-            <div className="flex items-center justify-between pb-2 border-b border-slate-800">
-              <h2 className="text-sm font-bold text-slate-200 flex items-center gap-2">
+            <div className="flex items-center justify-between pb-2 border-b border-zinc-800">
+              <h2 className="text-sm font-bold text-zinc-200 flex items-center gap-2">
                 <Clock className="w-4 h-4 text-rose-400" />
                 Schedule for {headerTitle} ({todayEventsList.length})
               </h2>
             </div>
 
             {todayEventsList.length === 0 ? (
-              <div className="p-12 rounded-2xl border border-dashed border-slate-800 bg-artemis-900/30 text-center flex flex-col items-center justify-center">
-                <CalendarIcon className="w-10 h-10 text-slate-600 mb-2" />
-                <h3 className="text-sm font-bold text-slate-300">No Appointments Scheduled</h3>
-                <p className="text-xs text-slate-500 mt-1 max-w-sm">
+              <div className="p-12 rounded-2xl border border-dashed border-zinc-800 bg-artemis-900/30 text-center flex flex-col items-center justify-center">
+                <CalendarIcon className="w-10 h-10 text-zinc-600 mb-2" />
+                <h3 className="text-sm font-bold text-zinc-300">No Appointments Scheduled</h3>
+                <p className="text-xs text-zinc-500 mt-1 max-w-sm">
                   There are no active service operations or appointments booked for this day.
                 </p>
                 <button
@@ -387,7 +387,7 @@ export const ScheduleTab: React.FC = () => {
                     setModalInitialDate(currentDateString);
                     setIsCreateModalOpen(true);
                   }}
-                  className="mt-4 px-4 py-1.5 rounded-xl bg-rose-500 text-slate-950 text-xs font-bold flex items-center gap-1.5 hover:bg-rose-400"
+                  className="mt-4 px-4 py-1.5 rounded-xl bg-rose-500 text-zinc-950 text-xs font-bold flex items-center gap-1.5 hover:bg-rose-400"
                 >
                   <Plus className="w-3.5 h-3.5" />
                   Book Appointment
@@ -406,21 +406,21 @@ export const ScheduleTab: React.FC = () => {
                     <div
                       key={event.id}
                       onClick={() => handleOpenEvent(event)}
-                      className="p-4 rounded-xl bg-artemis-900 border border-slate-800 hover:border-rose-500/40 cursor-pointer transition-all hover:shadow-lg group flex items-start justify-between gap-4"
+                      className="p-4 rounded-xl bg-artemis-900 border border-zinc-800 hover:border-rose-500/40 cursor-pointer transition-all hover:shadow-lg group flex items-start justify-between gap-4"
                     >
                       <div className="flex items-start gap-3.5 min-w-0">
                         {/* Time box */}
-                        <div className="p-2.5 rounded-xl bg-artemis-950 border border-slate-800 text-center shrink-0 min-w-[84px]">
+                        <div className="p-2.5 rounded-xl bg-artemis-950 border border-zinc-800 text-center shrink-0 min-w-[84px]">
                           {event.allDay ? (
-                            <span className="text-[11px] font-bold text-cyan-400 block font-mono">
+                            <span className="text-[11px] font-bold text-silver-400 block font-mono">
                               ALL DAY
                             </span>
                           ) : (
                             <>
-                              <span className="text-xs font-bold text-slate-100 block font-mono">
+                              <span className="text-xs font-bold text-zinc-100 block font-mono">
                                 {formatTime(event.startAt)}
                               </span>
-                              <span className="text-[10px] text-slate-500 block font-mono">
+                              <span className="text-[10px] text-zinc-500 block font-mono">
                                 {formatTime(event.endAt)}
                               </span>
                             </>
@@ -455,33 +455,33 @@ export const ScheduleTab: React.FC = () => {
                             </span>
                           </div>
 
-                          <h4 className="text-sm font-bold text-slate-100 group-hover:text-rose-400 transition-colors mt-1">
+                          <h4 className="text-sm font-bold text-zinc-100 group-hover:text-rose-400 transition-colors mt-1">
                             {event.title}
                           </h4>
 
                           {/* Related badges */}
-                          <div className="flex flex-wrap items-center gap-3 mt-2 text-[11px] text-slate-400">
+                          <div className="flex flex-wrap items-center gap-3 mt-2 text-[11px] text-zinc-400">
                             {wo && (
-                              <span className="flex items-center gap-1 font-mono text-emerald-400">
+                              <span className="flex items-center gap-1 font-mono text-bronze-400">
                                 <ClipboardList className="w-3 h-3" />
                                 {wo.workOrderNumber}
                               </span>
                             )}
                             {vehicle && (
-                              <span className="flex items-center gap-1 text-slate-300">
-                                <Car className="w-3 h-3 text-indigo-400" />
+                              <span className="flex items-center gap-1 text-zinc-300">
+                                <Car className="w-3 h-3 text-silver-400" />
                                 {vehicle.year ? `${vehicle.year} ` : ''}{vehicle.make} {vehicle.model}
                               </span>
                             )}
                             {customer && (
-                              <span className="flex items-center gap-1 text-slate-300">
-                                <User className="w-3 h-3 text-cyan-400" />
+                              <span className="flex items-center gap-1 text-zinc-300">
+                                <User className="w-3 h-3 text-silver-400" />
                                 {customer.name}
                               </span>
                             )}
                             {event.location && (
-                              <span className="flex items-center gap-1 text-slate-500">
-                                <MapPin className="w-3 h-3 text-slate-500" />
+                              <span className="flex items-center gap-1 text-zinc-500">
+                                <MapPin className="w-3 h-3 text-zinc-500" />
                                 {event.location}
                               </span>
                             )}
@@ -489,7 +489,7 @@ export const ScheduleTab: React.FC = () => {
                         </div>
                       </div>
 
-                      <div className="text-[11px] text-slate-500 font-semibold group-hover:text-rose-400 shrink-0">
+                      <div className="text-[11px] text-zinc-500 font-semibold group-hover:text-rose-400 shrink-0">
                         Open Tab →
                       </div>
                     </div>
@@ -512,19 +512,19 @@ export const ScheduleTab: React.FC = () => {
                     'flex flex-col rounded-xl border p-3 bg-artemis-900/60 transition-colors',
                     day.isToday
                       ? 'border-rose-500/40 bg-artemis-900/90 shadow-md shadow-rose-950/20'
-                      : 'border-slate-800'
+                      : 'border-zinc-800'
                   )}
                 >
                   {/* Day Header */}
-                  <div className="flex items-center justify-between pb-2 border-b border-slate-800/80 mb-2">
+                  <div className="flex items-center justify-between pb-2 border-b border-zinc-800/80 mb-2">
                     <div>
-                      <span className="text-[11px] uppercase font-bold text-slate-400 block">
+                      <span className="text-[11px] uppercase font-bold text-zinc-400 block">
                         {day.date.toLocaleDateString(undefined, { weekday: 'short' })}
                       </span>
                       <span
                         className={clsx(
                           'text-sm font-bold font-mono',
-                          day.isToday ? 'text-rose-400' : 'text-slate-200'
+                          day.isToday ? 'text-rose-400' : 'text-zinc-200'
                         )}
                       >
                         {day.date.getDate()}
@@ -538,7 +538,7 @@ export const ScheduleTab: React.FC = () => {
                         setIsCreateModalOpen(true);
                       }}
                       title={`Add event on ${day.dateString}`}
-                      className="p-1 rounded text-slate-500 hover:text-rose-400 hover:bg-slate-800"
+                      className="p-1 rounded text-zinc-500 hover:text-rose-400 hover:bg-zinc-800"
                     >
                       <Plus className="w-3.5 h-3.5" />
                     </button>
@@ -559,16 +559,16 @@ export const ScheduleTab: React.FC = () => {
                           )}
                         >
                           <div className="flex items-center justify-between text-[10px] font-mono">
-                            <span className="font-bold text-slate-400">
+                            <span className="font-bold text-zinc-400">
                               {ev.allDay ? 'ALL DAY' : formatTime(ev.startAt)}
                             </span>
-                            <span className="text-slate-500">{ev.eventNumber}</span>
+                            <span className="text-zinc-500">{ev.eventNumber}</span>
                           </div>
-                          <h5 className="text-xs font-bold text-slate-100 group-hover:text-rose-300 line-clamp-2 mt-0.5">
+                          <h5 className="text-xs font-bold text-zinc-100 group-hover:text-rose-300 line-clamp-2 mt-0.5">
                             {ev.title}
                           </h5>
                           {ev.location && (
-                            <div className="text-[10px] text-slate-400 truncate mt-1">
+                            <div className="text-[10px] text-zinc-400 truncate mt-1">
                               📍 {ev.location}
                             </div>
                           )}
@@ -577,7 +577,7 @@ export const ScheduleTab: React.FC = () => {
                     })}
 
                     {dayEvents.length === 0 && (
-                      <div className="h-20 flex items-center justify-center text-[10px] text-slate-600 italic">
+                      <div className="h-20 flex items-center justify-center text-[10px] text-zinc-600 italic">
                         No events
                       </div>
                     )}
@@ -590,9 +590,9 @@ export const ScheduleTab: React.FC = () => {
 
         {/* VIEW 3: MONTH VIEW */}
         {viewMode === 'month' && (
-          <div className="border border-slate-800 rounded-xl overflow-hidden bg-artemis-900/60 flex flex-col h-full min-h-[600px]">
+          <div className="border border-zinc-800 rounded-xl overflow-hidden bg-artemis-900/60 flex flex-col h-full min-h-[600px]">
             {/* Weekday headers */}
-            <div className="grid grid-cols-7 border-b border-slate-800 bg-artemis-950 text-center text-xs font-bold text-slate-400 py-2">
+            <div className="grid grid-cols-7 border-b border-zinc-800 bg-artemis-950 text-center text-xs font-bold text-zinc-400 py-2">
               <span>Mon</span>
               <span>Tue</span>
               <span>Wed</span>
@@ -603,7 +603,7 @@ export const ScheduleTab: React.FC = () => {
             </div>
 
             {/* Month grid cells */}
-            <div className="grid grid-cols-7 flex-1 auto-rows-fr divide-x divide-y divide-slate-800/80">
+            <div className="grid grid-cols-7 flex-1 auto-rows-fr divide-x divide-y divide-zinc-800/80">
               {monthGrid.map((cell) => {
                 const cellEvents = getEventsForDate(cell.dateString);
                 return (
@@ -614,7 +614,7 @@ export const ScheduleTab: React.FC = () => {
                       setViewMode('today');
                     }}
                     className={clsx(
-                      'p-2 min-h-[90px] flex flex-col cursor-pointer transition-colors hover:bg-slate-800/30',
+                      'p-2 min-h-[90px] flex flex-col cursor-pointer transition-colors hover:bg-zinc-800/30',
                       !cell.isCurrentMonth && 'opacity-40 bg-artemis-950/40',
                       cell.isToday && 'bg-rose-950/10 ring-1 ring-inset ring-rose-500/30'
                     )}
@@ -623,13 +623,13 @@ export const ScheduleTab: React.FC = () => {
                       <span
                         className={clsx(
                           'font-bold px-1.5 py-0.5 rounded',
-                          cell.isToday ? 'bg-rose-500 text-slate-950' : 'text-slate-300'
+                          cell.isToday ? 'bg-rose-500 text-zinc-950' : 'text-zinc-300'
                         )}
                       >
                         {cell.date.getDate()}
                       </span>
                       {cellEvents.length > 0 && (
-                        <span className="text-[10px] text-slate-500">{cellEvents.length}</span>
+                        <span className="text-[10px] text-zinc-500">{cellEvents.length}</span>
                       )}
                     </div>
 
@@ -656,7 +656,7 @@ export const ScheduleTab: React.FC = () => {
                         );
                       })}
                       {cellEvents.length > 3 && (
-                        <span className="text-[9px] text-slate-500 font-mono block pl-1">
+                        <span className="text-[9px] text-zinc-500 font-mono block pl-1">
                           +{cellEvents.length - 3} more
                         </span>
                       )}

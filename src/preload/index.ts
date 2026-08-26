@@ -13,6 +13,7 @@ import type {
   WorkOrderRecord,
   EstimateRecord,
   InvoiceRecord,
+  PaymentRecord,
   CreateCustomerOptions,
   UpdateCustomerOptions,
   CreateVehicleOptions,
@@ -23,11 +24,15 @@ import type {
   UpdateEstimateOptions,
   CreateInvoiceOptions,
   UpdateInvoiceOptions,
+  CreatePaymentOptions,
   ListCustomersFilter,
   ListVehiclesFilter,
   ListWorkOrdersFilter,
   ListEstimatesFilter,
   ListInvoicesFilter,
+  ListPaymentsFilter,
+  InvoicePaymentSummary,
+  AccountsReceivableSummary,
 } from '../shared/automotiveTypes';
 import type {
   ScheduleEventRecord,
@@ -135,6 +140,20 @@ const bridge: ArtemisWindowBridge = {
         ipcRenderer.invoke('artemis:automotive:invoices:void', id, reason),
       delete: (id: string): Promise<boolean> =>
         ipcRenderer.invoke('artemis:automotive:invoices:delete', id),
+    },
+    payments: {
+      list: (filter?: ListPaymentsFilter): Promise<PaymentRecord[]> =>
+        ipcRenderer.invoke('artemis:automotive:payments:list', filter),
+      get: (id: string): Promise<PaymentRecord | null> =>
+        ipcRenderer.invoke('artemis:automotive:payments:get', id),
+      create: (options: CreatePaymentOptions): Promise<PaymentRecord> =>
+        ipcRenderer.invoke('artemis:automotive:payments:create', options),
+      void: (id: string, reason: string): Promise<PaymentRecord> =>
+        ipcRenderer.invoke('artemis:automotive:payments:void', id, reason),
+      getInvoiceSummary: (invoiceId: string): Promise<InvoicePaymentSummary> =>
+        ipcRenderer.invoke('artemis:automotive:payments:getInvoiceSummary', invoiceId),
+      getAccountsReceivableSummary: (): Promise<AccountsReceivableSummary> =>
+        ipcRenderer.invoke('artemis:automotive:payments:getAccountsReceivableSummary'),
     },
   },
   schedule: {

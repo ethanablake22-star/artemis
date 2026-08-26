@@ -4,6 +4,7 @@ import type {
   WorkOrderRecord,
   EstimateRecord,
   InvoiceRecord,
+  PaymentRecord,
   CreateCustomerOptions,
   UpdateCustomerOptions,
   CreateVehicleOptions,
@@ -14,11 +15,16 @@ import type {
   UpdateEstimateOptions,
   CreateInvoiceOptions,
   UpdateInvoiceOptions,
+  CreatePaymentOptions,
   ListCustomersFilter,
   ListVehiclesFilter,
   ListWorkOrdersFilter,
   ListEstimatesFilter,
   ListInvoicesFilter,
+  ListPaymentsFilter,
+  InvoicePaymentSummary,
+  AccountsReceivableSummary,
+  InvoicePaymentStatus,
   IAutomotiveStorageRepository,
 } from '@shared/automotiveTypes';
 import { calculateEstimateTotals } from '@shared/currencyUtils';
@@ -28,6 +34,7 @@ const LOCAL_STORAGE_VEHICLES_KEY = 'artemis_automotive_vehicles_browser_dev';
 const LOCAL_STORAGE_WORK_ORDERS_KEY = 'artemis_automotive_work_orders_browser_dev';
 const LOCAL_STORAGE_ESTIMATES_KEY = 'artemis_automotive_estimates_browser_dev';
 const LOCAL_STORAGE_INVOICES_KEY = 'artemis_automotive_invoices_browser_dev';
+const LOCAL_STORAGE_PAYMENTS_KEY = 'artemis_automotive_payments_browser_dev';
 
 function isElectronEnvironment(): boolean {
   if (typeof window === 'undefined') return false;
@@ -44,11 +51,13 @@ export class LocalAutomotiveRepository implements IAutomotiveStorageRepository {
   private browserDevWorkOrders: WorkOrderRecord[] | null = null;
   private browserDevEstimates: EstimateRecord[] | null = null;
   private browserDevInvoices: InvoiceRecord[] | null = null;
+  private browserDevPayments: PaymentRecord[] | null = null;
   private nextCustomerSeq = 1;
   private nextVehicleSeq = 1;
   private nextWorkOrderSeq = 1;
   private nextEstimateSeq = 1;
   private nextInvoiceSeq = 1;
+  private nextPaymentSeq = 1;
 
   async listCustomers(filter?: ListCustomersFilter): Promise<CustomerRecord[]> {
     if (isElectronEnvironment()) {
@@ -906,6 +915,70 @@ export class LocalAutomotiveRepository implements IAutomotiveStorageRepository {
   }
 
   // ---------------------------------------------------------------------------
+  // Payments (V0.0.10)
+  // ---------------------------------------------------------------------------
+
+  async listPayments(filter?: ListPaymentsFilter): Promise<PaymentRecord[]> {
+    if (isElectronEnvironment()) {
+      if (!window.artemisAPI?.automotive?.payments?.list) {
+        throw new Error('Artemis Automotive IPC bridge unavailable in Electron environment.');
+      }
+      return window.artemisAPI.automotive.payments.list(filter);
+    }
+    return this.browserDevListPayments(filter);
+  }
+
+  async getPayment(id: string): Promise<PaymentRecord | null> {
+    if (isElectronEnvironment()) {
+      if (!window.artemisAPI?.automotive?.payments?.get) {
+        throw new Error('Artemis Automotive IPC bridge unavailable in Electron environment.');
+      }
+      return window.artemisAPI.automotive.payments.get(id);
+    }
+    return this.browserDevGetPayment(id);
+  }
+
+  async createPayment(options: CreatePaymentOptions): Promise<PaymentRecord> {
+    if (isElectronEnvironment()) {
+      if (!window.artemisAPI?.automotive?.payments?.create) {
+        throw new Error('Artemis Automotive IPC bridge unavailable in Electron environment.');
+      }
+      return window.artemisAPI.automotive.payments.create(options);
+    }
+    return this.browserDevCreatePayment(options);
+  }
+
+  async voidPayment(id: string, reason: string): Promise<PaymentRecord> {
+    if (isElectronEnvironment()) {
+      if (!window.artemisAPI?.automotive?.payments?.void) {
+        throw new Error('Artemis Automotive IPC bridge unavailable in Electron environment.');
+      }
+      return window.artemisAPI.automotive.payments.void(id, reason);
+    }
+    return this.browserDevVoidPayment(id, reason);
+  }
+
+  async getInvoicePaymentSummary(invoiceId: string): Promise<InvoicePaymentSummary> {
+    if (isElectronEnvironment()) {
+      if (!window.artemisAPI?.automotive?.payments?.getInvoiceSummary) {
+        throw new Error('Artemis Automotive IPC bridge unavailable in Electron environment.');
+      }
+      return window.artemisAPI.automotive.payments.getInvoiceSummary(invoiceId);
+    }
+    return this.browserDevGetInvoicePaymentSummary(invoiceId);
+  }
+
+  async getAccountsReceivableSummary(): Promise<AccountsReceivableSummary> {
+    if (isElectronEnvironment()) {
+      if (!window.artemisAPI?.automotive?.payments?.getAccountsReceivableSummary) {
+        throw new Error('Artemis Automotive IPC bridge unavailable in Electron environment.');
+      }
+      return window.artemisAPI.automotive.payments.getAccountsReceivableSummary();
+    }
+    return this.browserDevGetAccountsReceivableSummary();
+  }
+
+  // ---------------------------------------------------------------------------
   // Browser Dev Fallbacks for Invoices
   // ---------------------------------------------------------------------------
 
@@ -1100,6 +1173,200 @@ export class LocalAutomotiveRepository implements IAutomotiveStorageRepository {
     invoice.updatedAt = Date.now();
     await this.browserDevSaveInvoices(list);
     return true;
+  }
+
+  // ---------------------------------------------------------------------------
+  // Browser Dev Fallbacks for Payments
+  // ---------------------------------------------------------------------------
+
+  private async browserDevLoadPayments(): Promise<PaymentRecord[]> {
+    if (this.browserDevPayments !== null) {
+      return this.browserDevPayments;
+    }
+    try {
+      const stored = localStorage.getItem(LOCAL_STORAGE_PAYMENTS_KEY);
+      if (stored) {
+        this.browserDevPayments = JSON.parse(stored);
+        this.nextPaymentSeq = (this.browserDevPayments?.length || 0) + 1;
+        return this.browserDevPayments!;
+      }
+    } catch {
+      // ignore
+    }
+    this.browserDevPayments = [];
+    return this.browserDevPayments;
+  }
+
+  private async browserDevSavePayments(payments: PaymentRecord[]): Promise<void> {
+    this.browserDevPayments = payments;
+    try {
+      localStorage.setItem(LOCAL_STORAGE_PAYMENTS_KEY, JSON.stringify(payments));
+    } catch {
+      // ignore
+    }
+  }
+
+  private async browserDevListPayments(filter?: ListPaymentsFilter): Promise<PaymentRecord[]> {
+    const list = await this.browserDevLoadPayments();
+    let res = list;
+    if (filter?.invoiceId) res = res.filter((p) => p.invoiceId === filter.invoiceId);
+    if (filter?.customerId !== undefined) res = res.filter((p) => p.customerId === filter.customerId);
+    if (filter?.status) res = res.filter((p) => p.status === filter.status);
+    if (filter?.method) res = res.filter((p) => p.method === filter.method);
+    if (typeof filter?.startDate === 'number') res = res.filter((p) => p.receivedAt >= filter.startDate!);
+    if (typeof filter?.endDate === 'number') res = res.filter((p) => p.receivedAt <= filter.endDate!);
+    if (filter?.query) {
+      const q = filter.query.toLowerCase().trim();
+      res = res.filter(
+        (p) =>
+          p.paymentNumber.toLowerCase().includes(q) ||
+          p.invoiceNumberSnapshot.toLowerCase().includes(q) ||
+          (p.customerNameSnapshot && p.customerNameSnapshot.toLowerCase().includes(q)) ||
+          p.vehicleDescriptionSnapshot.toLowerCase().includes(q) ||
+          (p.reference && p.reference.toLowerCase().includes(q)) ||
+          (p.notes && p.notes.toLowerCase().includes(q))
+      );
+    }
+    return [...res].sort((a, b) => {
+      const rDiff = (b.receivedAt || 0) - (a.receivedAt || 0);
+      if (rDiff !== 0) return rDiff;
+      return (b.createdAt || 0) - (a.createdAt || 0);
+    });
+  }
+
+  private async browserDevGetPayment(id: string): Promise<PaymentRecord | null> {
+    const list = await this.browserDevLoadPayments();
+    return list.find((p) => p.id === id) || null;
+  }
+
+  private async browserDevCreatePayment(options: CreatePaymentOptions): Promise<PaymentRecord> {
+    const invoices = await this.browserDevLoadInvoices();
+    const invoice = invoices.find((i) => i.id === options.invoiceId);
+    if (!invoice || invoice.isDeleted) throw new Error('Invoice not found');
+    if (invoice.status !== 'issued') {
+      throw new Error('Payments may only be recorded against issued invoices.');
+    }
+
+    const payments = await this.browserDevLoadPayments();
+    const summary = await this.browserDevGetInvoicePaymentSummary(invoice.id);
+
+    const roundedAmount = Math.round(options.amountCents);
+    if (roundedAmount <= 0) throw new Error('Payment amount must be greater than zero');
+    if (roundedAmount > summary.balanceDueCents) {
+      throw new Error(
+        `Cannot record payment: amount ($${(roundedAmount / 100).toFixed(2)}) exceeds balance due ($${(summary.balanceDueCents / 100).toFixed(2)}).`
+      );
+    }
+
+    const seq = this.nextPaymentSeq++;
+    const paymentNumber = `PAY-${String(seq).padStart(6, '0')}`;
+
+    const balanceBeforeCents = summary.balanceDueCents;
+    const balanceAfterCents = Math.max(0, balanceBeforeCents - roundedAmount);
+
+    const payment: PaymentRecord = {
+      id: `pay-${Math.random().toString(36).substring(2, 10)}`,
+      paymentNumber,
+      invoiceId: invoice.id,
+      customerId: invoice.customerId,
+      invoiceNumberSnapshot: invoice.invoiceNumber,
+      customerNameSnapshot: invoice.customerNameSnapshot,
+      vehicleDescriptionSnapshot: invoice.vehicleDescriptionSnapshot,
+      status: 'posted',
+      amountCents: roundedAmount,
+      method: options.method,
+      reference: options.reference?.trim(),
+      notes: options.notes?.trim(),
+      receivedAt: options.receivedAt || Date.now(),
+      invoiceTotalSnapshotCents: invoice.totalCents,
+      balanceBeforeCents,
+      balanceAfterCents,
+      createdAt: Date.now(),
+    };
+
+    payments.push(payment);
+    await this.browserDevSavePayments(payments);
+    return payment;
+  }
+
+  private async browserDevVoidPayment(id: string, reason: string): Promise<PaymentRecord> {
+    const payments = await this.browserDevLoadPayments();
+    const payment = payments.find((p) => p.id === id);
+    if (!payment) throw new Error('Payment not found');
+    if (payment.status === 'void') throw new Error('Payment is already voided');
+    if (!reason || !reason.trim()) throw new Error('Void reason is required');
+
+    payment.status = 'void';
+    payment.voidedAt = Date.now();
+    payment.voidReason = reason.trim();
+    await this.browserDevSavePayments(payments);
+    return payment;
+  }
+
+  private async browserDevGetInvoicePaymentSummary(invoiceId: string): Promise<InvoicePaymentSummary> {
+    const invoices = await this.browserDevLoadInvoices();
+    const invoice = invoices.find((i) => i.id === invoiceId);
+    if (!invoice) throw new Error('Invoice not found');
+
+    const payments = await this.browserDevLoadPayments();
+    const active = payments.filter((p) => p.invoiceId === invoiceId && p.status === 'posted');
+    const paidCents = active.reduce((sum, p) => sum + p.amountCents, 0);
+    const balanceDueCents = Math.max(0, invoice.totalCents - paidCents);
+
+    let paymentStatus: InvoicePaymentStatus = 'unpaid';
+    if (invoice.totalCents === 0 || balanceDueCents === 0) {
+      paymentStatus = 'paid';
+    } else if (paidCents > 0) {
+      paymentStatus = 'partially_paid';
+    }
+
+    return {
+      invoiceId: invoice.id,
+      invoiceTotalCents: invoice.totalCents,
+      paidCents,
+      balanceDueCents,
+      paymentStatus,
+    };
+  }
+
+  private async browserDevGetAccountsReceivableSummary(): Promise<AccountsReceivableSummary> {
+    const invoices = await this.browserDevLoadInvoices();
+    const payments = await this.browserDevLoadPayments();
+    const now = new Date();
+    const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime();
+
+    const issued = invoices.filter((i) => !i.isDeleted && i.status === 'issued');
+    let totalReceivableCents = 0;
+    let unpaidInvoicesCount = 0;
+    let partiallyPaidInvoicesCount = 0;
+    let paidInvoicesCount = 0;
+
+    for (const inv of issued) {
+      const active = payments.filter((p) => p.invoiceId === inv.id && p.status === 'posted');
+      const paidCents = active.reduce((sum, p) => sum + p.amountCents, 0);
+      const balanceDue = Math.max(0, inv.totalCents - paidCents);
+      totalReceivableCents += balanceDue;
+
+      if (inv.totalCents === 0 || balanceDue === 0) {
+        paidInvoicesCount++;
+      } else if (paidCents === 0) {
+        unpaidInvoicesCount++;
+      } else {
+        partiallyPaidInvoicesCount++;
+      }
+    }
+
+    const paymentsReceivedTodayCents = payments
+      .filter((p) => p.status === 'posted' && p.receivedAt >= startOfToday)
+      .reduce((sum, p) => sum + p.amountCents, 0);
+
+    return {
+      totalReceivableCents,
+      unpaidInvoicesCount,
+      partiallyPaidInvoicesCount,
+      paidInvoicesCount,
+      paymentsReceivedTodayCents,
+    };
   }
 }
 

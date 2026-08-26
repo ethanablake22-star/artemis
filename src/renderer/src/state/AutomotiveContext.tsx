@@ -5,6 +5,7 @@ import type {
   WorkOrderRecord,
   EstimateRecord,
   InvoiceRecord,
+  PaymentRecord,
   CreateCustomerOptions,
   UpdateCustomerOptions,
   CreateVehicleOptions,
@@ -15,6 +16,10 @@ import type {
   UpdateEstimateOptions,
   CreateInvoiceOptions,
   UpdateInvoiceOptions,
+  CreatePaymentOptions,
+  InvoicePaymentSummary,
+  AccountsReceivableSummary,
+  InvoicePaymentStatus,
 } from '@shared/automotiveTypes';
 import { automotiveRepository } from '../services/automotiveStorage';
 
@@ -24,6 +29,7 @@ interface AutomotiveContextValue {
   workOrders: WorkOrderRecord[];
   estimates: EstimateRecord[];
   invoices: InvoiceRecord[];
+  payments: PaymentRecord[];
   isLoading: boolean;
   error: string | null;
   refreshData: () => Promise<void>;
@@ -45,12 +51,15 @@ interface AutomotiveContextValue {
   issueInvoice: (id: string) => Promise<InvoiceRecord>;
   voidInvoice: (id: string, reason: string) => Promise<InvoiceRecord>;
   deleteInvoice: (id: string) => Promise<boolean>;
+  createPayment: (options: CreatePaymentOptions) => Promise<PaymentRecord>;
+  voidPayment: (id: string, reason: string) => Promise<PaymentRecord>;
   getCustomerVehicles: (customerId: string) => VehicleRecord[];
   getCustomerById: (id: string) => CustomerRecord | undefined;
   getVehicleById: (id: string) => VehicleRecord | undefined;
   getWorkOrderById: (id: string) => WorkOrderRecord | undefined;
   getEstimateById: (id: string) => EstimateRecord | undefined;
   getInvoiceById: (id: string) => InvoiceRecord | undefined;
+  getPaymentById: (id: string) => PaymentRecord | undefined;
   getVehicleWorkOrders: (vehicleId: string) => WorkOrderRecord[];
   getCustomerWorkOrders: (customerId: string) => WorkOrderRecord[];
   getWorkOrderEstimates: (workOrderId: string) => EstimateRecord[];
@@ -60,6 +69,10 @@ interface AutomotiveContextValue {
   getWorkOrderInvoices: (workOrderId: string) => InvoiceRecord[];
   getVehicleInvoices: (vehicleId: string) => InvoiceRecord[];
   getCustomerInvoices: (customerId: string) => InvoiceRecord[];
+  getInvoicePayments: (invoiceId: string) => PaymentRecord[];
+  getCustomerPayments: (customerId: string) => PaymentRecord[];
+  getInvoicePaymentSummary: (invoiceId: string) => InvoicePaymentSummary | undefined;
+  getAccountsReceivableSummary: () => AccountsReceivableSummary;
 }
 
 const AutomotiveContext = createContext<AutomotiveContextValue | null>(null);
@@ -70,6 +83,7 @@ export const AutomotiveProvider: React.FC<{ children: React.ReactNode }> = ({ ch
   const [workOrders, setWorkOrders] = useState<WorkOrderRecord[]>([]);
   const [estimates, setEstimates] = useState<EstimateRecord[]>([]);
   const [invoices, setInvoices] = useState<InvoiceRecord[]>([]);
+  const [payments, setPayments] = useState<PaymentRecord[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -83,18 +97,21 @@ export const AutomotiveProvider: React.FC<{ children: React.ReactNode }> = ({ ch
         fetchedWorkOrders,
         fetchedEstimates,
         fetchedInvoices,
+        fetchedPayments,
       ] = await Promise.all([
         automotiveRepository.listCustomers(),
         automotiveRepository.listVehicles(),
         automotiveRepository.listWorkOrders(),
         automotiveRepository.listEstimates(),
         automotiveRepository.listInvoices(),
+        automotiveRepository.listPayments(),
       ]);
       setCustomers(fetchedCustomers);
       setVehicles(fetchedVehicles);
       setWorkOrders(fetchedWorkOrders);
       setEstimates(fetchedEstimates);
       setInvoices(fetchedInvoices);
+      setPayments(fetchedPayments);
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : String(err);
       setError(msg);
@@ -491,6 +508,38 @@ export const AutomotiveProvider: React.FC<{ children: React.ReactNode }> = ({ ch
     [invoices]
   );
 
+  const handleCreatePayment = useCallback(
+    async (options: CreatePaymentOptions): Promise<PaymentRecord> => {
+      setError(null);
+      try {
+        const created = await automotiveRepository.createPayment(options);
+        setPayments((prev) => [created, ...prev.filter((p) => p.id !== created.id)]);
+        return created;
+      } catch (err: unknown) {
+        const msg = err instanceof Error ? err.message : String(err);
+        setError(msg);
+        throw err;
+      }
+    },
+    []
+  );
+
+  const handleVoidPayment = useCallback(
+    async (id: string, reason: string): Promise<PaymentRecord> => {
+      setError(null);
+      try {
+        const voided = await automotiveRepository.voidPayment(id, reason);
+        setPayments((prev) => prev.map((p) => (p.id === id ? voided : p)));
+        return voided;
+      } catch (err: unknown) {
+        const msg = err instanceof Error ? err.message : String(err);
+        setError(msg);
+        throw err;
+      }
+    },
+    []
+  );
+
   const getWorkOrderInvoices = useCallback(
     (workOrderId: string): InvoiceRecord[] => {
       return invoices.filter((i) => i.workOrderId === workOrderId && !i.isDeleted);
@@ -512,6 +561,97 @@ export const AutomotiveProvider: React.FC<{ children: React.ReactNode }> = ({ ch
     [invoices]
   );
 
+  const getPaymentById = useCallback(
+    (id: string): PaymentRecord | undefined => {
+      return payments.find((p) => p.id === id);
+    },
+    [payments]
+  );
+
+  const getInvoicePayments = useCallback(
+    (invoiceId: string): PaymentRecord[] => {
+      return payments
+        .filter((p) => p.invoiceId === invoiceId)
+        .sort((a, b) => (b.receivedAt || 0) - (a.receivedAt || 0) || (b.createdAt || 0) - (a.createdAt || 0));
+    },
+    [payments]
+  );
+
+  const getCustomerPayments = useCallback(
+    (customerId: string): PaymentRecord[] => {
+      return payments
+        .filter((p) => p.customerId === customerId)
+        .sort((a, b) => (b.receivedAt || 0) - (a.receivedAt || 0) || (b.createdAt || 0) - (a.createdAt || 0));
+    },
+    [payments]
+  );
+
+  const getInvoicePaymentSummary = useCallback(
+    (invoiceId: string): InvoicePaymentSummary | undefined => {
+      const inv = invoices.find((i) => i.id === invoiceId && !i.isDeleted);
+      if (!inv) return undefined;
+      const invPayments = payments.filter(
+        (p) => p.invoiceId === invoiceId && p.status === 'posted'
+      );
+      const paidCents = invPayments.reduce((sum, p) => sum + p.amountCents, 0);
+      const balanceDueCents = Math.max(0, inv.totalCents - paidCents);
+
+      let paymentStatus: InvoicePaymentStatus = 'unpaid';
+      if (inv.totalCents === 0 || balanceDueCents === 0) {
+        paymentStatus = 'paid';
+      } else if (paidCents > 0) {
+        paymentStatus = 'partially_paid';
+      }
+
+      return {
+        invoiceId: inv.id,
+        invoiceTotalCents: inv.totalCents,
+        paidCents,
+        balanceDueCents,
+        paymentStatus,
+      };
+    },
+    [invoices, payments]
+  );
+
+  const getAccountsReceivableSummary = useCallback((): AccountsReceivableSummary => {
+    const now = new Date();
+    const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime();
+
+    const issuedInvoices = invoices.filter((i) => !i.isDeleted && i.status === 'issued');
+    let totalReceivableCents = 0;
+    let unpaidInvoicesCount = 0;
+    let partiallyPaidInvoicesCount = 0;
+    let paidInvoicesCount = 0;
+
+    for (const inv of issuedInvoices) {
+      const active = payments.filter((p) => p.invoiceId === inv.id && p.status === 'posted');
+      const paidCents = active.reduce((sum, p) => sum + p.amountCents, 0);
+      const balanceDue = Math.max(0, inv.totalCents - paidCents);
+      totalReceivableCents += balanceDue;
+
+      if (inv.totalCents === 0 || balanceDue === 0) {
+        paidInvoicesCount++;
+      } else if (paidCents === 0) {
+        unpaidInvoicesCount++;
+      } else {
+        partiallyPaidInvoicesCount++;
+      }
+    }
+
+    const paymentsReceivedTodayCents = payments
+      .filter((p) => p.status === 'posted' && p.receivedAt >= startOfToday)
+      .reduce((sum, p) => sum + p.amountCents, 0);
+
+    return {
+      totalReceivableCents,
+      unpaidInvoicesCount,
+      partiallyPaidInvoicesCount,
+      paidInvoicesCount,
+      paymentsReceivedTodayCents,
+    };
+  }, [invoices, payments]);
+
   const value = useMemo(
     () => ({
       customers,
@@ -519,6 +659,7 @@ export const AutomotiveProvider: React.FC<{ children: React.ReactNode }> = ({ ch
       workOrders,
       estimates,
       invoices,
+      payments,
       isLoading,
       error,
       refreshData,
@@ -540,12 +681,15 @@ export const AutomotiveProvider: React.FC<{ children: React.ReactNode }> = ({ ch
       issueInvoice: handleIssueInvoice,
       voidInvoice: handleVoidInvoice,
       deleteInvoice: handleDeleteInvoice,
+      createPayment: handleCreatePayment,
+      voidPayment: handleVoidPayment,
       getCustomerVehicles,
       getCustomerById,
       getVehicleById,
       getWorkOrderById,
       getEstimateById,
       getInvoiceById,
+      getPaymentById,
       getVehicleWorkOrders,
       getCustomerWorkOrders,
       getWorkOrderEstimates,
@@ -555,6 +699,10 @@ export const AutomotiveProvider: React.FC<{ children: React.ReactNode }> = ({ ch
       getWorkOrderInvoices,
       getVehicleInvoices,
       getCustomerInvoices,
+      getInvoicePayments,
+      getCustomerPayments,
+      getInvoicePaymentSummary,
+      getAccountsReceivableSummary,
     }),
     [
       customers,
@@ -562,6 +710,7 @@ export const AutomotiveProvider: React.FC<{ children: React.ReactNode }> = ({ ch
       workOrders,
       estimates,
       invoices,
+      payments,
       isLoading,
       error,
       refreshData,
@@ -583,12 +732,15 @@ export const AutomotiveProvider: React.FC<{ children: React.ReactNode }> = ({ ch
       handleIssueInvoice,
       handleVoidInvoice,
       handleDeleteInvoice,
+      handleCreatePayment,
+      handleVoidPayment,
       getCustomerVehicles,
       getCustomerById,
       getVehicleById,
       getWorkOrderById,
       getEstimateById,
       getInvoiceById,
+      getPaymentById,
       getVehicleWorkOrders,
       getCustomerWorkOrders,
       getWorkOrderEstimates,
@@ -598,6 +750,10 @@ export const AutomotiveProvider: React.FC<{ children: React.ReactNode }> = ({ ch
       getWorkOrderInvoices,
       getVehicleInvoices,
       getCustomerInvoices,
+      getInvoicePayments,
+      getCustomerPayments,
+      getInvoicePaymentSummary,
+      getAccountsReceivableSummary,
     ]
   );
 

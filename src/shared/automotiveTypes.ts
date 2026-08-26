@@ -14,8 +14,18 @@ import type {
   InvoicesBridge,
 } from './invoiceTypes';
 
+import type {
+  PaymentRecord,
+  CreatePaymentOptions,
+  ListPaymentsFilter,
+  PaymentsBridge,
+  InvoicePaymentSummary,
+  AccountsReceivableSummary,
+} from './paymentTypes';
+
 export * from './estimateTypes';
 export * from './invoiceTypes';
+export * from './paymentTypes';
 
 export type CustomerType = 'individual' | 'business';
 
@@ -137,17 +147,19 @@ export interface WorkOrderRecord {
 }
 
 export interface ArtemisAutomotiveStoreData {
-  schemaVersion: 5;
+  schemaVersion: 6;
   nextCustomerSequence: number;
   nextVehicleSequence: number;
   nextWorkOrderSequence: number;
   nextEstimateSequence: number;
   nextInvoiceSequence: number;
+  nextPaymentSequence: number;
   customers: CustomerRecord[];
   vehicles: VehicleRecord[];
   workOrders: WorkOrderRecord[];
   estimates: EstimateRecord[];
   invoices: InvoiceRecord[];
+  payments: PaymentRecord[];
 }
 
 export interface CreateCustomerOptions {
@@ -278,6 +290,7 @@ export interface AutomotiveBridge {
 
   estimates: EstimatesBridge;
   invoices: InvoicesBridge;
+  payments: PaymentsBridge;
 }
 
 export interface IAutomotiveStorageRepository {
@@ -313,4 +326,11 @@ export interface IAutomotiveStorageRepository {
   issueInvoice(id: string): Promise<InvoiceRecord>;
   voidInvoice(id: string, reason: string): Promise<InvoiceRecord>;
   deleteInvoice(id: string): Promise<boolean>;
+
+  listPayments(filter?: ListPaymentsFilter): Promise<PaymentRecord[]>;
+  getPayment(id: string): Promise<PaymentRecord | null>;
+  createPayment(options: CreatePaymentOptions): Promise<PaymentRecord>;
+  voidPayment(id: string, reason: string): Promise<PaymentRecord>;
+  getInvoicePaymentSummary(invoiceId: string): Promise<InvoicePaymentSummary>;
+  getAccountsReceivableSummary(): Promise<AccountsReceivableSummary>;
 }

@@ -40,7 +40,7 @@ export const TabBar: React.FC = () => {
         type="button"
         onClick={toggleLauncher}
         title="New Tab / App Launcher (Ctrl+T)"
-        className="no-drag flex items-center justify-center w-7 h-7 mb-1 rounded-md text-slate-400 hover:text-slate-100 hover:bg-slate-800/80 active:bg-slate-700/80 transition-colors shrink-0"
+        className="no-drag flex items-center justify-center w-7 h-7 mb-1 rounded-md text-zinc-400 hover:text-zinc-100 hover:bg-zinc-800/80 active:bg-zinc-700/80 transition-colors shrink-0"
         aria-label="New Tab"
       >
         <Plus className="w-4 h-4" />

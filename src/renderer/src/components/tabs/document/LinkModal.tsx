@@ -37,16 +37,16 @@ export const LinkModal: React.FC<LinkModalProps> = ({
 
   return (
     <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4 animate-fadeIn">
-      <div className="w-full max-w-md bg-artemis-900 border border-slate-700 rounded-2xl shadow-2xl overflow-hidden p-5">
-        <div className="flex items-center justify-between pb-3 border-b border-slate-800">
-          <div className="flex items-center gap-2 text-sm font-bold text-slate-100">
+      <div className="w-full max-w-md bg-artemis-900 border border-zinc-700 rounded-2xl shadow-2xl overflow-hidden p-5">
+        <div className="flex items-center justify-between pb-3 border-b border-zinc-800">
+          <div className="flex items-center gap-2 text-sm font-bold text-zinc-100">
             <Link2 className="w-4 h-4 text-artemis-accent" />
             Insert Hyperlink
           </div>
           <button
             type="button"
             onClick={onClose}
-            className="p-1 rounded-lg text-slate-400 hover:text-slate-100 hover:bg-slate-800"
+            className="p-1 rounded-lg text-zinc-400 hover:text-zinc-100 hover:bg-zinc-800"
           >
             <X className="w-4 h-4" />
           </button>
@@ -54,7 +54,7 @@ export const LinkModal: React.FC<LinkModalProps> = ({
 
         <form onSubmit={handleSubmit} className="mt-4 space-y-4">
           <div>
-            <label className="block text-xs font-semibold text-slate-300 mb-1.5">
+            <label className="block text-xs font-semibold text-zinc-300 mb-1.5">
               Destination URL / Web Address
             </label>
             <input
@@ -63,7 +63,7 @@ export const LinkModal: React.FC<LinkModalProps> = ({
               value={url}
               onChange={(e) => setUrl(e.target.value)}
               autoFocus
-              className="w-full bg-artemis-950 border border-slate-700 rounded-xl px-3 py-2 text-xs text-slate-100 placeholder-slate-500 focus:outline-none focus:border-artemis-accent"
+              className="w-full bg-artemis-950 border border-zinc-700 rounded-xl px-3 py-2 text-xs text-zinc-100 placeholder-zinc-500 focus:outline-none focus:border-artemis-accent"
             />
           </div>
 
@@ -83,13 +83,13 @@ export const LinkModal: React.FC<LinkModalProps> = ({
               <button
                 type="button"
                 onClick={onClose}
-                className="px-3.5 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-medium"
+                className="px-3.5 py-1.5 rounded-lg bg-zinc-800 hover:bg-zinc-700 text-zinc-300 text-xs font-medium"
               >
                 Cancel
               </button>
               <button
                 type="submit"
-                className="px-4 py-1.5 rounded-lg bg-artemis-accent hover:bg-sky-400 text-slate-950 text-xs font-bold flex items-center gap-1.5"
+                className="px-4 py-1.5 rounded-lg bg-artemis-accent hover:bg-silver-400 text-zinc-950 text-xs font-bold flex items-center gap-1.5"
               >
                 <Check className="w-3.5 h-3.5" />
                 Apply Link

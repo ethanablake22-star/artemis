@@ -233,10 +233,10 @@ export const DocumentTab: React.FC<DocumentTabProps> = ({ libraryItemId }) => {
   return (
     <div className="flex flex-col h-full w-full bg-artemis-950 overflow-hidden">
       {/* Top Document Header Bar (Hidden in print) */}
-      <div className="h-12 bg-artemis-950 border-b border-slate-800 px-5 flex items-center justify-between gap-4 shrink-0 select-none print:hidden">
+      <div className="h-12 bg-artemis-950 border-b border-zinc-800 px-5 flex items-center justify-between gap-4 shrink-0 select-none print:hidden">
         {/* Document Title & Icon */}
         <div className="flex items-center gap-3 min-w-0">
-          <div className="p-1.5 rounded-lg bg-indigo-500/10 border border-indigo-500/20 text-indigo-400 shrink-0">
+          <div className="p-1.5 rounded-lg bg-silver-500/10 border border-silver-500/20 text-silver-400 shrink-0">
             <FileText className="w-4 h-4" />
           </div>
 
@@ -251,19 +251,19 @@ export const DocumentTab: React.FC<DocumentTabProps> = ({ libraryItemId }) => {
                   if (e.key === 'Escape') setIsEditingTitle(false);
                 }}
                 autoFocus
-                className="bg-artemis-900 border border-artemis-accent/50 rounded px-2 py-0.5 text-xs text-slate-100 font-semibold focus:outline-none"
+                className="bg-artemis-900 border border-artemis-accent/50 rounded px-2 py-0.5 text-xs text-zinc-100 font-semibold focus:outline-none"
               />
               <button
                 type="button"
                 onClick={handleSaveTitle}
-                className="p-1 rounded text-emerald-400 hover:bg-emerald-500/10"
+                className="p-1 rounded text-bronze-400 hover:bg-bronze-500/10"
               >
                 <Check className="w-3.5 h-3.5" />
               </button>
               <button
                 type="button"
                 onClick={() => setIsEditingTitle(false)}
-                className="p-1 rounded text-slate-400 hover:bg-slate-800"
+                className="p-1 rounded text-zinc-400 hover:bg-zinc-800"
               >
                 <X className="w-3.5 h-3.5" />
               </button>
@@ -271,12 +271,12 @@ export const DocumentTab: React.FC<DocumentTabProps> = ({ libraryItemId }) => {
           ) : (
             <div
               onClick={handleStartTitleEdit}
-              className="group flex items-center gap-2 cursor-pointer py-1 px-1.5 -ml-1.5 rounded hover:bg-slate-800/60 transition-colors max-w-md"
+              className="group flex items-center gap-2 cursor-pointer py-1 px-1.5 -ml-1.5 rounded hover:bg-zinc-800/60 transition-colors max-w-md"
             >
-              <span className="text-xs font-bold text-slate-100 truncate tracking-wide">
+              <span className="text-xs font-bold text-zinc-100 truncate tracking-wide">
                 {documentTitle}
               </span>
-              <Edit2 className="w-3 h-3 text-slate-500 opacity-0 group-hover:opacity-100 transition-opacity shrink-0" />
+              <Edit2 className="w-3 h-3 text-zinc-500 opacity-0 group-hover:opacity-100 transition-opacity shrink-0" />
             </div>
           )}
         </div>
@@ -284,8 +284,8 @@ export const DocumentTab: React.FC<DocumentTabProps> = ({ libraryItemId }) => {
         {/* Status Indicators: Revision, Autosave state, Quick Actions */}
         <div className="flex items-center gap-4 text-xs shrink-0">
           {documentRecord && (
-            <span className="text-[11px] font-mono text-slate-500 flex items-center gap-1">
-              <Layers className="w-3 h-3 text-slate-600" />
+            <span className="text-[11px] font-mono text-zinc-500 flex items-center gap-1">
+              <Layers className="w-3 h-3 text-zinc-600" />
               Rev {documentRecord.revision}
             </span>
           )}
@@ -293,13 +293,13 @@ export const DocumentTab: React.FC<DocumentTabProps> = ({ libraryItemId }) => {
           {/* Save Status Badge */}
           <div className="flex items-center gap-1.5 font-medium">
             {saveStatus === 'saving' && (
-              <span className="flex items-center gap-1.5 text-amber-400 text-[11px]">
+              <span className="flex items-center gap-1.5 text-bronze-400 text-[11px]">
                 <Clock className="w-3.5 h-3.5 animate-spin" />
                 Saving…
               </span>
             )}
             {saveStatus === 'saved' && (
-              <span className="flex items-center gap-1.5 text-emerald-400 text-[11px]">
+              <span className="flex items-center gap-1.5 text-bronze-400 text-[11px]">
                 <CheckCircle2 className="w-3.5 h-3.5" />
                 Saved
               </span>
@@ -315,7 +315,7 @@ export const DocumentTab: React.FC<DocumentTabProps> = ({ libraryItemId }) => {
             )}
           </div>
 
-          <div className="w-px h-4 bg-slate-800" />
+          <div className="w-px h-4 bg-zinc-800" />
 
           {/* Current Mission Button */}
           {libraryItem && !libraryItem.isDeleted && (
@@ -331,11 +331,11 @@ export const DocumentTab: React.FC<DocumentTabProps> = ({ libraryItemId }) => {
               className={clsx(
                 'px-2.5 py-1 rounded text-[11px] font-bold flex items-center gap-1.5 transition-all',
                 isCurrentMission('document', libraryItemId)
-                  ? 'bg-amber-500/20 text-amber-300 border border-amber-500/40 shadow-sm shadow-amber-500/10'
-                  : 'bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700'
+                  ? 'bg-bronze-500/20 text-bronze-300 border border-bronze-500/40 shadow-sm shadow-bronze-500/10'
+                  : 'bg-zinc-800 hover:bg-zinc-700 text-zinc-300 border border-zinc-700'
               )}
             >
-              <Target className={clsx('w-3 h-3', isCurrentMission('document', libraryItemId) && 'text-amber-400 fill-amber-400/20')} />
+              <Target className={clsx('w-3 h-3', isCurrentMission('document', libraryItemId) && 'text-bronze-400 fill-bronze-400/20')} />
               {isCurrentMission('document', libraryItemId) ? '★ Current Mission' : 'Set as Current Mission'}
             </button>
           )}
@@ -346,7 +346,7 @@ export const DocumentTab: React.FC<DocumentTabProps> = ({ libraryItemId }) => {
               type="button"
               onClick={handlePrint}
               title="Print Document (Ctrl+P)"
-              className="p-1 rounded text-slate-400 hover:text-slate-200 hover:bg-slate-800 transition-colors"
+              className="p-1 rounded text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800 transition-colors"
             >
               <Printer className="w-3.5 h-3.5" />
             </button>
@@ -374,14 +374,14 @@ export const DocumentTab: React.FC<DocumentTabProps> = ({ libraryItemId }) => {
 
       {/* Loading Overlay / Error Banner / Main Paper Document Canvas */}
       {isLoading ? (
-        <div className="flex-1 flex items-center justify-center bg-artemis-950 text-slate-500 text-xs">
+        <div className="flex-1 flex items-center justify-center bg-artemis-950 text-zinc-500 text-xs">
           Loading document content…
         </div>
       ) : errorMessage && !documentRecord ? (
-        <div className="flex-1 flex flex-col items-center justify-center bg-artemis-950 text-slate-400 text-xs p-6 text-center">
+        <div className="flex-1 flex flex-col items-center justify-center bg-artemis-950 text-zinc-400 text-xs p-6 text-center">
           <AlertCircle className="w-8 h-8 text-red-400 mb-2" />
-          <h4 className="text-sm font-bold text-slate-200">Failed to Load Document</h4>
-          <p className="text-slate-400 mt-1 max-w-sm">{errorMessage}</p>
+          <h4 className="text-sm font-bold text-zinc-200">Failed to Load Document</h4>
+          <p className="text-zinc-400 mt-1 max-w-sm">{errorMessage}</p>
         </div>
       ) : (
         <DocumentCanvas editor={editor} />

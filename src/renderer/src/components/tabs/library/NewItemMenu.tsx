@@ -41,7 +41,7 @@ export const NewItemMenu: React.FC<NewItemMenuProps> = ({
       <button
         type="button"
         onClick={() => setIsOpen((prev) => !prev)}
-        className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-artemis-accent hover:bg-artemis-accent-hover text-artemis-950 font-semibold text-xs transition-colors shadow-sm shadow-cyan-500/20 active:scale-95 shrink-0"
+        className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-artemis-accent hover:bg-artemis-accent-hover text-artemis-950 font-semibold text-xs transition-colors shadow-sm shadow-silver-500/20 active:scale-95 shrink-0"
       >
         <Plus className="w-4 h-4 stroke-[2.5]" />
         <span>New</span>
@@ -49,22 +49,22 @@ export const NewItemMenu: React.FC<NewItemMenuProps> = ({
       </button>
 
       {isOpen && (
-        <div className="absolute left-0 sm:right-0 sm:left-auto mt-1.5 w-48 rounded-xl bg-artemis-900 border border-slate-700/80 shadow-2xl py-1 z-30 animate-fadeIn">
+        <div className="absolute left-0 sm:right-0 sm:left-auto mt-1.5 w-48 rounded-xl bg-artemis-900 border border-zinc-700/80 shadow-2xl py-1 z-30 animate-fadeIn">
           <button
             type="button"
             onClick={handleSelectFolder}
-            className="w-full flex items-center gap-2.5 px-3.5 py-2 text-xs text-slate-200 hover:text-slate-100 hover:bg-slate-800/80 transition-colors text-left font-medium"
+            className="w-full flex items-center gap-2.5 px-3.5 py-2 text-xs text-zinc-200 hover:text-zinc-100 hover:bg-zinc-800/80 transition-colors text-left font-medium"
           >
-            <FolderPlus className="w-4 h-4 text-amber-400 shrink-0" />
+            <FolderPlus className="w-4 h-4 text-bronze-400 shrink-0" />
             <span>Folder</span>
           </button>
 
           <button
             type="button"
             onClick={handleSelectDocument}
-            className="w-full flex items-center gap-2.5 px-3.5 py-2 text-xs text-slate-200 hover:text-slate-100 hover:bg-slate-800/80 transition-colors text-left font-medium"
+            className="w-full flex items-center gap-2.5 px-3.5 py-2 text-xs text-zinc-200 hover:text-zinc-100 hover:bg-zinc-800/80 transition-colors text-left font-medium"
           >
-            <FileText className="w-4 h-4 text-indigo-400 shrink-0" />
+            <FileText className="w-4 h-4 text-silver-400 shrink-0" />
             <span>Document</span>
           </button>
         </div>

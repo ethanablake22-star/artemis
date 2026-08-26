@@ -12,6 +12,7 @@ import type {
   EstimateLineItem,
   InvoiceRecord,
   InvoiceLineItem,
+  PaymentRecord,
   ArtemisAutomotiveStoreData,
   CreateCustomerOptions,
   UpdateCustomerOptions,
@@ -23,15 +24,20 @@ import type {
   UpdateEstimateOptions,
   CreateInvoiceOptions,
   UpdateInvoiceOptions,
+  CreatePaymentOptions,
   ListCustomersFilter,
   ListVehiclesFilter,
   ListWorkOrdersFilter,
   ListEstimatesFilter,
   ListInvoicesFilter,
+  ListPaymentsFilter,
+  InvoicePaymentSummary,
+  AccountsReceivableSummary,
+  InvoicePaymentStatus,
 } from '../shared/automotiveTypes';
 import { calculateEstimateTotals } from '../shared/currencyUtils';
 
-export const CURRENT_AUTOMOTIVE_SCHEMA_VERSION = 5;
+export const CURRENT_AUTOMOTIVE_SCHEMA_VERSION = 6;
 const AUTOMOTIVE_STORE_FILENAME = 'artemis_automotive_store.json';
 
 export class UnsupportedAutomotiveSchemaVersionError extends Error {
@@ -66,6 +72,10 @@ function formatInvoiceNumber(seq: number): string {
   return `INV-${String(seq).padStart(6, '0')}`;
 }
 
+export function formatPaymentNumber(seq: number): string {
+  return `PAY-${String(seq).padStart(6, '0')}`;
+}
+
 function deriveCustomerName(
   type: 'individual' | 'business',
   options: {
@@ -92,17 +102,19 @@ function deriveCustomerName(
 function validateAndMigrateAutomotiveStore(raw: unknown): ArtemisAutomotiveStoreData {
   if (!raw || typeof raw !== 'object') {
     return {
-      schemaVersion: 5,
+      schemaVersion: 6,
       nextCustomerSequence: 1,
       nextVehicleSequence: 1,
       nextWorkOrderSequence: 1,
       nextEstimateSequence: 1,
       nextInvoiceSequence: 1,
+      nextPaymentSequence: 1,
       customers: [],
       vehicles: [],
       workOrders: [],
       estimates: [],
       invoices: [],
+      payments: [],
     };
   }
 
@@ -111,7 +123,7 @@ function validateAndMigrateAutomotiveStore(raw: unknown): ArtemisAutomotiveStore
 
   switch (version) {
     case 1: {
-      // Deterministic migration from Schema 1 -> Schema 5
+      // Deterministic migration from Schema 1 -> Schema 6
       const rawCustomers = Array.isArray(obj.customers)
         ? (obj.customers as Record<string, unknown>[])
         : [];
@@ -151,7 +163,6 @@ function validateAndMigrateAutomotiveStore(raw: unknown): ArtemisAutomotiveStore
 
       const migratedVehicles: VehicleRecord[] = sortedVehicles.map((v, index) => {
         const seq = index + 1;
-        const vin = v.vin ? String(v.vin).trim().toUpperCase() : undefined;
         return {
           id: String(v.id || crypto.randomUUID()),
           vehicleNumber: formatVehicleNumber(seq),
@@ -159,10 +170,9 @@ function validateAndMigrateAutomotiveStore(raw: unknown): ArtemisAutomotiveStore
           year: typeof v.year === 'number' ? v.year : undefined,
           make: String(v.make || 'Unknown Make').trim(),
           model: String(v.model || 'Unknown Model').trim(),
-          trim: v.trim ? String(v.trim).trim() : undefined,
-          vin,
-          licensePlate: v.licensePlate ? String(v.licensePlate).trim().toUpperCase() : undefined,
+          vin: v.vin ? String(v.vin).trim().toUpperCase() : undefined,
           mileage: typeof v.mileage === 'number' ? v.mileage : undefined,
+          licensePlate: v.licensePlate ? String(v.licensePlate).trim().toUpperCase() : undefined,
           color: v.color ? String(v.color).trim() : undefined,
           notes: v.notes ? String(v.notes).trim() : undefined,
           createdAt: typeof v.createdAt === 'number' ? v.createdAt : Date.now(),
@@ -172,28 +182,31 @@ function validateAndMigrateAutomotiveStore(raw: unknown): ArtemisAutomotiveStore
       });
 
       return {
-        schemaVersion: 5,
+        schemaVersion: 6,
         nextCustomerSequence: migratedCustomers.length + 1,
         nextVehicleSequence: migratedVehicles.length + 1,
         nextWorkOrderSequence: 1,
         nextEstimateSequence: 1,
         nextInvoiceSequence: 1,
+        nextPaymentSequence: 1,
         customers: migratedCustomers,
         vehicles: migratedVehicles,
         workOrders: [],
         estimates: [],
         invoices: [],
+        payments: [],
       };
     }
 
     case 2: {
-      // Migration from Schema 2 -> Schema 5
+      // Deterministic migration from Schema 2 -> Schema 6
       const customers = Array.isArray(obj.customers)
         ? (obj.customers as CustomerRecord[])
         : [];
       const vehicles = Array.isArray(obj.vehicles)
         ? (obj.vehicles as VehicleRecord[])
         : [];
+
       const nextCustomerSequence =
         typeof obj.nextCustomerSequence === 'number'
           ? obj.nextCustomerSequence
@@ -204,22 +217,24 @@ function validateAndMigrateAutomotiveStore(raw: unknown): ArtemisAutomotiveStore
           : vehicles.length + 1;
 
       return {
-        schemaVersion: 5,
+        schemaVersion: 6,
         nextCustomerSequence,
         nextVehicleSequence,
         nextWorkOrderSequence: 1,
         nextEstimateSequence: 1,
         nextInvoiceSequence: 1,
+        nextPaymentSequence: 1,
         customers,
         vehicles,
         workOrders: [],
         estimates: [],
         invoices: [],
+        payments: [],
       };
     }
 
     case 3: {
-      // Migration from Schema 3 -> Schema 5
+      // Deterministic migration from Schema 3 -> Schema 6
       const customers = Array.isArray(obj.customers)
         ? (obj.customers as CustomerRecord[])
         : [];
@@ -244,22 +259,24 @@ function validateAndMigrateAutomotiveStore(raw: unknown): ArtemisAutomotiveStore
           : workOrders.length + 1;
 
       return {
-        schemaVersion: 5,
+        schemaVersion: 6,
         nextCustomerSequence,
         nextVehicleSequence,
         nextWorkOrderSequence,
         nextEstimateSequence: 1,
         nextInvoiceSequence: 1,
+        nextPaymentSequence: 1,
         customers,
         vehicles,
         workOrders,
         estimates: [],
         invoices: [],
+        payments: [],
       };
     }
 
     case 4: {
-      // Migration from Schema 4 -> Schema 5
+      // Migration from Schema 4 -> Schema 6
       const customers = Array.isArray(obj.customers)
         ? (obj.customers as CustomerRecord[])
         : [];
@@ -291,21 +308,24 @@ function validateAndMigrateAutomotiveStore(raw: unknown): ArtemisAutomotiveStore
           : estimates.length + 1;
 
       return {
-        schemaVersion: 5,
+        schemaVersion: 6,
         nextCustomerSequence,
         nextVehicleSequence,
         nextWorkOrderSequence,
         nextEstimateSequence,
         nextInvoiceSequence: 1,
+        nextPaymentSequence: 1,
         customers,
         vehicles,
         workOrders,
         estimates,
         invoices: [],
+        payments: [],
       };
     }
 
     case 5: {
+      // Migration from Schema 5 -> Schema 6
       const customers = Array.isArray(obj.customers)
         ? (obj.customers as CustomerRecord[])
         : [];
@@ -344,17 +364,81 @@ function validateAndMigrateAutomotiveStore(raw: unknown): ArtemisAutomotiveStore
           : invoices.length + 1;
 
       return {
-        schemaVersion: 5,
+        schemaVersion: 6,
         nextCustomerSequence,
         nextVehicleSequence,
         nextWorkOrderSequence,
         nextEstimateSequence,
         nextInvoiceSequence,
+        nextPaymentSequence: 1,
         customers,
         vehicles,
         workOrders,
         estimates,
         invoices,
+        payments: [],
+      };
+    }
+
+    case 6: {
+      const customers = Array.isArray(obj.customers)
+        ? (obj.customers as CustomerRecord[])
+        : [];
+      const vehicles = Array.isArray(obj.vehicles)
+        ? (obj.vehicles as VehicleRecord[])
+        : [];
+      const workOrders = Array.isArray(obj.workOrders)
+        ? (obj.workOrders as WorkOrderRecord[])
+        : [];
+      const estimates = Array.isArray(obj.estimates)
+        ? (obj.estimates as EstimateRecord[])
+        : [];
+      const invoices = Array.isArray(obj.invoices)
+        ? (obj.invoices as InvoiceRecord[])
+        : [];
+      const payments = Array.isArray(obj.payments)
+        ? (obj.payments as PaymentRecord[])
+        : [];
+
+      const nextCustomerSequence =
+        typeof obj.nextCustomerSequence === 'number'
+          ? obj.nextCustomerSequence
+          : customers.length + 1;
+      const nextVehicleSequence =
+        typeof obj.nextVehicleSequence === 'number'
+          ? obj.nextVehicleSequence
+          : vehicles.length + 1;
+      const nextWorkOrderSequence =
+        typeof obj.nextWorkOrderSequence === 'number'
+          ? obj.nextWorkOrderSequence
+          : workOrders.length + 1;
+      const nextEstimateSequence =
+        typeof obj.nextEstimateSequence === 'number'
+          ? obj.nextEstimateSequence
+          : estimates.length + 1;
+      const nextInvoiceSequence =
+        typeof obj.nextInvoiceSequence === 'number'
+          ? obj.nextInvoiceSequence
+          : invoices.length + 1;
+      const nextPaymentSequence =
+        typeof obj.nextPaymentSequence === 'number'
+          ? obj.nextPaymentSequence
+          : payments.length + 1;
+
+      return {
+        schemaVersion: 6,
+        nextCustomerSequence,
+        nextVehicleSequence,
+        nextWorkOrderSequence,
+        nextEstimateSequence,
+        nextInvoiceSequence,
+        nextPaymentSequence,
+        customers,
+        vehicles,
+        workOrders,
+        estimates,
+        invoices,
+        payments,
       };
     }
 
@@ -384,17 +468,19 @@ async function readAutomotiveStoreFile(): Promise<ArtemisAutomotiveStoreData> {
       throw err;
     }
     const initialStore: ArtemisAutomotiveStoreData = {
-      schemaVersion: 5,
+      schemaVersion: 6,
       nextCustomerSequence: 1,
       nextVehicleSequence: 1,
       nextWorkOrderSequence: 1,
       nextEstimateSequence: 1,
       nextInvoiceSequence: 1,
+      nextPaymentSequence: 1,
       customers: [],
       vehicles: [],
       workOrders: [],
       estimates: [],
       invoices: [],
+      payments: [],
     };
     await writeAutomotiveStoreFile(initialStore);
     inMemoryCache = initialStore;
@@ -1855,6 +1941,16 @@ export async function voidInvoice(id: string, reason: string): Promise<InvoiceRe
     );
   }
 
+  // Integrity Rule (V0.0.10): Cannot void an invoice while active posted payments exist against it
+  const activePostedPayment = (store.payments || []).find(
+    (p) => p.invoiceId === id && p.status === 'posted'
+  );
+  if (activePostedPayment) {
+    throw new Error(
+      `Cannot void Invoice ${invoice.invoiceNumber}: active posted payment ${activePostedPayment.paymentNumber} exists. All payments against this invoice must be voided first.`
+    );
+  }
+
   invoice.status = 'void';
   invoice.voidedAt = Date.now();
   invoice.voidReason = trimmedReason;
@@ -1891,5 +1987,254 @@ export async function deleteInvoice(id: string): Promise<boolean> {
   invoice.updatedAt = Date.now();
   await writeAutomotiveStoreFile(store);
   return true;
+}
+
+// ---------------------------------------------------------------------------
+// PAYMENTS & ACCOUNTS RECEIVABLE (V0.0.10)
+// ---------------------------------------------------------------------------
+
+export function calculateInvoicePaymentSummary(
+  invoice: InvoiceRecord,
+  payments: PaymentRecord[]
+): InvoicePaymentSummary {
+  const activePayments = (payments || []).filter(
+    (p) => p.invoiceId === invoice.id && p.status === 'posted'
+  );
+
+  const paidCents = activePayments.reduce((sum, p) => sum + p.amountCents, 0);
+  const balanceDueCents = Math.max(0, invoice.totalCents - paidCents);
+
+  let paymentStatus: InvoicePaymentStatus = 'unpaid';
+  if (invoice.totalCents === 0 || balanceDueCents === 0) {
+    paymentStatus = 'paid';
+  } else if (paidCents > 0) {
+    paymentStatus = 'partially_paid';
+  }
+
+  return {
+    invoiceId: invoice.id,
+    invoiceTotalCents: invoice.totalCents,
+    paidCents,
+    balanceDueCents,
+    paymentStatus,
+  };
+}
+
+export async function listPayments(filter?: ListPaymentsFilter): Promise<PaymentRecord[]> {
+  const store = await readAutomotiveStoreFile();
+  let results = store.payments || [];
+
+  if (filter?.invoiceId) {
+    results = results.filter((p) => p.invoiceId === filter.invoiceId);
+  }
+
+  if (filter?.customerId !== undefined) {
+    results = results.filter((p) => p.customerId === filter.customerId);
+  }
+
+  if (filter?.status) {
+    results = results.filter((p) => p.status === filter.status);
+  }
+
+  if (filter?.method) {
+    results = results.filter((p) => p.method === filter.method);
+  }
+
+  if (typeof filter?.startDate === 'number') {
+    results = results.filter((p) => p.receivedAt >= filter.startDate!);
+  }
+
+  if (typeof filter?.endDate === 'number') {
+    results = results.filter((p) => p.receivedAt <= filter.endDate!);
+  }
+
+  if (filter?.query) {
+    const q = filter.query.toLowerCase().trim();
+    results = results.filter(
+      (p) =>
+        p.paymentNumber.toLowerCase().includes(q) ||
+        p.invoiceNumberSnapshot.toLowerCase().includes(q) ||
+        (p.customerNameSnapshot && p.customerNameSnapshot.toLowerCase().includes(q)) ||
+        p.vehicleDescriptionSnapshot.toLowerCase().includes(q) ||
+        (p.reference && p.reference.toLowerCase().includes(q)) ||
+        (p.notes && p.notes.toLowerCase().includes(q))
+    );
+  }
+
+  return [...results].sort((a, b) => {
+    const rDiff = (b.receivedAt || 0) - (a.receivedAt || 0);
+    if (rDiff !== 0) return rDiff;
+    return (b.createdAt || 0) - (a.createdAt || 0);
+  });
+}
+
+export async function getPayment(id: string): Promise<PaymentRecord | null> {
+  if (!id || typeof id !== 'string') return null;
+  const store = await readAutomotiveStoreFile();
+  const payment = (store.payments || []).find((p) => p.id === id);
+  return payment || null;
+}
+
+export async function createPayment(options: CreatePaymentOptions): Promise<PaymentRecord> {
+  if (!options || !options.invoiceId || typeof options.invoiceId !== 'string') {
+    throw new Error('Valid invoice ID is required to record a payment');
+  }
+
+  const store = await readAutomotiveStoreFile();
+  const invoice = (store.invoices || []).find((i) => i.id === options.invoiceId);
+  if (!invoice || invoice.isDeleted) {
+    throw new Error(`Invoice "${options.invoiceId}" not found`);
+  }
+
+  // Payment only allowed on issued invoices
+  if (invoice.status !== 'issued') {
+    throw new Error(
+      `Cannot record payment against Invoice ${invoice.invoiceNumber} with status "${invoice.status}". Payments may only be recorded against issued invoices.`
+    );
+  }
+
+  if (typeof options.amountCents !== 'number' || isNaN(options.amountCents) || options.amountCents <= 0) {
+    throw new Error('Payment amount must be greater than zero');
+  }
+
+  const roundedAmountCents = Math.round(options.amountCents);
+  const summary = calculateInvoicePaymentSummary(invoice, store.payments || []);
+
+  if (roundedAmountCents > summary.balanceDueCents) {
+    throw new Error(
+      `Cannot record payment of $${(roundedAmountCents / 100).toFixed(2)}: amount exceeds remaining balance due of $${(summary.balanceDueCents / 100).toFixed(2)}. Overpayments are not supported.`
+    );
+  }
+
+  const validMethods = [
+    'cash',
+    'card',
+    'check',
+    'bank_transfer',
+    'digital_wallet',
+    'financing',
+    'other',
+  ];
+  if (!options.method || !validMethods.includes(options.method)) {
+    throw new Error(`Invalid payment method "${options.method}"`);
+  }
+
+  const receivedAt =
+    typeof options.receivedAt === 'number' && !isNaN(options.receivedAt) && options.receivedAt > 0
+      ? options.receivedAt
+      : Date.now();
+
+  const seq = typeof store.nextPaymentSequence === 'number' && store.nextPaymentSequence > 0
+    ? store.nextPaymentSequence
+    : (store.payments?.length || 0) + 1;
+
+  store.nextPaymentSequence = seq + 1;
+  const paymentNumber = formatPaymentNumber(seq);
+
+  const balanceBeforeCents = summary.balanceDueCents;
+  const balanceAfterCents = Math.max(0, balanceBeforeCents - roundedAmountCents);
+
+  const payment: PaymentRecord = {
+    id: crypto.randomUUID(),
+    paymentNumber,
+    invoiceId: invoice.id,
+    customerId: invoice.customerId,
+    invoiceNumberSnapshot: invoice.invoiceNumber,
+    customerNameSnapshot: invoice.customerNameSnapshot,
+    vehicleDescriptionSnapshot: invoice.vehicleDescriptionSnapshot,
+    status: 'posted',
+    amountCents: roundedAmountCents,
+    method: options.method,
+    reference: options.reference?.trim() || undefined,
+    notes: options.notes?.trim() || undefined,
+    receivedAt,
+    invoiceTotalSnapshotCents: invoice.totalCents,
+    balanceBeforeCents,
+    balanceAfterCents,
+    createdAt: Date.now(),
+  };
+
+  if (!store.payments) {
+    store.payments = [];
+  }
+  store.payments.push(payment);
+  await writeAutomotiveStoreFile(store);
+  return payment;
+}
+
+export async function voidPayment(id: string, reason: string): Promise<PaymentRecord> {
+  if (!id || typeof id !== 'string') {
+    throw new Error('Invalid payment ID provided');
+  }
+
+  const trimmedReason = reason?.trim();
+  if (!trimmedReason) {
+    throw new Error('A non-empty reason is required to void a Payment.');
+  }
+
+  const store = await readAutomotiveStoreFile();
+  const payment = (store.payments || []).find((p) => p.id === id);
+  if (!payment) {
+    throw new Error(`Payment "${id}" not found`);
+  }
+
+  if (payment.status === 'void') {
+    throw new Error(`Payment ${payment.paymentNumber} is already voided.`);
+  }
+
+  payment.status = 'void';
+  payment.voidedAt = Date.now();
+  payment.voidReason = trimmedReason;
+  await writeAutomotiveStoreFile(store);
+  return payment;
+}
+
+export async function getInvoicePaymentSummary(invoiceId: string): Promise<InvoicePaymentSummary> {
+  if (!invoiceId || typeof invoiceId !== 'string') {
+    throw new Error('Invalid invoice ID provided');
+  }
+
+  const store = await readAutomotiveStoreFile();
+  const invoice = (store.invoices || []).find((i) => i.id === invoiceId);
+  if (!invoice) {
+    throw new Error(`Invoice "${invoiceId}" not found`);
+  }
+
+  return calculateInvoicePaymentSummary(invoice, store.payments || []);
+}
+
+export async function getAccountsReceivableSummary(): Promise<AccountsReceivableSummary> {
+  const store = await readAutomotiveStoreFile();
+  const now = new Date();
+  const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime();
+
+  const issuedInvoices = (store.invoices || []).filter(
+    (i) => !i.isDeleted && i.status === 'issued'
+  );
+
+  const summaries = issuedInvoices.map((inv) =>
+    calculateInvoicePaymentSummary(inv, store.payments || [])
+  );
+
+  const totalReceivableCents = summaries.reduce((acc, s) => acc + s.balanceDueCents, 0);
+  const unpaidInvoicesCount = summaries.filter(
+    (s) => s.paymentStatus === 'unpaid' && s.invoiceTotalCents > 0
+  ).length;
+  const partiallyPaidInvoicesCount = summaries.filter(
+    (s) => s.paymentStatus === 'partially_paid'
+  ).length;
+  const paidInvoicesCount = summaries.filter((s) => s.paymentStatus === 'paid').length;
+
+  const paymentsReceivedTodayCents = (store.payments || [])
+    .filter((p) => p.status === 'posted' && p.receivedAt >= startOfToday)
+    .reduce((acc, p) => acc + p.amountCents, 0);
+
+  return {
+    totalReceivableCents,
+    unpaidInvoicesCount,
+    partiallyPaidInvoicesCount,
+    paidInvoicesCount,
+    paymentsReceivedTodayCents,
+  };
 }
 

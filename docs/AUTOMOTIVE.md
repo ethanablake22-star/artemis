@@ -1,12 +1,12 @@
-# Artemis Automotive Architecture & Data Model (Schema V5)
+# Artemis Automotive Architecture & Data Model (Schema V6)
 
 ## Overview
 
-**Artemis Automotive** is the native customer relationship management, vehicle fleet tracking, service work order, commercial estimating, and invoicing subsystem for the Artemis desktop platform. It provides an operational foundation for mechanic shops, fleet operators, and engineering teams to maintain customer accounts, vehicle profiles, VINs, mileage records, powertrain specifications, repair work orders, commercial price proposals, and final invoices directly within Artemis universal tabs.
+**Artemis Automotive** is the native customer relationship management, vehicle fleet tracking, service work order, commercial estimating, invoicing, and payment processing subsystem for the Artemis desktop platform. It provides an operational foundation for mechanic shops, fleet operators, and engineering teams to maintain customer accounts, vehicle profiles, VINs, mileage records, powertrain specifications, repair work orders, commercial price proposals, final invoices, and point-of-sale payment records directly within Artemis universal tabs.
 
 ---
 
-## Data Models & Entity Relationships (Schema V5)
+## Data Models & Entity Relationships (Schema V6)
 
 Automotive data is authoritatively stored, validated, numbered, and snapshot-preserved in the Electron Main Process:
 
@@ -88,6 +88,25 @@ Automotive data is authoritatively stored, validated, numbered, and snapshot-pre
 │   totalCents: 49450 ($494.50)                          │
 │   status: "draft" | "issued" | "void"                  │
 │   isDeleted: false                                     │
+└───────────────────────────┬────────────────────────────┘
+                            │
+              1 to Many Posted/Voided Payments
+                            │
+┌───────────────────────────▼────────────────────────────┐
+│                    PaymentRecord                       │
+│   id: "pay-uuid-..." (Immutable UUID)                  │
+│   paymentNumber: "PAY-000001" (Monotonic)              │
+│   invoiceId: "inv-uuid-..." (FK)                       │
+│   amountCents: 30000 ($300.00)                         │
+│   method: "card" | "cash" | "check" | ...              │
+│   status: "posted" | "void"                            │
+│   balanceBeforeCents: 49450                            │
+│   balanceAfterCents: 19450                             │
+│   invoiceNumberSnapshot: "INV-000001"                  │
+│   customerNameSnapshot: "Ethan Blake"                  │
+│   vehicleDescriptionSnapshot: "2006 Mercedes SL500"    │
+│   reference?: "Auth #938201"                           │
+│   receivedAt: 1787697682826                            │
 └────────────────────────────────────────────────────────┘
 ```
 
@@ -98,8 +117,9 @@ Automotive data is authoritatively stored, validated, numbered, and snapshot-pre
 > - **Work Order:** *"What happened to the vehicle?"* (Technical repair record).
 > - **Estimate:** *"What did we offer to do, and for how much?"* (Commercial proposal).
 > - **Invoice:** *"What does the customer actually owe?"* (Formal billed financial record).
+> - **Payment:** *"What money was received and when?"* (Point of sale cash ledger record).
 >
-> See full details in [docs/ESTIMATES.md](file:///home/EthanABlake/Projects/artemis/docs/ESTIMATES.md) and [docs/INVOICES.md](file:///home/EthanABlake/Projects/artemis/docs/INVOICES.md).
+> See full details in [docs/ESTIMATES.md](file:///home/EthanABlake/Projects/artemis/docs/ESTIMATES.md), [docs/INVOICES.md](file:///home/EthanABlake/Projects/artemis/docs/INVOICES.md), and [docs/PAYMENTS.md](file:///home/EthanABlake/Projects/artemis/docs/PAYMENTS.md).
 
 ---
 
@@ -109,14 +129,15 @@ Automotive data is authoritatively stored, validated, numbered, and snapshot-pre
    - Zero floating-point arithmetic for money storage and calculations.
    - All currencies stored as integer cents (`*Cents`), percentages as basis points (`*Bps`), quantities as scaled milli-units (`*Milli`).
 2. **Historical Snapshot Integrity**:
-   - Work Orders, Estimates, and Invoices preserve snapshots independently.
-   - Modifying a repair log does not alter commercial proposals or issued invoices.
+   - Work Orders, Estimates, Invoices, and Payments preserve snapshots independently.
+   - Modifying a repair log or contact info does not alter commercial proposals, issued invoices, or posted payment receipts.
 3. **Monotonic Sequential Numbering**:
-   - `CUS-XXXXXX`, `VEH-XXXXXX`, `WO-XXXXXX`, `EST-XXXXXX`, `INV-XXXXXX` generated authoritatively in Electron Main without number recycling.
-4. **Approved Estimate & Issued Invoice Protection**:
+   - `CUS-XXXXXX`, `VEH-XXXXXX`, `WO-XXXXXX`, `EST-XXXXXX`, `INV-XXXXXX`, `PAY-XXXXXX` generated authoritatively in Electron Main without number recycling.
+4. **Approved Estimate, Issued Invoice, & Payment Protection**:
    - Estimates in `approved` status and Invoices in `issued` status cannot be mutated via normal update APIs.
    - Invoices cannot be issued if their total exceeds the approved source Estimate total.
-   - Voiding an issued invoice is a permanent lifecycle transition requiring an explicit reason.
-   - Reopening an estimate is locked out while an active invoice exists.
-5. **Deterministic Schema Migration (V1..V4 → V5)**:
-   - Upgrades data files seamlessly to `schemaVersion: 5` with initialized `invoices: []` and `nextInvoiceSequence: 1`.
+   - Invoices cannot be voided if active posted payments exist against them.
+   - Payments cannot exceed the remaining invoice balance due.
+   - Voiding a payment cleanly restores the invoice balance due.
+5. **Deterministic Schema Migration (V1..V5 → V6)**:
+   - Upgrades data files seamlessly to `schemaVersion: 6` with initialized `payments: []` and `nextPaymentSequence: 1`.

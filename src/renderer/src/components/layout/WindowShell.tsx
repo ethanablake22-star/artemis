@@ -21,17 +21,17 @@ export const WindowShell: React.FC<WindowShellProps> = ({ children }) => {
   };
 
   return (
-    <div className="flex flex-col h-screen w-screen bg-artemis-950 text-slate-100 overflow-hidden print:bg-white print:h-auto print:w-auto print:overflow-visible">
+    <div className="flex flex-col h-screen w-screen bg-artemis-950 text-zinc-100 overflow-hidden print:bg-white print:h-auto print:w-auto print:overflow-visible">
       {/* Top Application Header / Tab Bar Strip */}
-      <header className="titlebar-drag-region h-11 bg-artemis-950 border-b border-slate-800/80 flex items-center px-2.5 gap-2 shrink-0 select-none print:hidden">
+      <header className="titlebar-drag-region h-11 bg-artemis-950 border-b border-zinc-800/80 flex items-center px-2.5 gap-2 shrink-0 select-none print:hidden">
         {/* Artemis Brand & App Launcher */}
         <div className="flex items-center gap-2 pr-1 shrink-0 no-drag">
           {/* Artemis Monogram Icon */}
           <div className="flex items-center gap-2 pl-1 pr-1.5 py-1">
-            <div className="w-5 h-5 rounded-md bg-gradient-to-br from-cyan-500 to-blue-600 flex items-center justify-center shadow-sm shadow-cyan-500/30 text-white font-black text-xs">
+            <div className="w-5 h-5 rounded-md bg-gradient-to-br from-silver-500 to-silver-600 flex items-center justify-center shadow-sm shadow-silver-500/30 text-white font-black text-xs">
               A
             </div>
-            <span className="font-bold tracking-wider text-xs bg-clip-text text-transparent bg-gradient-to-r from-slate-100 via-slate-200 to-slate-400">
+            <span className="font-bold tracking-wider text-xs bg-clip-text text-transparent bg-gradient-to-r from-zinc-100 via-zinc-200 to-zinc-400">
               ARTEMIS
             </span>
           </div>
@@ -50,7 +50,7 @@ export const WindowShell: React.FC<WindowShellProps> = ({ children }) => {
           <button
             type="button"
             onClick={handleMinimize}
-            className="w-7 h-7 flex items-center justify-center rounded text-slate-400 hover:text-slate-100 hover:bg-slate-800/80 transition-colors"
+            className="w-7 h-7 flex items-center justify-center rounded text-zinc-400 hover:text-zinc-100 hover:bg-zinc-800/80 transition-colors"
             title="Minimize"
             aria-label="Minimize"
           >
@@ -59,7 +59,7 @@ export const WindowShell: React.FC<WindowShellProps> = ({ children }) => {
           <button
             type="button"
             onClick={handleMaximize}
-            className="w-7 h-7 flex items-center justify-center rounded text-slate-400 hover:text-slate-100 hover:bg-slate-800/80 transition-colors"
+            className="w-7 h-7 flex items-center justify-center rounded text-zinc-400 hover:text-zinc-100 hover:bg-zinc-800/80 transition-colors"
             title="Maximize"
             aria-label="Maximize"
           >
@@ -68,7 +68,7 @@ export const WindowShell: React.FC<WindowShellProps> = ({ children }) => {
           <button
             type="button"
             onClick={handleClose}
-            className="w-7 h-7 flex items-center justify-center rounded text-slate-400 hover:text-red-400 hover:bg-red-500/10 transition-colors"
+            className="w-7 h-7 flex items-center justify-center rounded text-zinc-400 hover:text-red-400 hover:bg-red-500/10 transition-colors"
             title="Close"
             aria-label="Close"
           >
@@ -83,20 +83,20 @@ export const WindowShell: React.FC<WindowShellProps> = ({ children }) => {
       </main>
 
       {/* Global Desktop Status Bar */}
-      <footer className="h-6 bg-artemis-950 border-t border-slate-800/80 px-3 flex items-center justify-between text-[11px] text-slate-400 shrink-0 select-none print:hidden">
+      <footer className="h-6 bg-artemis-950 border-t border-zinc-800/80 px-3 flex items-center justify-between text-[11px] text-zinc-400 shrink-0 select-none print:hidden">
         <div className="flex items-center gap-3">
-          <span className="flex items-center gap-1.5 text-emerald-400">
-            <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+          <span className="flex items-center gap-1.5 text-bronze-400">
+            <span className="w-1.5 h-1.5 rounded-full bg-bronze-400 animate-pulse" />
             Core System Online
           </span>
-          <span className="text-slate-700">|</span>
-          <span className="text-slate-400">Universal Tab Shell</span>
+          <span className="text-zinc-700">|</span>
+          <span className="text-zinc-400">Universal Tab Shell</span>
         </div>
 
-        <div className="flex items-center gap-3 text-slate-400 font-mono text-[10px]">
+        <div className="flex items-center gap-3 text-zinc-400 font-mono text-[10px]">
           <span>Electron + React + TypeScript</span>
-          <span className="text-slate-700">|</span>
-          <span className="text-slate-400">Artemis v0.1.0</span>
+          <span className="text-zinc-700">|</span>
+          <span className="text-zinc-400">Artemis v0.1.0</span>
         </div>
       </footer>
     </div>

@@ -90,16 +90,16 @@ export const LibraryTab: React.FC = () => {
   };
 
   return (
-    <div className="flex h-full w-full bg-artemis-900 text-slate-100 overflow-hidden">
+    <div className="flex h-full w-full bg-artemis-900 text-zinc-100 overflow-hidden">
       {/* Left Sidebar: Folder Directory Tree */}
-      <aside className="w-64 border-r border-slate-800 bg-artemis-950/70 flex flex-col shrink-0 select-none p-3">
+      <aside className="w-64 border-r border-zinc-800 bg-artemis-950/70 flex flex-col shrink-0 select-none p-3">
         <FolderTreeView />
       </aside>
 
       {/* Main File Browser Area */}
       <div className="flex-1 flex flex-col min-w-0 bg-artemis-900 overflow-hidden">
         {/* Top Navigation & Action Bar */}
-        <div className="h-14 border-b border-slate-800 px-5 flex items-center justify-between gap-4 shrink-0 bg-artemis-950/40">
+        <div className="h-14 border-b border-zinc-800 px-5 flex items-center justify-between gap-4 shrink-0 bg-artemis-950/40">
           {/* Breadcrumbs */}
           <BreadcrumbNav />
 
@@ -107,26 +107,26 @@ export const LibraryTab: React.FC = () => {
           <div className="flex items-center gap-2.5 shrink-0">
             {/* Search Input */}
             <div className="relative flex items-center">
-              <Search className="w-3.5 h-3.5 absolute left-3 text-slate-500 pointer-events-none" />
+              <Search className="w-3.5 h-3.5 absolute left-3 text-zinc-500 pointer-events-none" />
               <input
                 type="text"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 placeholder="Filter library items..."
-                className="w-48 sm:w-56 bg-artemis-950 border border-slate-700/70 rounded-lg pl-8 pr-3 py-1.5 text-xs text-slate-200 placeholder-slate-500 focus:outline-none focus:border-artemis-accent"
+                className="w-48 sm:w-56 bg-artemis-950 border border-zinc-700/70 rounded-lg pl-8 pr-3 py-1.5 text-xs text-zinc-200 placeholder-zinc-500 focus:outline-none focus:border-artemis-accent"
               />
             </div>
 
             {/* View Mode Toggle */}
-            <div className="flex items-center bg-artemis-950 border border-slate-800 rounded-lg p-0.5">
+            <div className="flex items-center bg-artemis-950 border border-zinc-800 rounded-lg p-0.5">
               <button
                 type="button"
                 onClick={() => setViewMode('grid')}
                 className={clsx(
                   'p-1.5 rounded transition-colors',
                   viewMode === 'grid'
-                    ? 'bg-slate-800 text-slate-100'
-                    : 'text-slate-400 hover:text-slate-200'
+                    ? 'bg-zinc-800 text-zinc-100'
+                    : 'text-zinc-400 hover:text-zinc-200'
                 )}
                 title="Grid View"
               >
@@ -138,8 +138,8 @@ export const LibraryTab: React.FC = () => {
                 className={clsx(
                   'p-1.5 rounded transition-colors',
                   viewMode === 'list'
-                    ? 'bg-slate-800 text-slate-100'
-                    : 'text-slate-400 hover:text-slate-200'
+                    ? 'bg-zinc-800 text-zinc-100'
+                    : 'text-zinc-400 hover:text-zinc-200'
                 )}
                 title="List View"
               >
@@ -171,13 +171,13 @@ export const LibraryTab: React.FC = () => {
             {/* Empty State */}
             {filteredContents.length === 0 && (
               <div className="h-full flex flex-col items-center justify-center p-8 text-center select-none">
-                <div className="p-4 rounded-2xl bg-artemis-950 border border-slate-800 mb-3 shadow-lg">
-                  <FolderPlus className="w-8 h-8 text-slate-600" />
+                <div className="p-4 rounded-2xl bg-artemis-950 border border-zinc-800 mb-3 shadow-lg">
+                  <FolderPlus className="w-8 h-8 text-zinc-600" />
                 </div>
-                <h4 className="text-sm font-semibold text-slate-300">
+                <h4 className="text-sm font-semibold text-zinc-300">
                   {searchQuery ? 'No items match your filter' : 'This folder is empty'}
                 </h4>
-                <p className="text-xs text-slate-500 mt-1 max-w-sm">
+                <p className="text-xs text-zinc-500 mt-1 max-w-sm">
                   {searchQuery
                     ? 'Try adjusting your search terms.'
                     : 'Create a new folder or document using the "+ New" button in the top bar.'}
@@ -187,9 +187,9 @@ export const LibraryTab: React.FC = () => {
                     <button
                       type="button"
                       onClick={() => setIsCreateFolderOpen(true)}
-                      className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-medium border border-slate-700 transition-colors"
+                      className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-zinc-800 hover:bg-zinc-700 text-zinc-200 text-xs font-medium border border-zinc-700 transition-colors"
                     >
-                      <FolderPlus className="w-3.5 h-3.5 text-amber-400" />
+                      <FolderPlus className="w-3.5 h-3.5 text-bronze-400" />
                       <span>New Folder</span>
                     </button>
                     <button
@@ -221,7 +221,7 @@ export const LibraryTab: React.FC = () => {
                         'group relative p-3.5 rounded-xl border transition-all cursor-pointer flex flex-col justify-between h-36 select-none',
                         isSelected
                           ? 'bg-artemis-850 border-artemis-accent/60 shadow-md ring-1 ring-artemis-accent/30'
-                          : 'bg-artemis-950/60 border-slate-800/80 hover:bg-artemis-850/60 hover:border-slate-700'
+                          : 'bg-artemis-950/60 border-zinc-800/80 hover:bg-artemis-850/60 hover:border-zinc-700'
                       )}
                     >
                       <div className="flex items-start justify-between">
@@ -229,8 +229,8 @@ export const LibraryTab: React.FC = () => {
                           className={clsx(
                             'p-2 rounded-lg border transition-transform group-hover:scale-105',
                             isFolder
-                              ? 'bg-amber-500/10 border-amber-500/20 text-amber-400'
-                              : 'bg-indigo-500/10 border-indigo-500/20 text-indigo-400'
+                              ? 'bg-bronze-500/10 border-bronze-500/20 text-bronze-400'
+                              : 'bg-silver-500/10 border-silver-500/20 text-silver-400'
                           )}
                         >
                           {isFolder ? (
@@ -252,10 +252,10 @@ export const LibraryTab: React.FC = () => {
                       </div>
 
                       <div>
-                        <h4 className="text-xs font-semibold text-slate-200 truncate group-hover:text-artemis-accent transition-colors">
+                        <h4 className="text-xs font-semibold text-zinc-200 truncate group-hover:text-artemis-accent transition-colors">
                           {item.name}
                         </h4>
-                        <div className="flex items-center justify-between text-[10px] text-slate-500 mt-1 font-mono">
+                        <div className="flex items-center justify-between text-[10px] text-zinc-500 mt-1 font-mono">
                           <span className="capitalize">{item.type}</span>
                           <span>{formatDate(item.updatedAt)}</span>
                         </div>
@@ -268,10 +268,10 @@ export const LibraryTab: React.FC = () => {
 
             {/* List View */}
             {viewMode === 'list' && filteredContents.length > 0 && (
-              <div className="border border-slate-800 rounded-xl overflow-hidden bg-artemis-950/40 select-none">
+              <div className="border border-zinc-800 rounded-xl overflow-hidden bg-artemis-950/40 select-none">
                 <table className="w-full text-left text-xs border-collapse">
                   <thead>
-                    <tr className="border-b border-slate-800 bg-artemis-950/80 text-slate-400 font-medium">
+                    <tr className="border-b border-zinc-800 bg-artemis-950/80 text-zinc-400 font-medium">
                       <th className="py-2.5 px-4">Name</th>
                       <th className="py-2.5 px-4">Type</th>
                       <th className="py-2.5 px-4">Updated</th>
@@ -289,24 +289,24 @@ export const LibraryTab: React.FC = () => {
                           onClick={() => handleItemClick(item)}
                           onDoubleClick={() => handleItemDoubleClick(item)}
                           className={clsx(
-                            'border-b border-slate-800/60 cursor-pointer transition-colors group',
+                            'border-b border-zinc-800/60 cursor-pointer transition-colors group',
                             isSelected
-                              ? 'bg-artemis-accent/10 text-slate-100 font-medium'
-                              : 'hover:bg-slate-800/40 text-slate-300'
+                              ? 'bg-artemis-accent/10 text-zinc-100 font-medium'
+                              : 'hover:bg-zinc-800/40 text-zinc-300'
                           )}
                         >
                           <td className="py-2.5 px-4 flex items-center gap-2.5">
                             {isFolder ? (
-                              <Folder className="w-4 h-4 text-amber-400 shrink-0" />
+                              <Folder className="w-4 h-4 text-bronze-400 shrink-0" />
                             ) : (
-                              <FileText className="w-4 h-4 text-indigo-400 shrink-0" />
+                              <FileText className="w-4 h-4 text-silver-400 shrink-0" />
                             )}
                             <span className="truncate">{item.name}</span>
                           </td>
-                          <td className="py-2.5 px-4 text-slate-400 font-mono text-[11px] capitalize">
+                          <td className="py-2.5 px-4 text-zinc-400 font-mono text-[11px] capitalize">
                             {item.type}
                           </td>
-                          <td className="py-2.5 px-4 font-mono text-[11px] text-slate-400">
+                          <td className="py-2.5 px-4 font-mono text-[11px] text-zinc-400">
                             {formatDate(item.updatedAt)}
                           </td>
                           <td className="py-2.5 px-4 text-right">

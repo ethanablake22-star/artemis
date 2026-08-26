@@ -9,6 +9,7 @@ import { VehicleDetailTab } from './automotive/VehicleDetailTab';
 import { WorkOrderDetailTab } from './automotive/WorkOrderDetailTab';
 import { EstimateDetailTab } from './automotive/estimates/EstimateDetailTab';
 import { InvoiceDetailTab } from './automotive/invoices/InvoiceDetailTab';
+import { PaymentDetailTab } from './automotive/payments/PaymentDetailTab';
 import { ScheduleTab } from './schedule/ScheduleTab';
 import { ScheduleEventDetailTab } from './schedule/ScheduleEventDetailTab';
 import { Construction, Sparkles } from 'lucide-react';
@@ -18,7 +19,7 @@ export const TabHost: React.FC = () => {
 
   if (!activeTab) {
     return (
-      <div className="h-full w-full flex items-center justify-center text-slate-500 text-sm">
+      <div className="h-full w-full flex items-center justify-center text-zinc-500 text-sm">
         No active tab selected.
       </div>
     );
@@ -44,6 +45,8 @@ export const TabHost: React.FC = () => {
       return <EstimateDetailTab estimateId={activeTab.resourceId || ''} />;
     case 'automotive-invoice':
       return <InvoiceDetailTab invoiceId={activeTab.resourceId || ''} />;
+    case 'automotive-payment':
+      return <PaymentDetailTab paymentId={activeTab.resourceId || ''} />;
     case 'schedule':
     case 'calendar':
       return <ScheduleTab />;
@@ -52,16 +55,16 @@ export const TabHost: React.FC = () => {
     default:
       return (
         <div className="h-full w-full flex flex-col items-center justify-center p-8 text-center">
-          <div className="p-4 rounded-2xl bg-artemis-950/80 border border-slate-800 mb-4 shadow-xl">
+          <div className="p-4 rounded-2xl bg-artemis-950/80 border border-zinc-800 mb-4 shadow-xl">
             <Construction className="w-8 h-8 text-artemis-accent" />
           </div>
-          <h3 className="text-base font-bold text-slate-200">
+          <h3 className="text-base font-bold text-zinc-200">
             {activeTab.title} — Engine Placeholder
           </h3>
-          <p className="text-xs text-slate-400 max-w-md mt-1.5 leading-relaxed">
+          <p className="text-xs text-zinc-400 max-w-md mt-1.5 leading-relaxed">
             This Artemis tab is configured for <code className="text-artemis-accent">'{activeTab.type}'</code>. Future tasks will mount the dedicated engine (e.g. Chromium, Monaco, CAD, PCB) into this universal tab container.
           </p>
-          <div className="mt-4 flex items-center gap-2 text-[11px] font-mono text-slate-500 bg-slate-800/60 px-3 py-1 rounded-full border border-slate-700/50">
+          <div className="mt-4 flex items-center gap-2 text-[11px] font-mono text-zinc-500 bg-zinc-800/60 px-3 py-1 rounded-full border border-zinc-700/50">
             <Sparkles className="w-3.5 h-3.5 text-artemis-accent" />
             Universal Tab Container Ready
           </div>

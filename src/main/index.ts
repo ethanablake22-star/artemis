@@ -43,6 +43,12 @@ import {
   issueInvoice,
   voidInvoice,
   deleteInvoice,
+  listPayments,
+  getPayment,
+  createPayment,
+  voidPayment,
+  getInvoicePaymentSummary,
+  getAccountsReceivableSummary,
 } from './automotiveStorage';
 import {
   listScheduleEvents,
@@ -309,6 +315,31 @@ function createWindow() {
 
   ipcMain.handle('artemis:automotive:invoices:delete', async (_event, id) => {
     return deleteInvoice(id);
+  });
+
+  // Payments (V0.0.10)
+  ipcMain.handle('artemis:automotive:payments:list', async (_event, filter) => {
+    return listPayments(filter);
+  });
+
+  ipcMain.handle('artemis:automotive:payments:get', async (_event, id) => {
+    return getPayment(id);
+  });
+
+  ipcMain.handle('artemis:automotive:payments:create', async (_event, options) => {
+    return createPayment(options);
+  });
+
+  ipcMain.handle('artemis:automotive:payments:void', async (_event, id, reason) => {
+    return voidPayment(id, reason);
+  });
+
+  ipcMain.handle('artemis:automotive:payments:getInvoiceSummary', async (_event, invoiceId) => {
+    return getInvoicePaymentSummary(invoiceId);
+  });
+
+  ipcMain.handle('artemis:automotive:payments:getAccountsReceivableSummary', async () => {
+    return getAccountsReceivableSummary();
   });
 
   // ---------------------------------------------------------------------------
