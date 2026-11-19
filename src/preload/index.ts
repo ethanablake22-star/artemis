@@ -1,4 +1,5 @@
 import { contextBridge, ipcRenderer } from 'electron';
+import type { BackupOperationResult } from '../shared/backupTypes';
 import type { ArtemisWindowBridge } from '../shared/types';
 import type {
   LibraryItem,
@@ -47,6 +48,10 @@ import type {
 } from '../shared/homeTypes';
 
 const bridge: ArtemisWindowBridge = {
+  backup: {
+    export: (): Promise<BackupOperationResult> => ipcRenderer.invoke('artemis:backup:export'),
+    verify: (): Promise<BackupOperationResult> => ipcRenderer.invoke('artemis:backup:verify'),
+  },
   minimize: () => ipcRenderer.send('artemis:window:minimize'),
   maximize: () => ipcRenderer.send('artemis:window:maximize'),
   close: () => ipcRenderer.send('artemis:window:close'),
