@@ -1,4 +1,5 @@
 import { app, BrowserWindow, ipcMain, shell, dialog } from 'electron';
+import { exportArtemisBackup, verifyArtemisBackup } from './backupStorage';
 import path from 'node:path';
 import fs from 'node:fs/promises';
 import { fileURLToPath } from 'node:url';
@@ -120,6 +121,16 @@ function createWindow() {
 
   ipcMain.handle('artemis:app:version', () => {
     return app.getVersion();
+  });
+
+  ipcMain.handle('artemis:backup:export', async () => {
+    if (!mainWindow) throw new Error('Artemis window unavailable.');
+    return exportArtemisBackup(mainWindow);
+  });
+
+  ipcMain.handle('artemis:backup:verify', async () => {
+    if (!mainWindow) throw new Error('Artemis window unavailable.');
+    return verifyArtemisBackup(mainWindow);
   });
 
   // ---------------------------------------------------------------------------
